@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import {
   type TimesheetEntry,
@@ -10,38 +9,46 @@ import {
   deleteTimesheetEntry,
   updateTimesheetEntry,
 } from "../services/timesheetService";
-import { Card, CardContent } from "../components/shared/Card";
-import { Button } from "../components/shared/Button";
 import { TimesheetCalendar } from "../components/timesheet/TimesheetCalendar";
 import { TimesheetEntryList } from "../components/timesheet/TimesheetEntryList";
 import { TimesheetEntryModal } from "../components/timesheet/TimesheetEntryModal";
-import { TimesheetSummary } from "../components/timesheet/TimesheetSummary";
 
 interface TimesheetFormData extends NewTimesheetPayload {
   work_date: string;
 }
 
+const pad = (value: number) => String(value).padStart(2, "0");
+
+const getLocalDateValue = (date: Date) =>
+  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+
+const getMonthKey = (date: Date) =>
+  `${date.getFullYear()}-${pad(date.getMonth() + 1)}`;
+
 export const TimesheetPage: React.FC = () => {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
 
+  const today = new Date();
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+
   // Date State Management (Defaulting to Current Month)
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(monthStart);
   const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split("T")[0],
+    getLocalDateValue(today),
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editEntryId, setEditEntryId] = useState<string | null>(null);
 
   // Form State
   const [formData, setFormData] = useState<TimesheetFormData>({
-    work_date: new Date().toISOString().split("T")[0],
+    work_date: getLocalDateValue(today),
     hours_logged: 8.0,
     description: "",
     company_id: "",
   });
 
-  const yearMonth = currentDate.toISOString().slice(0, 7); // "YYYY-MM"
+  const yearMonth = getMonthKey(currentDate);
 
   // --------------------------------------------------------------------------
   // TanStack Query: Fetch Logs
@@ -51,7 +58,9 @@ export const TimesheetPage: React.FC = () => {
     queryFn: () => fetchUserTimesheets(yearMonth),
   });
 
-  const selectedDayLogs = timesheets.filter((log) => log.work_date === selectedDate);
+  const selectedDayLogs = timesheets.filter(
+    (log) => log.work_date === selectedDate,
+  );
   const totalDailyHours = selectedDayLogs.reduce(
     (acc, log) => acc + Number(log.hours_logged),
     0,
@@ -69,6 +78,11 @@ export const TimesheetPage: React.FC = () => {
       description: "",
       company_id: profile?.company_id ?? "",
     });
+  };
+
+  const applyMonthChange = (nextDate: Date) => {
+    setCurrentDate(nextDate);
+    setSelectedDate(getLocalDateValue(nextDate));
   };
 
   const openCreateModal = () => {
@@ -109,8 +123,13 @@ export const TimesheetPage: React.FC = () => {
   // TanStack Mutation: Update Log Entry
   // --------------------------------------------------------------------------
   const updateMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: Partial<TimesheetFormData> }) =>
-      updateTimesheetEntry(id, payload),
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload: Partial<TimesheetFormData>;
+    }) => updateTimesheetEntry(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["timesheets", yearMonth] });
       closeModal();
@@ -128,13 +147,13 @@ export const TimesheetPage: React.FC = () => {
   });
 
   const handlePrevMonth = () => {
-    setCurrentDate(
+    applyMonthChange(
       new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1),
     );
   };
 
   const handleNextMonth = () => {
-    setCurrentDate(
+    applyMonthChange(
       new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1),
     );
   };
@@ -161,42 +180,28 @@ export const TimesheetPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="mx-auto max-w-7xl space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#191c1d]">
-            My Logs: {profile?.full_name}
-          </h1>
-          <p className="text-sm text-[#5e5e62] mt-1">
+          <h1 className="text-2xl font-bold text-text">My Logs</h1>
+          <p className="mt-1 text-sm text-muted">
             Review and manage your daily time entries
           </p>
         </div>
-
-        <div className="flex items-center gap-3">
-          <Card className="rounded-full">
-            <CardContent className="flex items-center gap-2 px-4 py-2">
-              <span className="text-sm font-medium text-[#191c1d]">
-                {currentDate.toLocaleString("default", {
-                  month: "long",
-                  year: "numeric",
-                })}
-              </span>
-            </CardContent>
-          </Card>
-        </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-12 gap-6 items-start lg:items-stretch">
         <TimesheetCalendar
           currentDate={currentDate}
           selectedDate={selectedDate}
           timesheets={timesheets}
+          totalMonthlyHours={totalMonthlyHours}
           onSelectDate={setSelectedDate}
           onPreviousMonth={handlePrevMonth}
           onNextMonth={handleNextMonth}
         />
 
-        <div className="col-span-12 lg:col-span-4 space-y-6">
+        <div className="col-span-12 lg:col-span-4 lg:sticky lg:top-6">
           <TimesheetEntryList
             selectedDate={selectedDate}
             totalDailyHours={totalDailyHours}
@@ -208,18 +213,8 @@ export const TimesheetPage: React.FC = () => {
             isUpdating={updateMutation.isPending}
             isDeleting={deleteMutation.isPending}
           />
-
-          <TimesheetSummary totalMonthlyHours={totalMonthlyHours} />
         </div>
       </div>
-
-      <Button
-        onClick={openCreateModal}
-        className="fixed bottom-8 right-8 z-40 h-14 w-14 rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95"
-        aria-label="Log hours"
-      >
-        <Plus className="w-7 h-7" />
-      </Button>
 
       <TimesheetEntryModal
         open={isModalOpen}
@@ -228,7 +223,9 @@ export const TimesheetPage: React.FC = () => {
         onClose={closeModal}
         onSubmit={handleFormSubmit}
         onChange={setFormData}
-        isSaving={editEntryId ? updateMutation.isPending : createMutation.isPending}
+        isSaving={
+          editEntryId ? updateMutation.isPending : createMutation.isPending
+        }
       />
     </div>
   );

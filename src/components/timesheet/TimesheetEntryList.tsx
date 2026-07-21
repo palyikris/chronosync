@@ -27,18 +27,41 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
   isUpdating,
   isDeleting,
 }) => {
+  const selectedDayLabel = new Date(
+    `${selectedDate}T12:00:00`,
+  ).toLocaleDateString("default", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+
   return (
-    <Card>
+    <Card className="flex h-full flex-col">
       <CardHeader>
-        <h3 className="font-bold text-text">Entries for {selectedDate}</h3>
-        <p className="text-xs text-muted">Total: {totalDailyHours} hours logged</p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+              Selected Day
+            </p>
+            <h3 className="mt-1 font-bold text-text">{selectedDayLabel}</h3>
+            <p className="text-xs text-muted">{totalDailyHours} hours logged</p>
+          </div>
+          <div className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary-strong">
+            Live detail
+          </div>
+        </div>
       </CardHeader>
 
-      <CardContent className="space-y-3 max-h-[380px] overflow-y-auto">
+      <CardContent className="flex-1 space-y-3 overflow-y-auto">
         {loading ? (
-          <div className="py-8 text-center text-sm text-muted">Loading entries...</div>
+          <div className="py-8 text-center text-sm text-muted">
+            Loading entries...
+          </div>
         ) : entries.length === 0 ? (
-          <div className="py-8 text-center text-sm text-muted">No hours logged for this date.</div>
+          <div className="space-y-3 py-10 text-center text-sm text-muted">
+            <p>No hours logged for this date.</p>
+            <p>Use the button below to add the first entry.</p>
+          </div>
         ) : (
           entries.map((entry) => (
             <div
@@ -49,7 +72,9 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
                 <span className="rounded bg-[#e3e2e6] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-strong">
                   Work Log
                 </span>
-                <span className="text-sm font-bold text-primary-strong">{entry.hours_logged} hrs</span>
+                <span className="text-sm font-bold text-primary-strong">
+                  {entry.hours_logged} hrs
+                </span>
               </div>
 
               <p className="mb-2 text-sm font-normal text-text">
@@ -90,9 +115,13 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
         )}
       </CardContent>
 
-      <CardFooter>
-        <Button variant="dashed" className="w-full rounded-xl" onClick={onAddEntry}>
-          <Plus className="h-4 w-4" /> Add Entry for {selectedDate}
+      <CardFooter className="mt-auto bg-bg-accent/60">
+        <Button
+          variant="primary"
+          className="w-full rounded-xl"
+          onClick={onAddEntry}
+        >
+          <Plus className="h-4 w-4" /> Add Entry
         </Button>
       </CardFooter>
     </Card>
