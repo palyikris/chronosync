@@ -1,13 +1,6 @@
 import React from "react";
 import { cn } from "../../utils/cn";
-
-type ButtonVariant = "primary" | "secondary" | "ghost" | "outline" | "danger" | "dashed";
-type ButtonSize = "sm" | "md" | "lg" | "icon";
-
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: ButtonVariant;
-  size?: ButtonSize;
-}
+import type { ButtonProps, ButtonSize, ButtonVariant } from "../../types/ui";
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:

@@ -2,14 +2,7 @@ import React from "react";
 import { X } from "lucide-react";
 import { cn } from "../../utils/cn";
 import { Button } from "./Button";
-
-interface ModalProps {
-  open: boolean;
-  title: React.ReactNode;
-  onClose: () => void;
-  children: React.ReactNode;
-  className?: string;
-}
+import type { ModalProps } from "../../types/ui";
 
 export const Modal: React.FC<ModalProps> = ({ open, title, onClose, children, className }) => {
   if (!open) return null;

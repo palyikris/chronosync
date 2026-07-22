@@ -1,9 +1,5 @@
 import React from "react";
-
-interface CompanySettingsHeaderProps {
-  title: string;
-  subtitle: string;
-}
+import type { CompanySettingsHeaderProps } from "../../types/company-settings";
 
 export const CompanySettingsHeader: React.FC<CompanySettingsHeaderProps> = ({ title, subtitle }) => {
   return (

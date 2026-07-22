@@ -1,10 +1,7 @@
 import React from "react";
 import { TrendingUp } from "lucide-react";
 import { Card, CardContent } from "../shared/Card";
-
-interface TimesheetSummaryProps {
-  totalMonthlyHours: number;
-}
+import type { TimesheetSummaryProps } from "../../types/timesheet";
 
 export const TimesheetSummary: React.FC<TimesheetSummaryProps> = ({ totalMonthlyHours }) => {
   return (

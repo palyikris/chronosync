@@ -8,16 +8,10 @@ import {
   Building2,
   LogOut,
   Settings,
-  type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-
-interface NavItem {
-  to: string;
-  label: string;
-  icon: LucideIcon;
-  roleRequired?: "super_admin" | "company_admin" | "regular";
-}
+import { getRoleLabel } from "../../utils/getRoleLabel";
+import type { NavItem } from "../../types/ui";
 
 export const Sidebar: React.FC = () => {
   const [isHovered, setIsHovered] = useState(false);
@@ -45,7 +39,7 @@ export const Sidebar: React.FC = () => {
       roleRequired: "company_admin",
     },
     {
-      to: "admin/settings",
+      to: "/admin/settings",
       label: "Company Settings",
       icon: Settings,
       roleRequired: "company_admin",
@@ -61,10 +55,15 @@ export const Sidebar: React.FC = () => {
   // Filter items based on user's active role
   const filteredNavItems = mainNavItems.filter((item) => {
     if (!item.roleRequired) return true;
+    // Hide company settings from super_admins
+    if (item.to === "/admin/settings" && profile?.role === "super_admin")
+      return false;
     if (item.roleRequired === "super_admin")
       return profile?.role === "super_admin";
     if (item.roleRequired === "company_admin")
-      return profile?.role === "company_admin" || profile?.role === "super_admin";
+      return (
+        profile?.role === "company_admin" || profile?.role === "super_admin"
+      );
     return true;
   });
 
@@ -155,7 +154,7 @@ export const Sidebar: React.FC = () => {
               {profile?.full_name || "User Profile"}
             </span>
             <span className="text-xs text-gray-400 truncate">
-              {profile?.role}
+              {getRoleLabel(profile?.role || "regular")}
             </span>
           </div>
         </div>

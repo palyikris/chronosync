@@ -1,21 +1,10 @@
 import React from "react";
 import { FolderPlus, Plus } from "lucide-react";
-import { type Client, type Project } from "../../services/clientProjectService";
 import { Button } from "../shared/Button";
 import { Card } from "../shared/Card";
 import { Input } from "../shared/Input";
 import { Select } from "../shared/Select";
-
-interface ProjectManagementCardProps {
-  clients: Client[];
-  projects: Project[];
-  selectedClientId: string;
-  projectName: string;
-  onSelectedClientIdChange: (value: string) => void;
-  onProjectNameChange: (value: string) => void;
-  onSubmit: (event: React.FormEvent) => void;
-  isSaving: boolean;
-}
+import type { ProjectManagementCardProps } from "../../types/company-settings";
 
 export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   clients,

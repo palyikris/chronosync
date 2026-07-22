@@ -1,7 +1,6 @@
 import React from "react";
 import { cn } from "../../utils/cn";
-
-interface CardProps extends React.HTMLAttributes<HTMLDivElement> {}
+import type { CardProps } from "../../types/ui";
 
 export const Card: React.FC<CardProps> = ({ className, ...props }) => {
   return (

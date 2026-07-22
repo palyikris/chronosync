@@ -1,18 +1,8 @@
 import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { type TimesheetEntry } from "../../services/timesheetService";
 import { Button } from "../shared/Button";
 import { Card, CardContent, CardHeader } from "../shared/Card";
-
-interface TimesheetCalendarProps {
-  currentDate: Date;
-  selectedDate: string;
-  timesheets: TimesheetEntry[];
-  totalMonthlyHours: number;
-  onSelectDate: (date: string) => void;
-  onPreviousMonth: () => void;
-  onNextMonth: () => void;
-}
+import type { TimesheetCalendarProps } from "../../types/timesheet";
 
 const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 

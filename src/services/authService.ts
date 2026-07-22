@@ -1,4 +1,5 @@
 import { supabase } from "../lib/supabaseClient";
+import type { CompanyUserRole } from "../types/user-management";
 
 /**
  * Signs up a new user and assigns them to a specific company.
@@ -8,7 +9,7 @@ export async function signUpUser(params: {
   password: string;
   fullName: string;
   companyId: string;
-  role?: "admin" | "regular";
+  role?: CompanyUserRole;
 }) {
   const { data, error } = await supabase.auth.signUp({
     email: params.email,

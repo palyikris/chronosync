@@ -1,10 +1,6 @@
 import React from "react";
 import { cn } from "../../utils/cn";
-
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  leftIcon?: React.ReactNode;
-  rightIcon?: React.ReactNode;
-}
+import type { InputProps } from "../../types/ui";
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, leftIcon, rightIcon, ...props }, ref) => {

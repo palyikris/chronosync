@@ -1,20 +1,8 @@
 import React from "react";
 import { Edit, History, Plus, Trash2 } from "lucide-react";
-import { type TimesheetEntry } from "../../services/timesheetService";
 import { Button } from "../shared/Button";
 import { Card, CardContent, CardFooter, CardHeader } from "../shared/Card";
-
-interface TimesheetEntryListProps {
-  selectedDate: string;
-  totalDailyHours: number;
-  entries: TimesheetEntry[];
-  loading: boolean;
-  onAddEntry: () => void;
-  onEditEntry: (entry: TimesheetEntry) => void;
-  onDeleteEntry: (entryId: string) => void;
-  isUpdating: boolean;
-  isDeleting: boolean;
-}
+import type { TimesheetEntryListProps } from "../../types/timesheet";
 
 export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
   selectedDate,
@@ -26,6 +14,8 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
   onDeleteEntry,
   isUpdating,
   isDeleting,
+  clients,
+  canManageTarget,
 }) => {
   const selectedDayLabel = new Date(
     `${selectedDate}T12:00:00`,
@@ -70,7 +60,11 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
             >
               <div className="mb-1 flex items-start justify-between">
                 <span className="rounded bg-[#e3e2e6] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-strong">
-                  Work Log
+                  {(() => {
+                    const clientName =
+                      clients.find((c) => c.id === entry.client_id)?.name ?? "";
+                    return clientName || "Unknown Client";
+                  })()}
                 </span>
                 <span className="text-sm font-bold text-primary-strong">
                   {entry.hours_logged} hrs
@@ -86,44 +80,50 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
                   <History className="h-3.5 w-3.5" /> Logged
                 </span>
 
-                <div className="flex items-center gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onEditEntry(entry)}
-                    disabled={isUpdating}
-                    className="h-8 w-8 rounded-full text-primary-strong hover:bg-[#e6f0d6]"
-                    aria-label="Edit entry"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
+                {canManageTarget ? (
+                  <div className="flex items-center gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onEditEntry(entry)}
+                      disabled={isUpdating}
+                      className="h-8 w-8 rounded-full text-primary-strong hover:bg-[#e6f0d6]"
+                      aria-label="Edit entry"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
 
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onDeleteEntry(entry.id)}
-                    disabled={isDeleting}
-                    className="h-8 w-8 rounded-full text-danger hover:bg-red-50"
-                    aria-label="Delete entry"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onDeleteEntry(entry.id)}
+                      disabled={isDeleting}
+                      className="h-8 w-8 rounded-full text-danger hover:bg-red-50"
+                      aria-label="Delete entry"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <span className="text-xs text-muted">Read only</span>
+                )}
               </div>
             </div>
           ))
         )}
       </CardContent>
 
-      <CardFooter className="mt-auto bg-bg-accent/60">
-        <Button
-          variant="primary"
-          className="w-full rounded-xl"
-          onClick={onAddEntry}
-        >
-          <Plus className="h-4 w-4" /> Add Entry
-        </Button>
-      </CardFooter>
+      {canManageTarget ? (
+        <CardFooter className="mt-auto bg-bg-accent/60">
+          <Button
+            variant="primary"
+            className="w-full rounded-xl"
+            onClick={onAddEntry}
+          >
+            <Plus className="h-4 w-4" /> Add Entry
+          </Button>
+        </CardFooter>
+      ) : null}
     </Card>
   );
 };

@@ -1,11 +1,13 @@
-// Add 'type' before the imported type definitions
 import type { User, Session } from "@supabase/supabase-js";
+
+export type UserRole = "super_admin" | "company_admin" | "regular";
 
 export interface UserProfile {
   id: string;
   company_id: string;
   full_name: string;
-  role: "super_admin" | "company_admin" | "regular";
+  role: UserRole;
+  is_active: boolean;
   created_at: string;
 }
 

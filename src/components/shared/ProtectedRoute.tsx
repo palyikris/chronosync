@@ -1,11 +1,7 @@
 import React from "react";
 import { useAuth } from "../../context/AuthContext";
 import { Navigate, Outlet } from "react-router-dom";
-
-
-interface ProtectedRouteProps {
-  requireAdmin?: boolean;
-}
+import type { ProtectedRouteProps } from "../../types/ui";
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requireAdmin = false,

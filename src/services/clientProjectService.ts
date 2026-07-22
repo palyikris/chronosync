@@ -1,37 +1,35 @@
 import { supabase } from "../lib/supabaseClient";
-
-export interface Client {
-  id: string;
-  company_id: string;
-  name: string;
-  created_at: string;
-}
-
-export interface Project {
-  id: string;
-  client_id: string;
-  company_id: string;
-  name: string;
-  created_at: string;
-}
+import type { Client, Project } from "../types/client-project";
 
 // Fetch all clients for the company
-export async function fetchClients(): Promise<Client[]> {
-  const { data, error } = await supabase
-    .from("clients")
-    .select("*")
-    .order("name", { ascending: true });
+export async function fetchClients(companyId?: string): Promise<Client[]> {
+  let query = supabase.from("clients").select("*").order("name", {
+    ascending: true,
+  });
+
+  if (companyId) {
+    query = query.eq("company_id", companyId);
+  }
+
+  const { data, error } = await query;
 
   if (error) throw error;
   return data as Client[];
 }
 
 // Fetch all projects for the company (or filtered by client_id)
-export async function fetchProjects(clientId?: string): Promise<Project[]> {
+export async function fetchProjects(
+  companyId?: string,
+  clientId?: string,
+): Promise<Project[]> {
   let query = supabase
     .from("projects")
     .select("*")
     .order("name", { ascending: true });
+
+  if (companyId) {
+    query = query.eq("company_id", companyId);
+  }
 
   if (clientId) {
     query = query.eq("client_id", clientId);

@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../context/AuthContext";
 import {
-  type Client,
-  type Project,
   fetchClients,
   fetchProjects,
   createClient,
@@ -12,6 +10,7 @@ import {
 import { CompanySettingsHeader } from "../components/company-settings/CompanySettingsHeader";
 import { ClientManagementCard } from "../components/company-settings/ClientManagementCard";
 import { ProjectManagementCard } from "../components/company-settings/ProjectManagementCard";
+import type { Client, Project } from "../types/client-project";
 
 export const CompanySettingsPage: React.FC = () => {
   const { profile } = useAuth();
@@ -22,13 +21,15 @@ export const CompanySettingsPage: React.FC = () => {
   const [projectName, setProjectName] = useState("");
 
   const { data: clients = [] } = useQuery<Client[]>({
-    queryKey: ["clients"],
-    queryFn: fetchClients,
+    queryKey: ["clients", profile?.id, profile?.company_id],
+    queryFn: () => fetchClients(profile?.company_id),
+    enabled: Boolean(profile?.company_id),
   });
 
   const { data: projects = [] } = useQuery<Project[]>({
-    queryKey: ["projects"],
-    queryFn: () => fetchProjects(),
+    queryKey: ["projects", profile?.id, profile?.company_id],
+    queryFn: () => fetchProjects(profile?.company_id),
+    enabled: Boolean(profile?.company_id),
   });
 
   const createClientMutation = useMutation({

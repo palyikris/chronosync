@@ -1,18 +1,9 @@
 import React from "react";
 import { Briefcase, Building2, Plus } from "lucide-react";
-import { type Client, type Project } from "../../services/clientProjectService";
 import { Button } from "../shared/Button";
 import { Card } from "../shared/Card";
 import { Input } from "../shared/Input";
-
-interface ClientManagementCardProps {
-  clients: Client[];
-  projects: Project[];
-  clientName: string;
-  onClientNameChange: (value: string) => void;
-  onSubmit: (event: React.FormEvent) => void;
-  isSaving: boolean;
-}
+import type { ClientManagementCardProps } from "../../types/company-settings";
 
 export const ClientManagementCard: React.FC<ClientManagementCardProps> = ({
   clients,

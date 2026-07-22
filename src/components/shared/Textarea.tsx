@@ -1,7 +1,6 @@
 import React from "react";
 import { cn } from "../../utils/cn";
-
-interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
+import type { TextareaProps } from "../../types/ui";
 
 export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className, ...props }, ref) => {

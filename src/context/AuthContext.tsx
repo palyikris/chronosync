@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { type User, type Session } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabaseClient';
-import { type AuthContextType, type UserProfile } from '../types/auth';
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { type User, type Session } from "@supabase/supabase-js";
+import { supabase } from "../lib/supabaseClient";
+import { type AuthContextType, type UserProfile } from "../types/auth";
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -13,31 +13,35 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
 });
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Helper to fetch custom profile metadata from Postgres
   const fetchProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+    const { data: profileData, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .single();
 
-      if (error) {
-        console.error('Error fetching user profile:', error.message);
-        setProfile(null);
-      } else {
-        setProfile(data as UserProfile);
-      }
-    } catch (err) {
-      console.error('Unexpected profile fetch error:', err);
-      setProfile(null);
+    if (error || !profileData) {
+      console.error("Error fetching profile:", error);
+      return;
     }
+
+    // Soft Delete Access Guard
+    if (profileData.is_active === false) {
+      await supabase.auth.signOut();
+      throw new Error(
+        "Your account has been deactivated by your company admin.",
+      );
+    }
+
+    setProfile(profileData);
   };
 
   useEffect(() => {
@@ -53,19 +57,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     // 2. Auth state change listener (Triggers on login, logout, token refresh)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
 
-        if (session?.user) {
-          await fetchProfile(session.user.id);
-        } else {
-          setProfile(null);
-        }
-        setLoading(false);
+      if (session?.user) {
+        await fetchProfile(session.user.id);
+      } else {
+        setProfile(null);
       }
-    );
+      setLoading(false);
+    });
 
     return () => subscription.unsubscribe();
   }, []);
@@ -79,8 +83,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(false);
   };
 
-  const isSuperAdmin = profile?.role === 'super_admin';
-  const isCompanyAdmin = profile?.role === 'company_admin';
+  const isSuperAdmin = profile?.role === "super_admin";
+  const isCompanyAdmin = profile?.role === "company_admin";
 
   return (
     <AuthContext.Provider
