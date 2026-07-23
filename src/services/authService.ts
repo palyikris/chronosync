@@ -35,17 +35,37 @@ export async function signUpUser(params: {
  * Standard email + password sign in.
  */
 export async function signInUser(email: string, password: string) {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  const { data: authData, error: authError } =
+    await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-  if (error) {
-    console.error("Sign-in Error:", error.message);
-    throw error;
+  if (authError) {
+    console.error("Sign-in Error:", authError.message);
+    throw authError;
   }
 
-  return data;
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("is_active")
+    .eq("id", authData.user.id)
+    .single();
+
+  if (profileError) {
+    await supabase.auth.signOut();
+    throw new Error("Could not verify user account status.");
+  }
+
+  // Block inactive users immediately
+  if (profile?.is_active === false) {
+    await supabase.auth.signOut();
+    throw new Error(
+      "Your account has been deactivated. Please contact your company administrator.",
+    );
+  }
+
+  return authData;
 }
 
 /**

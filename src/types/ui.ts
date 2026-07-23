@@ -31,6 +31,12 @@ export interface ModalProps {
   className?: string;
 }
 
+export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {}
+
+export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {}
+
+export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
+
 export interface ProtectedRouteProps {
   requireAdmin?: boolean;
 }

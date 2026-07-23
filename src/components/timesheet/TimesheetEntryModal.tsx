@@ -34,7 +34,7 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
               type="date"
               required
               value={formData.work_date}
-              onChange={(event) =>
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
                 onChange((current) => ({
                   ...current,
                   work_date: event.target.value,
@@ -55,7 +55,7 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
               max="24"
               required
               value={formData.hours_logged}
-              onChange={(event) =>
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
                 onChange((current) => ({
                   ...current,
                   hours_logged: parseFloat(event.target.value) || 0,
@@ -74,7 +74,7 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
             rows={3}
             required
             value={formData.description}
-            onChange={(event) =>
+            onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) =>
               onChange((current) => ({
                 ...current,
                 description: event.target.value,
@@ -92,7 +92,7 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
             <Select
               required
               value={formData.client_id}
-              onChange={(event) =>
+              onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
                 onChange((current) => ({
                   ...current,
                   client_id: event.target.value,
@@ -117,7 +117,7 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
               required
               disabled={!formData.client_id}
               value={formData.project_id}
-              onChange={(event) =>
+              onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
                 onChange((current) => ({
                   ...current,
                   project_id: event.target.value,

@@ -7,6 +7,8 @@ import { ProtectedRoute } from "./components/shared/ProtectedRoute";
 import { AppLayout } from "./components/shared/AppLayout";
 import { TimesheetPage } from "./pages/TimesheetPage";
 import { CompanySettingsPage } from "./pages/CompanySettingsPage";
+import { UserManagementPage } from "./pages/UserManagementPage";
+import { AdminDashboardPage } from "./pages/DashboardPage";
 
 // Dynamic Index Redirect Component
 const RootRedirect: React.FC = () => {
@@ -44,14 +46,8 @@ export default function App() {
               <Route path="/timesheet" element={<TimesheetPage />} />
 
               {/* Placeholders for upcoming Admin Pages */}
-              <Route
-                path="/admin/dashboard"
-                element={<div>Company Dashboard Placeholder</div>}
-              />
-              <Route
-                path="/admin/users"
-                element={<div>Manage Team Placeholder</div>}
-              />
+              <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+              <Route path="/admin/users" element={<UserManagementPage />} />
               <Route
                 path="/admin/settings"
                 element={<CompanySettingsPage />}

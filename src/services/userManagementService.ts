@@ -8,7 +8,7 @@ import type {
 
 const tempAuthClient = createClient(
   import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY,
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
   {
     auth: {
       persistSession: false,
@@ -30,18 +30,22 @@ export async function fetchCompanyMembers(): Promise<UserProfile[]> {
   return data as UserProfile[];
 }
 
-/**
- * Provision new team user (US-03)
- */
+
 export async function createCompanyUser(payload: CreateCompanyUserPayload) {
+  const targetEmail = payload.email?.trim();
+  const targetPassword = payload.password?.trim() || "TempPassword123!";
+
+  if (!targetEmail) {
+    throw new Error("Email address is required.");
+  }
+
   const { data, error } = await tempAuthClient.auth.signUp({
-    email: payload.email,
-    password: payload.password || "TempPassword123!",
+    email: targetEmail,
+    password: targetPassword,
     options: {
       data: {
-        full_name: payload.full_name,
         company_id: payload.company_id,
-        role: payload.role,
+        role: payload.role || "regular",
       },
     },
   });
@@ -93,6 +97,19 @@ export async function sendUserPasswordReset(email: string) {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${window.location.origin}/login`,
   });
+
+  if (error) throw error;
+}
+
+
+/**
+ * Permanently hard-delete a user profile and auth account (US-03)
+ */
+export async function deleteCompanyUser(userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('profiles')
+    .delete()
+    .eq('id', userId);
 
   if (error) throw error;
 }

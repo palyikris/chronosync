@@ -24,14 +24,18 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
         <div className="rounded-xl bg-bg-accent p-2.5 text-primary-strong">
           <FolderPlus className="h-5 w-5" />
         </div>
-        <h2 className="text-lg font-bold text-text">2. Add Project to Client</h2>
+        <h2 className="text-lg font-bold text-text">
+          2. Add Project to Client
+        </h2>
       </div>
 
       <form onSubmit={onSubmit} className="space-y-3">
         <Select
           required
           value={selectedClientId}
-          onChange={(event) => onSelectedClientIdChange(event.target.value)}
+          onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
+            onSelectedClientIdChange(event.target.value)
+          }
         >
           <option value="">Select a Client First...</option>
           {clients.map((client) => (
@@ -46,7 +50,9 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
             type="text"
             required
             disabled={!selectedClientId}
-            placeholder={selectedClientId ? "Project Name" : "Select client above"}
+            placeholder={
+              selectedClientId ? "Project Name" : "Select client above"
+            }
             value={projectName}
             onChange={(event) => onProjectNameChange(event.target.value)}
             className="flex-1 disabled:cursor-not-allowed disabled:bg-[#f3f4f5]"
@@ -63,13 +69,19 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
 
       <div className="max-h-60 space-y-2 overflow-y-auto">
         <h3 className="text-xs font-semibold uppercase text-muted">
-          {selectedClient ? `Projects for ${selectedClient.name}` : "All Projects"}
+          {selectedClient
+            ? `Projects for ${selectedClient.name}`
+            : "All Projects"}
         </h3>
         {projects.length === 0 ? (
-          <p className="text-sm italic text-muted-strong">No projects created yet.</p>
+          <p className="text-sm italic text-muted-strong">
+            No projects created yet.
+          </p>
         ) : (
           projects
-            .filter((project) => (!selectedClientId ? true : project.client_id === selectedClientId))
+            .filter((project) =>
+              !selectedClientId ? true : project.client_id === selectedClientId,
+            )
             .map((project) => (
               <div
                 key={project.id}
@@ -77,7 +89,10 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
               >
                 <span>{project.name}</span>
                 <span className="rounded bg-bg-accent px-2 py-0.5 text-xs text-muted-strong">
-                  {clients.find((client) => client.id === project.client_id)?.name}
+                  {
+                    clients.find((client) => client.id === project.client_id)
+                      ?.name
+                  }
                 </span>
               </div>
             ))
