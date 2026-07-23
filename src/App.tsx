@@ -9,6 +9,7 @@ import { TimesheetPage } from "./pages/TimesheetPage";
 import { CompanySettingsPage } from "./pages/CompanySettingsPage";
 import { UserManagementPage } from "./pages/UserManagementPage";
 import { AdminDashboardPage } from "./pages/DashboardPage";
+import { CompanyManagementPage } from "./pages/CompanyManagementPage";
 
 // Dynamic Index Redirect Component
 const RootRedirect: React.FC = () => {
@@ -54,7 +55,7 @@ export default function App() {
               ></Route>
               <Route
                 path="/super-admin/companies"
-                element={<div>Super Admin Company Directory Placeholder</div>}
+                element={<CompanyManagementPage />}
               />
             </Route>
           </Route>

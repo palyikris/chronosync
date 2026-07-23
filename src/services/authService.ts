@@ -65,7 +65,7 @@ export async function signInUser(email: string, password: string) {
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("is_active")
+    .select("company_id, is_active, role")
     .eq("id", authData.user.id)
     .single();
 
@@ -74,11 +74,30 @@ export async function signInUser(email: string, password: string) {
     throw new Error("Could not verify user account status.");
   }
 
+  const { data: company, error: companyError } = await supabase
+    .from("companies")
+    .select("is_active")
+    .eq("id", profile.company_id)
+    .single();
+
+  if (companyError && profile.role !== "super_admin") {
+    await supabase.auth.signOut();
+    throw new Error("Could not verify company status.");
+  }
+
   // Block inactive users immediately
   if (profile?.is_active === false) {
     await supabase.auth.signOut();
     throw new Error(
       "Your account has been deactivated. Please contact your company administrator.",
+    );
+  }
+
+  // Block users from inactive companies
+  if (company?.is_active === false) {
+    await supabase.auth.signOut();
+    throw new Error(
+      "Your company account has been deactivated. Please contact your company administrator.",
     );
   }
 

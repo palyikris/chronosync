@@ -27,11 +27,19 @@ const tempAuthClient = createClient(
 /**
  * Fetch team members for the Company Admin table
  */
-export async function fetchCompanyMembers(): Promise<UserProfile[]> {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .order("full_name", { ascending: true });
+export async function fetchCompanyMembers(
+  companyId?: string,
+  role?: string,
+): Promise<UserProfile[]> {
+  let query = supabase.from("profiles").select("*");
+
+  if (role !== "super_admin" && companyId) {
+    query = query.eq("company_id", companyId);
+  }
+
+  const { data, error } = await query.order("full_name", {
+    ascending: true,
+  });
 
   if (error) throw error;
   return data as UserProfile[];

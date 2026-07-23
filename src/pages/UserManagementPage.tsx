@@ -31,8 +31,9 @@ export const UserManagementPage: React.FC = () => {
   const [isFilterPopoverOpen, setIsFilterPopoverOpen] = useState(false);
 
   const { data: members = [], isLoading } = useQuery({
-    queryKey: ["companyMembers"],
-    queryFn: fetchCompanyMembers,
+    queryKey: ["companyMembers", profile?.company_id, profile?.role],
+    queryFn: () => fetchCompanyMembers(profile?.company_id, profile?.role),
+    enabled: Boolean(profile),
   });
 
   const inviteMutation = useMutation({
