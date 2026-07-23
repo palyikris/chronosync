@@ -8,7 +8,10 @@ import {
   deleteTimesheetEntry,
   updateTimesheetEntry,
 } from "../services/timesheetService";
-import { fetchClients, fetchProjects } from "../services/clientProjectService";
+import {
+  fetchActiveClients,
+  fetchActiveProjects,
+} from "../services/clientProjectService";
 import { TimesheetCalendar } from "../components/timesheet/TimesheetCalendar";
 import { TimesheetEntryList } from "../components/timesheet/TimesheetEntryList";
 import { TimesheetEntryModal } from "../components/timesheet/TimesheetEntryModal";
@@ -107,15 +110,15 @@ export const TimesheetPage: React.FC = () => {
 
   const { data: clients = [] } = useQuery<Client[]>({
     queryKey: ["clients", targetCompanyId || "all"],
-    queryFn: () => fetchClients(targetCompanyId || undefined),
+    queryFn: () => fetchActiveClients(targetCompanyId || ""),
     enabled: Boolean(targetCompanyId || isSuperAdmin),
   });
 
   const { data: projects = [] } = useQuery<Project[]>({
     queryKey: ["projects", targetCompanyId || "all", formData.client_id],
     queryFn: () =>
-      fetchProjects(
-        targetCompanyId || undefined,
+      fetchActiveProjects(
+        targetCompanyId || "",
         formData.client_id || undefined,
       ),
     enabled: Boolean((targetCompanyId || isSuperAdmin) && formData.client_id),

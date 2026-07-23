@@ -5,6 +5,7 @@ export interface Client {
   id: string;
   company_id: string;
   name: string;
+  is_active: boolean;
   created_at: string;
 }
 
@@ -13,6 +14,7 @@ export interface Project {
   client_id: string;
   company_id: string;
   name: string;
+  is_active: boolean;
   created_at: string;
 }
 

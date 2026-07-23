@@ -16,12 +16,8 @@ export interface ClientManagementCardProps {
 }
 
 export interface ProjectManagementCardProps {
+  companyId: string;
   clients: Client[];
   projects: Project[];
-  selectedClientId: string;
-  projectName: string;
-  onSelectedClientIdChange: (value: string) => void;
-  onProjectNameChange: (value: string) => void;
-  onSubmit: (event: React.FormEvent) => void;
-  isSaving: boolean;
+  onRefresh: () => void;
 }
