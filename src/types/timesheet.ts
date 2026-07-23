@@ -1,6 +1,46 @@
 import type React from "react";
+import { z } from "zod";
 import type { Client, Project } from "./client-project";
 import type { UserProfile, UserRole } from "./auth";
+
+const timesheetDateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format");
+
+const timesheetTextSchema = z.string().trim().min(1).max(2000);
+
+const timesheetIdSchema = z.string().trim().min(1);
+
+const timesheetHoursSchema = z
+  .number()
+  .finite()
+  .positive()
+  .max(24, "Hours logged cannot exceed 24");
+
+export const newTimesheetPayloadSchema = z
+  .object({
+    work_date: timesheetDateSchema,
+    hours_logged: timesheetHoursSchema,
+    description: timesheetTextSchema,
+    company_id: timesheetIdSchema,
+    client_id: timesheetIdSchema,
+    project_id: timesheetIdSchema,
+    target_user_id: timesheetIdSchema.optional(),
+  })
+  .strict();
+
+export const timesheetEntryUpdatePayloadSchema = z
+  .object({
+    work_date: timesheetDateSchema.optional(),
+    hours_logged: timesheetHoursSchema.optional(),
+    description: timesheetTextSchema.optional(),
+    client_id: timesheetIdSchema.optional(),
+    project_id: timesheetIdSchema.optional(),
+  })
+  .strict()
+  .refine((payload) => Object.keys(payload).length > 0, {
+    message: "At least one timesheet field must be provided",
+  });
 
 export interface TimesheetEntry {
   id: string;
@@ -14,21 +54,10 @@ export interface TimesheetEntry {
   created_at: string;
 }
 
-export interface NewTimesheetPayload {
-  work_date: string;
-  hours_logged: number;
-  description: string;
-  company_id: string;
-  client_id: string;
-  project_id: string;
-  target_user_id?: string;
-}
+export type NewTimesheetPayload = z.infer<typeof newTimesheetPayloadSchema>;
 
-export type TimesheetEntryUpdatePayload = Partial<
-  Pick<
-    TimesheetEntry,
-    "work_date" | "hours_logged" | "description" | "client_id" | "project_id"
-  >
+export type TimesheetEntryUpdatePayload = z.infer<
+  typeof timesheetEntryUpdatePayloadSchema
 >;
 
 export type SelectableTimesheetUser = Pick<

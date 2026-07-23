@@ -129,25 +129,25 @@ export const UserTable: React.FC<UserTableProps> = ({
 
                   <td className="px-6 py-4 relative text-center">
                     <div className="flex justify-center items-center gap-2 text-[#5e5e62]">
-                      {member.full_name && (
+                      {member.email && (
                         <button
                           type="button"
                           title={
-                            sendingResetEmail === member.full_name
+                            sendingResetEmail === member.email
                               ? "Sending..."
                               : "Send Password Reset Email"
                           }
-                          onClick={() => onSendPasswordReset(member.full_name)}
-                          disabled={sendingResetEmail === member.full_name}
+                          onClick={() => onSendPasswordReset(member.email)}
+                          disabled={sendingResetEmail === member.email}
                           className={`p-1.5 rounded-full transition ${
-                            sendingResetEmail === member.full_name
+                            sendingResetEmail === member.email
                               ? "bg-gray-100"
                               : "hover:bg-gray-100"
                           }`}
                         >
                           <Mail
                             className={`w-4 h-4 text-[#5e5e62] ${
-                              sendingResetEmail === member.full_name
+                              sendingResetEmail === member.email
                                 ? "opacity-60"
                                 : ""
                             }`}
@@ -156,7 +156,11 @@ export const UserTable: React.FC<UserTableProps> = ({
                       )}
                       <button
                         type="button"
-                        title={member.is_active ? "Deactivate User" : "Reactivate User"}
+                        title={
+                          member.is_active
+                            ? "Deactivate User"
+                            : "Reactivate User"
+                        }
                         onClick={() => onToggleStatus(member)}
                         className={`p-1.5 rounded-full transition ${
                           member.is_active

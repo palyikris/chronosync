@@ -1,4 +1,8 @@
 import { supabase } from "../lib/supabaseClient";
+import {
+  signInCredentialsSchema,
+  signUpCredentialsSchema,
+} from "../types/auth";
 import type { CompanyUserRole } from "../types/user-management";
 
 /**
@@ -11,14 +15,22 @@ export async function signUpUser(params: {
   companyId: string;
   role?: CompanyUserRole;
 }) {
-  const { data, error } = await supabase.auth.signUp({
+  const validatedParams = signUpCredentialsSchema.parse({
     email: params.email,
     password: params.password,
+    fullName: params.fullName,
+    companyId: params.companyId,
+    role: params.role,
+  });
+
+  const { data, error } = await supabase.auth.signUp({
+    email: validatedParams.email,
+    password: validatedParams.password,
     options: {
       data: {
-        full_name: params.fullName,
-        company_id: params.companyId,
-        role: params.role || "regular",
+        full_name: validatedParams.fullName,
+        company_id: validatedParams.companyId,
+        role: validatedParams.role || "regular",
       },
     },
   });
@@ -35,10 +47,15 @@ export async function signUpUser(params: {
  * Standard email + password sign in.
  */
 export async function signInUser(email: string, password: string) {
+  const validatedCredentials = signInCredentialsSchema.parse({
+    email,
+    password,
+  });
+
   const { data: authData, error: authError } =
     await supabase.auth.signInWithPassword({
-      email,
-      password,
+      email: validatedCredentials.email,
+      password: validatedCredentials.password,
     });
 
   if (authError) {

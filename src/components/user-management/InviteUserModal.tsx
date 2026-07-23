@@ -28,15 +28,14 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
-    console.log("Submitting invite for:", { email, full_name: fullName, role });
     try {
-      await onSubmit({ email, full_name: email, role });
+      await onSubmit({ email, full_name: fullName, role });
       setEmail("");
       setFullName("");
       setRole("regular");
       onClose();
-    } catch (err: any) {
-      setErrorMsg(err.message || "Failed to create user");
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : "Failed to create user");
     }
   };
 
@@ -48,6 +47,22 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
             {errorMsg}
           </div>
         )}
+
+        <div>
+          <label className="block text-xs font-semibold text-[#5e5e62] mb-1">
+            Full Name
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              required
+              placeholder="Elena Rivera"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="w-full px-3 py-2.5 bg-transparent border border-[#C4C7C5] rounded-xl focus:ring-2 focus:ring-[#4e6700] outline-none text-sm"
+            />
+          </div>
+        </div>
 
         <div>
           <label className="block text-xs font-semibold text-[#5e5e62] mb-1">
@@ -74,7 +89,9 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
             <Shield className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#5e5e62]" />
             <select
               value={role}
-              onChange={(e) => setRole(e.target.value as "company_admin" | "regular")}
+              onChange={(e) =>
+                setRole(e.target.value as "company_admin" | "regular")
+              }
               className="w-full pl-9 pr-3 py-2.5 bg-transparent border border-[#C4C7C5] rounded-xl focus:ring-2 focus:ring-[#4e6700] outline-none text-sm"
             >
               <option value="regular">Regular User</option>

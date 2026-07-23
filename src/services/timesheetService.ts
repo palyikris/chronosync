@@ -1,4 +1,8 @@
 import { supabase } from "../lib/supabaseClient";
+import {
+  newTimesheetPayloadSchema,
+  timesheetEntryUpdatePayloadSchema,
+} from "../types/timesheet";
 import type {
   NewTimesheetPayload,
   SelectableTimesheetUser,
@@ -76,6 +80,8 @@ export async function fetchSelectableCompanyUsers(
 export async function createTimesheetEntry(
   payload: NewTimesheetPayload,
 ): Promise<TimesheetEntry> {
+  const validatedPayload = newTimesheetPayloadSchema.parse(payload);
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -85,13 +91,13 @@ export async function createTimesheetEntry(
     .from("timesheets")
     .insert([
       {
-        user_id: payload.target_user_id ?? user.id,
-        company_id: payload.company_id,
-        client_id: payload.client_id,
-        project_id: payload.project_id,
-        work_date: payload.work_date,
-        hours_logged: payload.hours_logged,
-        description: payload.description,
+        user_id: validatedPayload.target_user_id ?? user.id,
+        company_id: validatedPayload.company_id,
+        client_id: validatedPayload.client_id,
+        project_id: validatedPayload.project_id,
+        work_date: validatedPayload.work_date,
+        hours_logged: validatedPayload.hours_logged,
+        description: validatedPayload.description,
       },
     ])
     .select()
@@ -117,23 +123,25 @@ export async function updateTimesheetEntry(
   id: string,
   payload: TimesheetEntryUpdatePayload,
 ): Promise<TimesheetEntry> {
+  const validatedPayload = timesheetEntryUpdatePayloadSchema.parse(payload);
+
   const { data, error } = await supabase
     .from("timesheets")
     .update({
-      ...(payload.work_date !== undefined && {
-        work_date: payload.work_date,
+      ...(validatedPayload.work_date !== undefined && {
+        work_date: validatedPayload.work_date,
       }),
-      ...(payload.hours_logged !== undefined && {
-        hours_logged: payload.hours_logged,
+      ...(validatedPayload.hours_logged !== undefined && {
+        hours_logged: validatedPayload.hours_logged,
       }),
-      ...(payload.description !== undefined && {
-        description: payload.description,
+      ...(validatedPayload.description !== undefined && {
+        description: validatedPayload.description,
       }),
-      ...(payload.client_id !== undefined && {
-        client_id: payload.client_id,
+      ...(validatedPayload.client_id !== undefined && {
+        client_id: validatedPayload.client_id,
       }),
-      ...(payload.project_id !== undefined && {
-        project_id: payload.project_id,
+      ...(validatedPayload.project_id !== undefined && {
+        project_id: validatedPayload.project_id,
       }),
     })
     .eq("id", id)

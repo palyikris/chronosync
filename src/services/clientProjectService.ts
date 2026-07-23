@@ -1,4 +1,8 @@
 import { supabase } from "../lib/supabaseClient";
+import {
+  createClientPayloadSchema,
+  createProjectPayloadSchema,
+} from "../types/client-project";
 import type { Client, Project } from "../types/client-project";
 
 // Fetch all clients for the company
@@ -45,9 +49,19 @@ export async function createClient(
   name: string,
   companyId: string,
 ): Promise<Client> {
+  const validatedPayload = createClientPayloadSchema.parse({
+    name,
+    company_id: companyId,
+  });
+
   const { data, error } = await supabase
     .from("clients")
-    .insert([{ name, company_id: companyId }])
+    .insert([
+      {
+        name: validatedPayload.name,
+        company_id: validatedPayload.company_id,
+      },
+    ])
     .select()
     .single();
 
@@ -61,9 +75,21 @@ export async function createProject(
   clientId: string,
   companyId: string,
 ): Promise<Project> {
+  const validatedPayload = createProjectPayloadSchema.parse({
+    name,
+    client_id: clientId,
+    company_id: companyId,
+  });
+
   const { data, error } = await supabase
     .from("projects")
-    .insert([{ name, client_id: clientId, company_id: companyId }])
+    .insert([
+      {
+        name: validatedPayload.name,
+        client_id: validatedPayload.client_id,
+        company_id: validatedPayload.company_id,
+      },
+    ])
     .select()
     .single();
 

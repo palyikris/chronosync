@@ -1,5 +1,12 @@
 import { createClient } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabaseClient";
+import {
+  createCompanyUserPayloadSchema,
+  deleteCompanyUserIdSchema,
+  passwordResetEmailSchema,
+  toggleUserActiveStatusPayloadSchema,
+  updateUserRolePayloadSchema,
+} from "../types/user-management";
 import type { UserProfile } from "../types/auth";
 import type {
   CompanyUserRole,
@@ -32,20 +39,17 @@ export async function fetchCompanyMembers(): Promise<UserProfile[]> {
 
 
 export async function createCompanyUser(payload: CreateCompanyUserPayload) {
-  const targetEmail = payload.email?.trim();
-  const targetPassword = payload.password?.trim() || "TempPassword123!";
-
-  if (!targetEmail) {
-    throw new Error("Email address is required.");
-  }
+  const validatedPayload = createCompanyUserPayloadSchema.parse(payload);
+  const targetPassword = validatedPayload.password || "TempPassword123!";
 
   const { data, error } = await tempAuthClient.auth.signUp({
-    email: targetEmail,
+    email: validatedPayload.email,
     password: targetPassword,
     options: {
       data: {
-        company_id: payload.company_id,
-        role: payload.role || "regular",
+        full_name: validatedPayload.full_name,
+        company_id: validatedPayload.company_id,
+        role: validatedPayload.role,
       },
     },
   });
@@ -61,10 +65,12 @@ export async function updateUserRole(
   userId: string,
   role: CompanyUserRole,
 ) {
+  const validatedPayload = updateUserRolePayloadSchema.parse({ userId, role });
+
   const { data, error } = await supabase
     .from("profiles")
-    .update({ role })
-    .eq("id", userId)
+    .update({ role: validatedPayload.role })
+    .eq("id", validatedPayload.userId)
     .select()
     .single();
 
@@ -79,10 +85,15 @@ export async function toggleUserActiveStatus(
   userId: string,
   isActive: boolean,
 ) {
+  const validatedPayload = toggleUserActiveStatusPayloadSchema.parse({
+    userId,
+    isActive,
+  });
+
   const { data, error } = await supabase
     .from("profiles")
-    .update({ is_active: isActive })
-    .eq("id", userId)
+    .update({ is_active: validatedPayload.isActive })
+    .eq("id", validatedPayload.userId)
     .select()
     .single();
 
@@ -94,7 +105,9 @@ export async function toggleUserActiveStatus(
  * Trigger Password Reset Email
  */
 export async function sendUserPasswordReset(email: string) {
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+  const validatedEmail = passwordResetEmailSchema.parse(email);
+
+  const { error } = await supabase.auth.resetPasswordForEmail(validatedEmail, {
     redirectTo: `${window.location.origin}/login`,
   });
 
@@ -106,10 +119,12 @@ export async function sendUserPasswordReset(email: string) {
  * Permanently hard-delete a user profile and auth account (US-03)
  */
 export async function deleteCompanyUser(userId: string): Promise<void> {
+  const validatedUserId = deleteCompanyUserIdSchema.parse(userId);
+
   const { error } = await supabase
-    .from('profiles')
+    .from("profiles")
     .delete()
-    .eq('id', userId);
+    .eq("id", validatedUserId);
 
   if (error) throw error;
 }
