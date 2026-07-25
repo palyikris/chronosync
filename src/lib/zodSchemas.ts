@@ -1,7 +1,10 @@
 import { z } from "zod";
 import i18n from "./i18n";
 
-export const emailSchema = z.string().trim().email(i18n.t("validation.validEmail"));
+export const emailSchema = z
+  .string()
+  .trim()
+  .email(i18n.t("validation.validEmail"));
 
 export const passwordSchema = z
   .string()
@@ -10,7 +13,17 @@ export const passwordSchema = z
 
 export const uuidSchema = z.string().uuid(i18n.t("validation.validUuid"));
 
-export const trimmedNonEmptyStringSchema = (
-  message: string,
-  maxLength = 255,
-) => z.string().trim().min(1, message).max(maxLength);
+export const trimmedNonEmptyStringSchema = (message: string, maxLength = 255) =>
+  z.string().trim().min(1, message).max(maxLength);
+
+export const updatePasswordSchema = z
+  .object({
+    newPassword: z.string().min(8, "validation.passwordMin"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "validation.passwordsDoNotMatch",
+    path: ["confirmPassword"],
+  });
+
+export type UpdatePasswordPayload = z.infer<typeof updatePasswordSchema>;

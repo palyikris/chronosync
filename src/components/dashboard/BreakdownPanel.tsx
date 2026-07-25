@@ -27,7 +27,7 @@ export const BreakdownPanel: React.FC<BreakdownPanelProps> = ({
           {emptyMessage}
         </div>
       ) : (
-        <div className="space-y-4 max-h-80 overflow-y-auto pr-1">
+        <div className="space-y-4 max-h-80 overflow-y-auto px-4">
           {items.map((item) => (
             <div key={item.id} className="space-y-1.5">
               <div className="flex justify-between text-xs font-semibold">

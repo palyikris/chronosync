@@ -10,6 +10,7 @@ import { CompanySettingsPage } from "./pages/CompanySettingsPage";
 import { UserManagementPage } from "./pages/UserManagementPage";
 import { AdminDashboardPage } from "./pages/DashboardPage";
 import { CompanyManagementPage } from "./pages/CompanyManagementPage";
+import { UserSettingsPage } from "./pages/UserSettingsPage";
 
 // Dynamic Index Redirect Component
 const RootRedirect: React.FC = () => {
@@ -39,14 +40,13 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
 
           {/* Root Redirect Handler */}
-          <Route path="/" element={<RootRedirect />} />
+          <Route path="/" element={<Navigate to={"/login"} />} />
 
           {/* Protected Application Routes */}
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>
               <Route path="/timesheet" element={<TimesheetPage />} />
 
-              {/* Placeholders for upcoming Admin Pages */}
               <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
               <Route path="/admin/users" element={<UserManagementPage />} />
               <Route
@@ -57,6 +57,7 @@ export default function App() {
                 path="/super-admin/companies"
                 element={<CompanyManagementPage />}
               />
+              <Route path="/settings" element={<UserSettingsPage />} />
             </Route>
           </Route>
 

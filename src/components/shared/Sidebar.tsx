@@ -52,6 +52,11 @@ export const Sidebar: React.FC = () => {
       icon: Building2,
       roleRequired: "super_admin",
     },
+    {
+      to: "/settings",
+      label: t("navigation.userSettings"),
+      icon: Settings,
+    },
   ];
 
   // Filter items based on user's active role
