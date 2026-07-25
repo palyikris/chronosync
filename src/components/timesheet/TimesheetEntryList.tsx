@@ -1,5 +1,6 @@
 import React from "react";
 import { Edit, History, Plus, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "../shared/Button";
 import { Card, CardContent, CardFooter, CardHeader } from "../shared/Card";
 import type { TimesheetEntryListProps } from "../../types/timesheet";
@@ -17,9 +18,10 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
   clients,
   canManageTarget,
 }) => {
+  const { t, i18n } = useTranslation();
   const selectedDayLabel = new Date(
     `${selectedDate}T12:00:00`,
-  ).toLocaleDateString("default", {
+  ).toLocaleDateString(i18n.language, {
     weekday: "short",
     month: "short",
     day: "numeric",
@@ -31,13 +33,15 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
-              Selected Day
+              {t("timesheet.selectedDay")}
             </p>
             <h3 className="mt-1 font-bold text-text">{selectedDayLabel}</h3>
-            <p className="text-xs text-muted">{totalDailyHours} hours logged</p>
+            <p className="text-xs text-muted">
+              {totalDailyHours} {t("timesheet.hoursLogged")}
+            </p>
           </div>
           <div className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary-strong">
-            Live detail
+            {t("timesheet.liveDetail")}
           </div>
         </div>
       </CardHeader>
@@ -45,12 +49,12 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
       <CardContent className="flex-1 space-y-3 overflow-y-auto">
         {loading ? (
           <div className="py-8 text-center text-sm text-muted">
-            Loading entries...
+            {t("timesheet.loadingEntries")}
           </div>
         ) : entries.length === 0 ? (
           <div className="space-y-3 py-10 text-center text-sm text-muted">
-            <p>No hours logged for this date.</p>
-            <p>Use the button below to add the first entry.</p>
+            <p>{t("timesheet.noEntries")}</p>
+            <p>{t("timesheet.addFirstEntry")}</p>
           </div>
         ) : (
           entries.map((entry) => (
@@ -63,7 +67,7 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
                   {(() => {
                     const clientName =
                       clients.find((c) => c.id === entry.client_id)?.name ?? "";
-                    return clientName || "Unknown Client";
+                    return clientName || t("timesheet.unknownClient");
                   })()}
                 </span>
                 <span className="text-sm font-bold text-primary-strong">
@@ -72,12 +76,12 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
               </div>
 
               <p className="mb-2 text-sm font-normal text-text">
-                {entry.description || "No description provided."}
+                {entry.description || t("timesheet.noDescription")}
               </p>
 
               <div className="flex items-center justify-between text-xs text-muted">
                 <span className="flex items-center gap-1">
-                  <History className="h-3.5 w-3.5" /> Logged
+                  <History className="h-3.5 w-3.5" /> {t("timesheet.logged")}
                 </span>
 
                 {canManageTarget ? (
@@ -88,7 +92,7 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
                       onClick={() => onEditEntry(entry)}
                       disabled={isUpdating}
                       className="h-8 w-8 rounded-full text-primary-strong hover:bg-[#e6f0d6]"
-                      aria-label="Edit entry"
+                      aria-label={t("timesheet.editEntry")}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -99,13 +103,18 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
                       onClick={() => onDeleteEntry(entry.id)}
                       disabled={isDeleting}
                       className="h-8 w-8 rounded-full text-danger hover:bg-red-50"
-                      aria-label="Delete entry"
+                      aria-label={t("timesheet.deleteEntry")}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 ) : (
-                  <span className="text-xs text-muted">Read only</span>
+                  <>
+                    <span className="text-xs text-muted">Read only</span>
+                    <span className="text-xs text-muted">
+                      {t("timesheet.readOnly")}
+                    </span>
+                  </>
                 )}
               </div>
             </div>
@@ -120,7 +129,7 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
             className="w-full rounded-xl"
             onClick={onAddEntry}
           >
-            <Plus className="h-4 w-4" /> Add Entry
+            <Plus className="h-4 w-4" /> {t("timesheet.addEntry")}
           </Button>
         </CardFooter>
       ) : null}

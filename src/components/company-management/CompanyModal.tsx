@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import type { Company } from "../../types/company";
 
 export interface CompanyFormData {
@@ -25,6 +26,8 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
   onSubmit,
   onChange,
 }) => {
+  const { t } = useTranslation();
+
   if (!isOpen) {
     return null;
   }
@@ -33,12 +36,14 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl border border-outline">
         <h2 className="text-xl font-bold mb-4">
-          {editingCompany ? "Edit Company" : "Create New Company"}
+          {editingCompany
+            ? t("companyManagement.editCompanyTitle")
+            : t("companyManagement.createNewCompany")}
         </h2>
         <form onSubmit={onSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-slate-600 mb-1">
-              Company Name
+              {t("companyManagement.companyName")}
             </label>
             <input
               type="text"
@@ -50,7 +55,7 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-600 mb-1">
-              Billing Email
+              {t("companyManagement.billingEmail")}
             </label>
             <input
               type="email"
@@ -61,7 +66,7 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-600 mb-1">
-              Számlázz.hu API Token
+              {t("companyManagement.szamlazzToken")}
             </label>
             <input
               type="password"
@@ -78,8 +83,11 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
               onChange={(e) => onChange({ is_active: e.target.checked })}
               className="rounded text-primary focus:ring-primary"
             />
-            <label htmlFor="is_active_check" className="text-sm font-medium text-slate-700">
-              Company Active
+            <label
+              htmlFor="is_active_check"
+              className="text-sm font-medium text-slate-700"
+            >
+              {t("companyManagement.companyActive")}
             </label>
           </div>
 
@@ -89,13 +97,15 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 rounded text-sm font-medium text-slate-600 hover:bg-slate-100"
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               type="submit"
               className="px-4 py-2 bg-primary-container text-on-primary-container rounded text-sm font-bold hover:shadow"
             >
-              {editingCompany ? "Save Changes" : "Create Company"}
+              {editingCompany
+                ? t("companyManagement.saveChanges")
+                : t("companyManagement.createCompany")}
             </button>
           </div>
         </form>

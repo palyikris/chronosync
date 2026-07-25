@@ -1,5 +1,6 @@
 import React from "react";
 import { Calendar as CalendarIcon, Clock } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "../shared/Button";
 import { Input } from "../shared/Input";
 import { Modal } from "../shared/Modal";
@@ -18,17 +19,21 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
   onChange,
   isSaving,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <Modal
       open={open}
-      title={isEditing ? "Edit Entry" : "Log New Entry"}
+      title={
+        isEditing ? t("timesheet.entryTitleEdit") : t("timesheet.entryTitleNew")
+      }
       onClose={onClose}
     >
       <form onSubmit={onSubmit} className="space-y-5 p-6">
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2 sm:col-span-1">
             <label className="mb-1 block text-xs font-semibold text-muted">
-              Date
+              {t("timesheet.date")}
             </label>
             <Input
               type="date"
@@ -46,7 +51,7 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
 
           <div className="col-span-2 sm:col-span-1">
             <label className="mb-1 block text-xs font-semibold text-muted">
-              Total Hours
+              {t("timesheet.totalHours")}
             </label>
             <Input
               type="number"
@@ -68,7 +73,7 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
 
         <div>
           <label className="mb-1 block text-xs font-semibold text-muted">
-            Task Description
+            {t("timesheet.taskDescription")}
           </label>
           <Textarea
             rows={3}
@@ -80,14 +85,14 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
                 description: event.target.value,
               }))
             }
-            placeholder="What did you work on today?"
+            placeholder={t("timesheet.taskDescriptionPlaceholder")}
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2 sm:col-span-1">
             <label className="mb-1 block text-xs font-semibold text-muted">
-              Client
+              {t("timesheet.client")}
             </label>
             <Select
               required
@@ -100,7 +105,7 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
                 }))
               }
             >
-              <option value="">Select a client</option>
+              <option value="">{t("timesheet.selectClient")}</option>
               {clients.map((client) => (
                 <option key={client.id} value={client.id}>
                   {client.name}
@@ -111,7 +116,7 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
 
           <div className="col-span-2 sm:col-span-1">
             <label className="mb-1 block text-xs font-semibold text-muted">
-              Project
+              {t("timesheet.project")}
             </label>
             <Select
               required
@@ -126,8 +131,8 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
             >
               <option value="">
                 {formData.client_id
-                  ? "Select a project"
-                  : "Select a client first"}
+                  ? t("timesheet.selectProject")
+                  : t("timesheet.selectClientFirst")}
               </option>
               {projects.map((project) => (
                 <option key={project.id} value={project.id}>
@@ -145,14 +150,18 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
             className="flex-1 rounded-full"
             onClick={onClose}
           >
-            Cancel
+            {t("timesheet.cancel")}
           </Button>
           <Button
             type="submit"
             className="flex-1 rounded-full"
             disabled={isSaving}
           >
-            {isSaving ? "Saving..." : isEditing ? "Save Changes" : "Save Entry"}
+            {isSaving
+              ? t("timesheet.saving")
+              : isEditing
+                ? t("timesheet.saveChanges")
+                : t("timesheet.saveEntry")}
           </Button>
         </div>
       </form>

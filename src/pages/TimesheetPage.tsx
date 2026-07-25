@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import {
   fetchUserTimesheets,
@@ -36,6 +37,7 @@ const getMonthKey = (date: Date) =>
 export const TimesheetPage: React.FC = () => {
   const { profile, user } = useAuth();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const today = new Date();
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -281,16 +283,16 @@ export const TimesheetPage: React.FC = () => {
     <div className="mx-auto max-w-7xl space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-text">My Logs</h1>
-          <p className="mt-1 text-sm text-muted">
-            Review and manage your daily time entries
-          </p>
+          <h1 className="text-2xl font-bold text-text">
+            {t("timesheet.title")}
+          </h1>
+          <p className="mt-1 text-sm text-muted">{t("timesheet.subtitle")}</p>
         </div>
 
         {(isSuperAdmin || isCompanyAdmin) && (
           <div className="w-full sm:max-w-md">
             <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.2em] text-muted">
-              Viewing Timesheet For
+              {t("timesheet.viewingFor")}
             </label>
             <Select
               value={targetUserId ?? ""}

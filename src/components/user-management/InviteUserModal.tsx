@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Modal } from "../shared/Modal";
 import { Mail, Shield } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { User as SBUser } from "@supabase/supabase-js";
 
 interface InviteUserModalProps {
@@ -20,6 +21,7 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
   onSubmit,
   isLoading,
 }) => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [role, setRole] = useState<"company_admin" | "regular">("regular");
@@ -35,12 +37,18 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
       setRole("regular");
       onClose();
     } catch (err: unknown) {
-      setErrorMsg(err instanceof Error ? err.message : "Failed to create user");
+      setErrorMsg(
+        err instanceof Error ? err.message : t("users.failedCreateUser"),
+      );
     }
   };
 
   return (
-    <Modal open={isOpen} onClose={onClose} title="Invite New Team Member">
+    <Modal
+      open={isOpen}
+      onClose={onClose}
+      title={t("users.inviteNewTeamMember")}
+    >
       <form onSubmit={handleSubmit} className="space-y-4 pt-2 p-4">
         {errorMsg && (
           <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-200">
@@ -50,13 +58,13 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
 
         <div>
           <label className="block text-xs font-semibold text-[#5e5e62] mb-1">
-            Full Name
+            {t("users.fullName")}
           </label>
           <div className="relative">
             <input
               type="text"
               required
-              placeholder="Elena Rivera"
+              placeholder={t("users.placeholderFullName")}
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               className="w-full px-3 py-2.5 bg-transparent border border-[#C4C7C5] rounded-xl focus:ring-2 focus:ring-[#4e6700] outline-none text-sm"
@@ -66,14 +74,14 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
 
         <div>
           <label className="block text-xs font-semibold text-[#5e5e62] mb-1">
-            Email Address
+            {t("users.emailAddress")}
           </label>
           <div className="relative">
             <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#5e5e62]" />
             <input
               type="email"
               required
-              placeholder="elena.r@chronotrack.io"
+              placeholder={t("users.placeholderEmail")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full pl-9 pr-3 py-2.5 bg-transparent border border-[#C4C7C5] rounded-xl focus:ring-2 focus:ring-[#4e6700] outline-none text-sm"
@@ -83,7 +91,7 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
 
         <div>
           <label className="block text-xs font-semibold text-[#5e5e62] mb-1">
-            Access Role
+            {t("users.accessRole")}
           </label>
           <div className="relative">
             <Shield className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#5e5e62]" />
@@ -94,8 +102,8 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
               }
               className="w-full pl-9 pr-3 py-2.5 bg-transparent border border-[#C4C7C5] rounded-xl focus:ring-2 focus:ring-[#4e6700] outline-none text-sm"
             >
-              <option value="regular">Regular User</option>
-              <option value="company_admin">Company Admin</option>
+              <option value="regular">{t("users.regularUser")}</option>
+              <option value="company_admin">{t("users.companyAdmin")}</option>
             </select>
           </div>
         </div>
@@ -106,7 +114,7 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
             onClick={onClose}
             className="flex-1 py-2.5 border border-[#C4C7C5] text-[#191c1d] rounded-full font-semibold hover:bg-[#f3f4f5] transition text-sm"
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             type="submit"
@@ -114,7 +122,7 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
             style={{ backgroundColor: "#ABDB11" }}
             className="flex-1 py-2.5 text-[#151f00] rounded-full font-bold shadow-md hover:opacity-90 active:scale-[0.98] transition text-sm disabled:opacity-50"
           >
-            {isLoading ? "Creating..." : "Invite User"}
+            {isLoading ? t("users.creating") : t("users.inviteUser")}
           </button>
         </div>
       </form>

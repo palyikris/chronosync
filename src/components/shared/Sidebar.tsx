@@ -12,11 +12,13 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { getRoleLabel } from "../../utils/getRoleLabel";
 import type { NavItem } from "../../types/ui";
+import { useTranslation } from "react-i18next";
 
 export const Sidebar: React.FC = () => {
   const [isHovered, setIsHovered] = useState(false);
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleLogout = async () => {
     await signOut();
@@ -25,28 +27,28 @@ export const Sidebar: React.FC = () => {
 
   // Define navigation items mapped to Lucide Icons
   const mainNavItems: NavItem[] = [
-    { to: "/timesheet", label: "Timesheets", icon: Clock },
+    { to: "/timesheet", label: t("navigation.timesheets"), icon: Clock },
     {
       to: "/admin/dashboard",
-      label: "Dashboard",
+      label: t("navigation.dashboard"),
       icon: LayoutDashboard,
       roleRequired: "company_admin",
     },
     {
       to: "/admin/users",
-      label: "Team Members",
+      label: t("navigation.teamMembers"),
       icon: Users,
       roleRequired: "company_admin",
     },
     {
       to: "/admin/settings",
-      label: "Company Settings",
+      label: t("navigation.companySettings"),
       icon: Settings,
       roleRequired: "company_admin",
     },
     {
       to: "/super-admin/companies",
-      label: "Companies",
+      label: t("navigation.companies"),
       icon: Building2,
       roleRequired: "super_admin",
     },
@@ -89,7 +91,7 @@ export const Sidebar: React.FC = () => {
             Chrono<span className="text-primary-strong">Sync</span>
           </h1>
           <p className="text-xs text-gray-500 uppercase font-semibold tracking-wider whitespace-nowrap">
-            {profile?.role?.replace("_", " ") || "Portal"}
+            {profile?.role?.replace("_", " ") || t("navigation.portal")}
           </p>
         </div>
       </div>
@@ -174,7 +176,7 @@ export const Sidebar: React.FC = () => {
                 : "opacity-0 -translate-x-4 pointer-events-none"
             }`}
           >
-            Sign Out
+            {t("navigation.signOut")}
           </span>
         </button>
       </div>

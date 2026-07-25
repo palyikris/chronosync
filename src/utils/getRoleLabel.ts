@@ -1,14 +1,15 @@
 import type { UserRole } from "../types/auth";
+import i18n from "../lib/i18n";
 
 export const getRoleLabel = (role: UserRole | string) => {
   switch (role) {
     case "super_admin":
-      return "Super Admin";
+      return i18n.t("roles.superAdmin");
     case "company_admin":
-      return "Company Admin";
+      return i18n.t("roles.companyAdmin");
     case "regular":
-      return "Regular User";
+      return i18n.t("roles.regularUser");
     default:
-      return "Unknown Role";
+      return i18n.t("roles.unknownRole");
   }
 };

@@ -1,8 +1,10 @@
 import { supabase } from "../lib/supabaseClient";
+import i18n from "../lib/i18n";
 import {
   type DashboardData,
   type DashboardKPIs,
   type ClientProjectBreakdown,
+  type UserWorkBreakdown,
   type DailyLoggingTrend,
 } from "../types/dashboard";
 
@@ -14,7 +16,7 @@ export async function fetchAdminDashboardData(
   startDate: string,
   endDate: string,
 ): Promise<DashboardData> {
-  // 1. Parallel Execution: Fetch active company profiles & timesheet entries with client/project joins
+  // 1. Parallel Execution: Fetch active company profiles & timesheet entries with joins
   const [profilesResult, timesheetsResult] = await Promise.all([
     supabase.from("profiles").select("id, is_active").eq("is_active", true),
 
@@ -29,7 +31,8 @@ export async function fetchAdminDashboardData(
         client_id,
         project_id,
         clients!inner ( id, name ),
-        projects!inner ( id, name )
+        projects!inner ( id, name ),
+        profiles!inner ( id, full_name )
       `,
       )
       .gte("work_date", startDate)
@@ -53,14 +56,15 @@ export async function fetchAdminDashboardData(
   const activeLoggersCount = uniqueLoggingUsers.size;
   const totalActiveMembers = activeProfiles.length;
 
-  // Groupings for charts
+  // Grouping maps
   const breakdownMap = new Map<string, ClientProjectBreakdown>();
+  const userBreakdownMap = new Map<string, UserWorkBreakdown>();
   const dailyMap = new Map<string, number>();
 
   timesheetEntries.forEach((entry) => {
     const hours = Number(entry.hours_logged) || 0;
 
-    // Client/Project Grouping
+    // --- 1. Client/Project Grouping ---
     const clientObj = Array.isArray(entry.clients)
       ? entry.clients[0]
       : entry.clients;
@@ -69,9 +73,9 @@ export async function fetchAdminDashboardData(
       : entry.projects;
 
     const clientId = entry.client_id;
-    const clientName = clientObj?.name || "Unassigned Client";
+    const clientName = clientObj?.name || i18n.t("errors.unassignedClient");
     const projectId = entry.project_id;
-    const projectName = projectObj?.name || "General Project";
+    const projectName = projectObj?.name || i18n.t("errors.generalProject");
 
     const groupKey = `${clientId}:${projectId}`;
 
@@ -89,7 +93,29 @@ export async function fetchAdminDashboardData(
     const group = breakdownMap.get(groupKey)!;
     group.totalHours += hours;
 
-    // Daily Trend Grouping
+    // --- 2. User Breakdown Grouping ---
+    const profileObj = Array.isArray(entry.profiles)
+      ? entry.profiles[0]
+      : entry.profiles;
+
+    const userId = entry.user_id;
+    const userName = profileObj?.full_name || i18n.t("errors.unknownUser");
+    const userEmail = profileObj?.full_name || undefined; // Assuming email is not available in the current schema
+
+    if (!userBreakdownMap.has(userId)) {
+      userBreakdownMap.set(userId, {
+        userId,
+        userName,
+        userEmail,
+        totalHours: 0,
+        percentage: 0,
+      });
+    }
+
+    const userGroup = userBreakdownMap.get(userId)!;
+    userGroup.totalHours += hours;
+
+    // --- 3. Daily Trend Grouping ---
     const dateKey = entry.work_date;
     dailyMap.set(dateKey, (dailyMap.get(dateKey) || 0) + hours);
   });
@@ -111,8 +137,22 @@ export async function fetchAdminDashboardData(
     capacityUtilizationPct,
   };
 
-  // Convert breakdown map to array, compute percentage share, and sort by total hours descending
+  // Convert client/project map to array, compute percentage share, and sort descending
   const clientProjectBreakdown = Array.from(breakdownMap.values())
+    .map((item) => ({
+      ...item,
+      totalHours: Math.round(item.totalHours * 10) / 10,
+      percentage:
+        totalLoggedHours > 0
+          ? Math.round((item.totalHours / totalLoggedHours) * 100)
+          : 0,
+    }))
+    .sort((a, b) => b.totalHours - a.totalHours);
+
+  // Convert user map to array, compute percentage share, and sort descending
+  const userBreakdown: UserWorkBreakdown[] = Array.from(
+    userBreakdownMap.values(),
+  )
     .map((item) => ({
       ...item,
       totalHours: Math.round(item.totalHours * 10) / 10,
@@ -134,6 +174,7 @@ export async function fetchAdminDashboardData(
   return {
     kpis,
     clientProjectBreakdown,
+    userBreakdown,
     dailyTrends,
   };
 }

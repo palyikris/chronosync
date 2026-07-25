@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import {
   fetchCompanyMembers,
@@ -19,6 +20,7 @@ import type { UserProfile } from "../types/auth";
 export const UserManagementPage: React.FC = () => {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
@@ -59,11 +61,7 @@ export const UserManagementPage: React.FC = () => {
   });
 
   const handleDeleteUser = async (userId: string, fullName: string) => {
-    if (
-      window.confirm(
-        `Are you sure you want to PERMANENTLY delete ${fullName}? This will erase their account and timesheets permanently.`,
-      )
-    ) {
+    if (window.confirm(t("users.confirmDeleteUser", { fullName }))) {
       deleteUserMutation.mutate(userId);
     }
   };
@@ -72,9 +70,10 @@ export const UserManagementPage: React.FC = () => {
     try {
       setSendingResetEmail(email);
       await sendUserPasswordReset(email);
-      alert("Password reset email sent.");
+      alert(t("users.passwordResetSent"));
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to send reset email.";
+      const message =
+        err instanceof Error ? err.message : t("users.failedSendReset");
       alert(message);
     } finally {
       setSendingResetEmail(null);

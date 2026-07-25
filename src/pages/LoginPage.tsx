@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { signInUser } from "../services/authService";
 import { useAuth } from "../context/AuthContext";
 import { getHomeRouteForRole } from "../utils/navigation";
@@ -13,6 +14,7 @@ export const LoginPage: React.FC = () => {
 
   const { user, profile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!authLoading && user && profile) {
@@ -29,7 +31,9 @@ export const LoginPage: React.FC = () => {
       await signInUser(email, password);
       // Success! AuthContext listener will detect the session change and redirect automatically.
     } catch (err: unknown) {
-      setErrorMsg(err instanceof Error ? err.message : "Invalid email or password.");
+      setErrorMsg(
+        err instanceof Error ? err.message : t("auth.invalidCredentials"),
+      );
       setLoading(false);
     }
   };
@@ -41,13 +45,18 @@ export const LoginPage: React.FC = () => {
           <section className="auth-card flex min-h-112 items-center justify-center p-8 md:p-10">
             <div className="flex flex-col items-center gap-4 text-center">
               <div className="auth-brand-badge bg-primary text-primary-foreground">
-                <span className="material-symbols-outlined text-[28px]" aria-hidden="true">
+                <span
+                  className="material-symbols-outlined text-[28px]"
+                  aria-hidden="true"
+                >
                   schedule
                 </span>
               </div>
               <div className="space-y-2">
                 <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
-                <p className="auth-subtitle text-sm text-muted">Loading your account...</p>
+                <p className="auth-subtitle text-sm text-muted">
+                  {t("common.loadingAccount")}
+                </p>
               </div>
             </div>
           </section>
@@ -62,7 +71,10 @@ export const LoginPage: React.FC = () => {
         <section className="auth-card p-8 md:p-10">
           <div className="mb-8 flex flex-col items-center gap-2 text-center">
             <div className="auth-brand-badge bg-primary text-primary-foreground">
-              <span className="material-symbols-outlined text-[28px]" aria-hidden="true">
+              <span
+                className="material-symbols-outlined text-[28px]"
+                aria-hidden="true"
+              >
                 schedule
               </span>
             </div>
@@ -70,16 +82,16 @@ export const LoginPage: React.FC = () => {
               ChronoSync
             </h1>
             <p className="auth-subtitle text-sm text-muted">
-              Multi-Tenant Timesheet Portal
+              {t("auth.brandSubtitle")}
             </p>
           </div>
 
           <div className="mb-8 text-center">
             <h2 className="auth-title text-2xl font-normal leading-8 text-text">
-              Sign In to Timesheet App
+              {t("auth.signInTitle")}
             </h2>
             <p className="auth-subtitle mt-1 text-sm leading-5 text-muted">
-              Enter your credentials to manage your time
+              {t("auth.signInSubtitle")}
             </p>
           </div>
 
@@ -87,7 +99,10 @@ export const LoginPage: React.FC = () => {
             {errorMsg && <div className="auth-error">{errorMsg}</div>}
 
             <div className={`auth-field ${email ? "has-value" : ""}`}>
-              <span className="material-symbols-outlined auth-field-icon" aria-hidden="true">
+              <span
+                className="material-symbols-outlined auth-field-icon"
+                aria-hidden="true"
+              >
                 mail
               </span>
               <input
@@ -100,11 +115,14 @@ export const LoginPage: React.FC = () => {
                 autoComplete="email"
                 className="auth-input"
               />
-              <label htmlFor="email">Email Address</label>
+              <label htmlFor="email">{t("auth.emailLabel")}</label>
             </div>
 
             <div className={`auth-field ${password ? "has-value" : ""}`}>
-              <span className="material-symbols-outlined auth-field-icon" aria-hidden="true">
+              <span
+                className="material-symbols-outlined auth-field-icon"
+                aria-hidden="true"
+              >
                 lock
               </span>
               <input
@@ -117,14 +135,19 @@ export const LoginPage: React.FC = () => {
                 autoComplete="current-password"
                 className="auth-input pr-12"
               />
-              <label htmlFor="password">Password</label>
+              <label htmlFor="password">{t("auth.passwordLabel")}</label>
               <button
                 type="button"
                 onClick={() => setShowPassword((current) => !current)}
                 className="auth-field-action"
-                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-label={
+                  showPassword ? t("auth.hidePassword") : t("auth.showPassword")
+                }
               >
-                <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                <span
+                  className="material-symbols-outlined text-[20px]"
+                  aria-hidden="true"
+                >
                   {showPassword ? "visibility_off" : "visibility"}
                 </span>
               </button>
@@ -136,8 +159,13 @@ export const LoginPage: React.FC = () => {
                 disabled={loading}
                 className="auth-button-primary bg-primary text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <span>{loading ? "Signing in..." : "Sign In"}</span>
-                <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                <span>
+                  {loading ? t("common.signingIn") : t("common.signIn")}
+                </span>
+                <span
+                  className="material-symbols-outlined text-[20px]"
+                  aria-hidden="true"
+                >
                   arrow_forward
                 </span>
               </button>
@@ -147,7 +175,7 @@ export const LoginPage: React.FC = () => {
                   type="button"
                   className="auth-link-button px-4 py-2 text-sm font-medium text-primary-strong transition hover:underline"
                 >
-                  Forgot Password?
+                  {t("auth.forgotPassword")}
                 </button>
               </div>
             </div>
@@ -155,16 +183,19 @@ export const LoginPage: React.FC = () => {
 
           <div className="mt-12 text-center">
             <p className="text-sm leading-5 text-muted-strong">
-              Don&apos;t have an account?{" "}
-              <a className="font-semibold text-primary-strong hover:underline" href="#">
-                Contact Admin
+              {t("auth.dontHaveAccount")}{" "}
+              <a
+                className="font-semibold text-primary-strong hover:underline"
+                href="#"
+              >
+                {t("auth.contactAdmin")}
               </a>
             </p>
           </div>
         </section>
 
         <div className="mt-8 flex items-center justify-center gap-6 text-sm text-muted opacity-60">
-          <span>v1.0.0</span>
+          <span>{t("common.version")}</span>
         </div>
       </main>
     </div>

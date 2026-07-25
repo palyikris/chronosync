@@ -1,16 +1,14 @@
 import { z } from "zod";
+import i18n from "./i18n";
 
-export const emailSchema = z
-  .string()
-  .trim()
-  .email("Enter a valid email address");
+export const emailSchema = z.string().trim().email(i18n.t("validation.validEmail"));
 
 export const passwordSchema = z
   .string()
   .trim()
-  .min(8, "Password must be at least 8 characters long");
+  .min(8, i18n.t("validation.passwordMin"));
 
-export const uuidSchema = z.string().uuid("Enter a valid UUID");
+export const uuidSchema = z.string().uuid(i18n.t("validation.validUuid"));
 
 export const trimmedNonEmptyStringSchema = (
   message: string,

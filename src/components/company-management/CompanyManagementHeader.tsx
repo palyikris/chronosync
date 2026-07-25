@@ -1,5 +1,6 @@
 import React from "react";
 import { Search, SlidersHorizontal } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface CompanyManagementHeaderProps {
   searchQuery: string;
@@ -14,6 +15,8 @@ export const CompanyManagementHeader: React.FC<CompanyManagementHeaderProps> = (
   filterActiveOnly,
   onFilterToggle,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <header className="sticky top-0 z-40 border-b border-[#C4C7C5] bg-white px-6 py-4">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -22,8 +25,12 @@ export const CompanyManagementHeader: React.FC<CompanyManagementHeaderProps> = (
             <span className="material-symbols-outlined">account_tree</span>
           </div>
           <div>
-            <p className="text-sm font-semibold text-[#191c1d]">ChronoTrack</p>
-            <p className="text-xs text-[#5e5e62]">Company directory</p>
+            <p className="text-sm font-semibold text-[#191c1d]">
+              {t("companyManagement.brand")}
+            </p>
+            <p className="text-xs text-[#5e5e62]">
+              {t("companyManagement.directory")}
+            </p>
           </div>
         </div>
 
@@ -34,7 +41,7 @@ export const CompanyManagementHeader: React.FC<CompanyManagementHeaderProps> = (
               type="text"
               value={searchQuery}
               onChange={(event) => onSearchChange(event.target.value)}
-              placeholder="Search companies..."
+              placeholder={t("companyManagement.searchPlaceholder")}
               className="w-full pl-10 pr-4 py-2.5 border border-[#C4C7C5] rounded-xl bg-white focus:ring-2 focus:ring-[#4e6700] outline-none text-sm"
             />
           </div>
@@ -49,7 +56,9 @@ export const CompanyManagementHeader: React.FC<CompanyManagementHeaderProps> = (
             }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
-            {filterActiveOnly ? "Active Only" : "All Companies"}
+            {filterActiveOnly
+              ? t("companyManagement.activeOnly")
+              : t("companyManagement.allCompanies")}
           </button>
         </div>
       </div>

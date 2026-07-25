@@ -14,6 +14,22 @@ export interface ClientProjectBreakdown {
   percentage: number;
 }
 
+export interface UserWorkBreakdown {
+  userId: string;
+  userName: string;
+  userEmail?: string;
+  totalHours: number;
+  percentage: number;
+}
+
+export interface BreakdownItem {
+  id: string;
+  primaryLabel: string;
+  secondaryLabel?: string;
+  totalHours: number;
+  percentage: number;
+}
+
 export interface DailyLoggingTrend {
   workDate: string; // YYYY-MM-DD
   totalHours: number;
@@ -22,5 +38,6 @@ export interface DailyLoggingTrend {
 export interface DashboardData {
   kpis: DashboardKPIs;
   clientProjectBreakdown: ClientProjectBreakdown[];
+  userBreakdown: UserWorkBreakdown[];
   dailyTrends: DailyLoggingTrend[];
 }

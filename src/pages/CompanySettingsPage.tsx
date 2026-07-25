@@ -1,5 +1,6 @@
 import React from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import { fetchClients, fetchProjects } from "../services/clientProjectService";
 import { CompanySettingsHeader } from "../components/company-settings/CompanySettingsHeader";
@@ -10,6 +11,7 @@ import type { Client, Project } from "../types/client-project";
 export const CompanySettingsPage: React.FC = () => {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const { data: clients = [] } = useQuery<Client[]>({
     queryKey: ["clients", profile?.id, profile?.company_id],
@@ -35,8 +37,8 @@ export const CompanySettingsPage: React.FC = () => {
   return (
     <div className="mx-auto max-w-6xl space-y-8">
       <CompanySettingsHeader
-        title="Company Settings"
-        subtitle="Manage your clients and project structure"
+        title={t("companySettings.title")}
+        subtitle={t("companySettings.subtitle")}
       />
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[0.92fr_1.08fr]">

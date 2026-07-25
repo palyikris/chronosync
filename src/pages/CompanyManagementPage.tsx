@@ -1,6 +1,7 @@
 // src/pages/CompanyManagementPage.tsx
 import React, { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { CompanyManagementHeader } from "../components/company-management/CompanyManagementHeader";
 import { CompanyManagementSidebar } from "../components/company-management/CompanyManagementSidebar";
 import { CompanyModal } from "../components/company-management/CompanyModal";
@@ -13,6 +14,7 @@ const companyQueryKey = ["companies"];
 
 export const CompanyManagementPage: React.FC = () => {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterActiveOnly, setFilterActiveOnly] = useState(false);
 
@@ -47,7 +49,8 @@ export const CompanyManagementPage: React.FC = () => {
       await invalidateCompanies();
       setIsModalOpen(false);
     },
-    onError: (error) => handleMutationError(error, "Operation failed"),
+    onError: (error) =>
+      handleMutationError(error, t("companyManagement.operationFailed")),
   });
 
   const updateCompanyMutation = useMutation({
@@ -62,7 +65,8 @@ export const CompanyManagementPage: React.FC = () => {
       await invalidateCompanies();
       setIsModalOpen(false);
     },
-    onError: (error) => handleMutationError(error, "Operation failed"),
+    onError: (error) =>
+      handleMutationError(error, t("companyManagement.operationFailed")),
   });
 
   const toggleActiveMutation = useMutation({
@@ -71,7 +75,8 @@ export const CompanyManagementPage: React.FC = () => {
     onSuccess: async () => {
       await invalidateCompanies();
     },
-    onError: (error) => handleMutationError(error, "Failed to change status"),
+    onError: (error) =>
+      handleMutationError(error, t("companyManagement.failedChangeStatus")),
   });
 
   const softDeleteMutation = useMutation({
@@ -79,7 +84,8 @@ export const CompanyManagementPage: React.FC = () => {
     onSuccess: async () => {
       await invalidateCompanies();
     },
-    onError: (error) => handleMutationError(error, "Failed to soft delete"),
+    onError: (error) =>
+      handleMutationError(error, t("companyManagement.failedSoftDelete")),
   });
 
   const restoreMutation = useMutation({
@@ -87,7 +93,8 @@ export const CompanyManagementPage: React.FC = () => {
     onSuccess: async () => {
       await invalidateCompanies();
     },
-    onError: (error) => handleMutationError(error, "Failed to restore company"),
+    onError: (error) =>
+      handleMutationError(error, t("companyManagement.failedRestore")),
   });
 
   const hardDeleteMutation = useMutation({
@@ -95,7 +102,8 @@ export const CompanyManagementPage: React.FC = () => {
     onSuccess: async () => {
       await invalidateCompanies();
     },
-    onError: (error) => handleMutationError(error, "Failed to purge company"),
+    onError: (error) =>
+      handleMutationError(error, t("companyManagement.failedPurge")),
   });
 
   const handleOpenCreateModal = () => {
@@ -159,12 +167,7 @@ export const CompanyManagementPage: React.FC = () => {
   };
 
   const handleSoftDelete = async (id: string) => {
-    if (
-      !confirm(
-        "Are you sure you want to soft delete this company? Active users will be locked out.",
-      )
-    )
-      return;
+    if (!confirm(t("companyManagement.confirmSoftDelete"))) return;
     try {
       await softDeleteMutation.mutateAsync(id);
     } catch {
@@ -181,12 +184,7 @@ export const CompanyManagementPage: React.FC = () => {
   };
 
   const handleHardDelete = async (id: string) => {
-    if (
-      !confirm(
-        "PERMANENT ACTION: Are you sure you want to permanently purge this company record?",
-      )
-    )
-      return;
+    if (!confirm(t("companyManagement.confirmHardDelete"))) return;
     try {
       await hardDeleteMutation.mutateAsync(id);
     } catch {
@@ -224,10 +222,10 @@ export const CompanyManagementPage: React.FC = () => {
             <div className="flex justify-between items-end mb-8">
               <div>
                 <h1 className="text-3xl font-normal text-on-surface mb-2">
-                  Company Directory
+                  {t("companyManagement.title")}
                 </h1>
                 <p className="text-sm text-secondary">
-                  Manage enterprise tenants, billing integrations, and status.
+                  {t("companyManagement.subtitle")}
                 </p>
               </div>
             </div>
@@ -250,7 +248,7 @@ export const CompanyManagementPage: React.FC = () => {
         className="fixed bottom-8 right-8 bg-primary text-on-primary-container hover:shadow-lg transition-all flex items-center gap-3 px-6 py-4 rounded-xl active:scale-95 z-50 font-bold"
       >
         <span className="material-symbols-outlined font-bold">add</span>
-        <span>Add Company</span>
+        <span>{t("companyManagement.addCompany")}</span>
       </button>
 
       <CompanyModal

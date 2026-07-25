@@ -8,6 +8,7 @@ import {
   UserCheck,
   UserX,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { UserProfile } from "../../types/auth";
 
 interface UserTableProps {
@@ -29,46 +30,47 @@ export const UserTable: React.FC<UserTableProps> = ({
   onDeleteUser,
   onUpdateRole,
 }) => {
+  const { t } = useTranslation();
   return (
-    <div className="bg-white rounded-2xl border border-[#C4C7C5] shadow-sm overflow-hidden">
+    <div className="bg-white rounded-2xl border border-border-strong shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
-          <thead className="bg-[#f3f4f5] border-b border-[#C4C7C5] text-xs font-semibold text-[#191c1d]">
+          <thead className="bg-[#f3f4f5] border-b border-border-strong text-xs font-semibold text-text">
             <tr>
-              <th className="px-6 py-4">Member</th>
-              <th className="px-6 py-4">Role Segment</th>
-              <th className="px-6 py-4">Status</th>
-              <th className="px-6 py-4 text-center">Actions</th>
+              <th className="px-6 py-4">{t("users.member")}</th>
+              <th className="px-6 py-4">{t("users.roleSegment")}</th>
+              <th className="px-6 py-4">{t("users.status")}</th>
+              <th className="px-6 py-4 text-center">{t("users.actions")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 text-sm">
             {isLoading ? (
               <tr>
                 <td colSpan={4} className="text-center py-8 text-gray-400">
-                  Loading team members...
+                  {t("users.loadingMembers")}
                 </td>
               </tr>
             ) : members.length === 0 ? (
               <tr>
                 <td colSpan={4} className="text-center py-8 text-gray-400">
-                  No team members found.
+                  {t("users.noMembers")}
                 </td>
               </tr>
             ) : (
               members.map((member) => (
                 <tr
                   key={member.id}
-                  className={`hover:bg-[#f8f9fa] transition ${
+                  className={`hover:bg-bg transition ${
                     !member.is_active ? "opacity-50 bg-gray-50" : ""
                   }`}
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-[#4e6700] text-white flex items-center justify-center font-bold text-sm shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-primary-strong text-white flex items-center justify-center font-bold text-sm shrink-0">
                         {member.full_name?.charAt(0) || "U"}
                       </div>
                       <div className="flex flex-col">
-                        <span className="font-semibold text-[#191c1d]">
+                        <span className="font-semibold text-text">
                           {member.full_name}
                         </span>
                       </div>
@@ -78,37 +80,37 @@ export const UserTable: React.FC<UserTableProps> = ({
                   <td className="px-6 py-4">
                     {member.role === "super_admin" ? (
                       <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-bold uppercase tracking-wider">
-                        Super Admin
+                        {t("users.superAdmin")}
                       </span>
                     ) : (
-                      <div className="inline-flex border border-[#C4C7C5] rounded-full overflow-hidden bg-white">
+                      <div className="inline-flex border border-border-strong rounded-full overflow-hidden bg-white">
                         <button
                           type="button"
                           onClick={() => onUpdateRole(member, "company_admin")}
                           className={`px-3 py-1 text-xs font-semibold flex items-center gap-1 transition ${
                             member.role === "company_admin"
-                              ? "bg-[#abdb11] text-[#151f00] font-bold"
-                              : "text-[#5e5e62] hover:bg-gray-100"
+                              ? "bg-primary text-primary-foreground font-bold"
+                              : "text-muted hover:bg-gray-100"
                           }`}
                         >
                           {member.role === "company_admin" && (
                             <Check className="w-3.5 h-3.5" />
                           )}
-                          ADMIN
+                          {t("users.admin")}
                         </button>
                         <button
                           type="button"
                           onClick={() => onUpdateRole(member, "regular")}
-                          className={`px-3 py-1 text-xs font-semibold flex items-center gap-1 transition border-l border-[#C4C7C5] ${
+                          className={`px-3 py-1 text-xs font-semibold flex items-center gap-1 transition border-l border-border-strong ${
                             member.role === "regular"
-                              ? "bg-[#abdb11] text-[#151f00] font-bold"
-                              : "text-[#5e5e62] hover:bg-gray-100"
+                              ? "bg-primary text-primary-foreground font-bold"
+                              : "text-muted hover:bg-gray-100"
                           }`}
                         >
                           {member.role === "regular" && (
                             <Check className="w-3.5 h-3.5" />
                           )}
-                          REGULAR
+                          {t("users.regular")}
                         </button>
                       </div>
                     )}
@@ -118,24 +120,26 @@ export const UserTable: React.FC<UserTableProps> = ({
                     <div className="flex items-center gap-2">
                       <div
                         className={`w-2 h-2 rounded-full ${
-                          member.is_active ? "bg-[#4e6700]" : "bg-gray-400"
+                          member.is_active ? "bg-primary-strong" : "bg-gray-400"
                         }`}
                       />
                       <span className="text-sm font-medium">
-                        {member.is_active ? "Active" : "Inactive"}
+                        {member.is_active
+                          ? t("users.active")
+                          : t("users.inactive")}
                       </span>
                     </div>
                   </td>
 
                   <td className="px-6 py-4 relative text-center">
-                    <div className="flex justify-center items-center gap-2 text-[#5e5e62]">
+                    <div className="flex justify-center items-center gap-2 text-muted">
                       {member.email && (
                         <button
                           type="button"
                           title={
                             sendingResetEmail === member.email
-                              ? "Sending..."
-                              : "Send Password Reset Email"
+                              ? t("users.sending")
+                              : t("users.sendPasswordReset")
                           }
                           onClick={() => onSendPasswordReset(member.email)}
                           disabled={sendingResetEmail === member.email}
@@ -146,7 +150,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                           }`}
                         >
                           <Mail
-                            className={`w-4 h-4 text-[#5e5e62] ${
+                            className={`w-4 h-4 text-muted ${
                               sendingResetEmail === member.email
                                 ? "opacity-60"
                                 : ""
@@ -158,8 +162,8 @@ export const UserTable: React.FC<UserTableProps> = ({
                         type="button"
                         title={
                           member.is_active
-                            ? "Deactivate User"
-                            : "Reactivate User"
+                            ? t("users.deactivateUser")
+                            : t("users.reactivateUser")
                         }
                         onClick={() => onToggleStatus(member)}
                         className={`p-1.5 rounded-full transition ${
@@ -176,7 +180,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                       </button>
                       <button
                         type="button"
-                        title="Permanently Delete User"
+                        title={t("users.permanentlyDeleteUser")}
                         onClick={() => onDeleteUser(member)}
                         className="p-1.5 hover:bg-red-50 rounded-full transition text-red-600"
                       >
@@ -191,24 +195,24 @@ export const UserTable: React.FC<UserTableProps> = ({
         </table>
       </div>
 
-      <div className="px-6 py-4 flex items-center justify-between bg-[#f3f4f5] border-t border-[#C4C7C5] text-xs text-[#5e5e62]">
-        <span>Showing {members.length} members</span>
+      <div className="px-6 py-4 flex items-center justify-between bg-[#f3f4f5] border-t border-border-strong text-xs text-muted">
+        <span>{t("users.showingMembers", { count: members.length })}</span>
         <div className="flex items-center gap-2">
           <button
             type="button"
-            className="p-1.5 border border-[#C4C7C5] rounded-lg text-gray-400 cursor-not-allowed"
+            className="p-1.5 border border-border-strong rounded-lg text-gray-400 cursor-not-allowed"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
           <button
             type="button"
-            className="px-3 py-1 bg-[#abdb11] text-[#151f00] font-bold rounded-lg"
+            className="px-3 py-1 bg-primary text-primary-foreground font-bold rounded-lg"
           >
             1
           </button>
           <button
             type="button"
-            className="p-1.5 border border-[#C4C7C5] rounded-lg hover:bg-gray-200 text-[#5e5e62]"
+            className="p-1.5 border border-border-strong rounded-lg hover:bg-gray-200 text-muted"
           >
             <ChevronRight className="w-4 h-4" />
           </button>

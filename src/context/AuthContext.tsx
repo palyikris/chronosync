@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { type User, type Session } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabaseClient";
 import { type AuthContextType, type UserProfile } from "../types/auth";
+import i18n from "../lib/i18n";
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -36,9 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     // Soft Delete Access Guard
     if (profileData.is_active === false) {
       await supabase.auth.signOut();
-      throw new Error(
-        "Your account has been deactivated by your company admin.",
-      );
+      throw new Error(i18n.t("errors.accountDeactivated"));
     }
 
     setProfile(profileData);

@@ -1,10 +1,9 @@
 import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "../shared/Button";
 import { Card, CardContent, CardHeader } from "../shared/Card";
 import type { TimesheetCalendarProps } from "../../types/timesheet";
-
-const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
   currentDate,
@@ -15,7 +14,16 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
   onPreviousMonth,
   onNextMonth,
 }) => {
-  const monthLabel = currentDate.toLocaleString("default", {
+  const { t, i18n } = useTranslation();
+
+  const weekDays = Array.from({ length: 7 }, (_, index) => {
+    const day = new Date(Date.UTC(2024, 0, 1 + index));
+    return new Intl.DateTimeFormat(i18n.language, { weekday: "short" }).format(
+      day,
+    );
+  });
+
+  const monthLabel = currentDate.toLocaleString(i18n.language, {
     month: "long",
     year: "numeric",
   });
@@ -43,12 +51,12 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
       <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
           <div className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
-            Month View
+            {t("common.monthView")}
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <span className="font-semibold text-text">{monthLabel}</span>
             <span className="rounded-full border border-border-strong bg-bg-accent px-3 py-1 text-xs font-semibold text-muted-strong">
-              Total Logged: {formatHours(totalMonthlyHours)} hrs
+              {t("timesheet.totalLogged")}: {formatHours(totalMonthlyHours)} hrs
             </span>
           </div>
         </div>
@@ -58,7 +66,7 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
             variant="ghost"
             size="icon"
             onClick={onPreviousMonth}
-            aria-label="Previous month"
+            aria-label={t("common.previousMonth")}
           >
             <ChevronLeft className="h-5 w-5 text-muted" />
           </Button>
@@ -66,7 +74,7 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
             variant="ghost"
             size="icon"
             onClick={onNextMonth}
-            aria-label="Next month"
+            aria-label={t("common.nextMonth")}
           >
             <ChevronRight className="h-5 w-5 text-muted" />
           </Button>

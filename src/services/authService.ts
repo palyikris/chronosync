@@ -1,4 +1,5 @@
 import { supabase } from "../lib/supabaseClient";
+import i18n from "../lib/i18n";
 import {
   signInCredentialsSchema,
   signUpCredentialsSchema,
@@ -71,7 +72,7 @@ export async function signInUser(email: string, password: string) {
 
   if (profileError) {
     await supabase.auth.signOut();
-    throw new Error("Could not verify user account status.");
+    throw new Error(i18n.t("auth.couldNotVerifyUser"));
   }
 
   const { data: company, error: companyError } = await supabase
@@ -82,23 +83,19 @@ export async function signInUser(email: string, password: string) {
 
   if (companyError && profile.role !== "super_admin") {
     await supabase.auth.signOut();
-    throw new Error("Could not verify company status.");
+    throw new Error(i18n.t("auth.couldNotVerifyCompany"));
   }
 
   // Block inactive users immediately
   if (profile?.is_active === false) {
     await supabase.auth.signOut();
-    throw new Error(
-      "Your account has been deactivated. Please contact your company administrator.",
-    );
+    throw new Error(i18n.t("auth.accountDeactivatedContact"));
   }
 
   // Block users from inactive companies
   if (company?.is_active === false) {
     await supabase.auth.signOut();
-    throw new Error(
-      "Your company account has been deactivated. Please contact your company administrator.",
-    );
+    throw new Error(i18n.t("auth.companyDeactivatedContact"));
   }
 
   return authData;

@@ -8,6 +8,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
+import { useTranslation } from "react-i18next";
 import type { DailyLoggingTrend } from "../../types/dashboard";
 
 interface DailyTrendChartProps {
@@ -17,16 +18,17 @@ interface DailyTrendChartProps {
 const CustomTooltip: React.FC<{
   active?: boolean;
   payload?: any[];
-}> = ({ active, payload }) => {
+  t?: (key: string) => string;
+}> = ({ active, payload, t }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="bg-[#191c1d] text-white p-3 rounded-xl shadow-xl border border-gray-800 text-xs font-medium space-y-1">
-        <p className="text-[#abdb11] font-bold">
+      <div className="bg-text text-white p-3 rounded-xl shadow-xl border border-gray-800 text-xs font-medium space-y-1">
+        <p className="text-primary font-bold">
           {data.formattedDate} ({data.dayOfWeek})
         </p>
         <p>
-          Logged:{" "}
+          {t?.("dashboard.loggedLabel") ?? "Logged"}:{" "}
           <span className="font-bold text-white">{data.totalHours} hrs</span>
         </p>
       </div>
@@ -38,6 +40,7 @@ const CustomTooltip: React.FC<{
 export const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
   dailyTrends,
 }) => {
+  const { t } = useTranslation();
   // Format dates and identify weekends
   const formattedData = useMemo(() => {
     return dailyTrends.map((trend) => {
@@ -64,15 +67,15 @@ export const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
   
 
   return (
-    <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-[#C4C7C5] shadow-sm space-y-6">
+    <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-border-strong shadow-sm space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center border-b border-gray-100 pb-4">
         <div>
-          <h2 className="text-lg font-bold text-[#191c1d]">
-            Daily Logging Trend
+          <h2 className="text-lg font-bold text-text">
+            {t("dashboard.dailyTrendTitle")}
           </h2>
-          <p className="text-xs text-[#5e5e62]">
-            Total hours logged per calendar day across all active team members
+          <p className="text-xs text-muted">
+            {t("dashboard.dailyTrendSubtitle")}
           </p>
         </div>
 
@@ -80,18 +83,18 @@ export const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
         <div className="flex items-center gap-4 text-xs font-semibold">
           <div className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded bg-primary" />
-            <span className="text-[#5e5e62]">Weekday</span>
+            <span className="text-muted">{t("dashboard.weekday")}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded bg-[#e3e2e6]" />
-            <span className="text-[#5e5e62]">Weekend</span>
+            <span className="text-muted">{t("dashboard.weekend")}</span>
           </div>
         </div>
       </div>
 
       {formattedData.length === 0 ? (
         <div className="py-20 text-center text-sm text-gray-400">
-          No time entries recorded for this date range.
+          {t("dashboard.noEntriesInRange")}
         </div>
       ) : (
         <div className="h-64 w-full pt-2">
@@ -112,7 +115,7 @@ export const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
                 tickLine={false}
               />
               <Tooltip
-                content={<CustomTooltip />}
+                content={<CustomTooltip t={t} />}
                 cursor={{ fill: "rgba(0,0,0,0.03)" }}
               />
 

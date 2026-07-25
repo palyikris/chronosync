@@ -1,4 +1,5 @@
 import { supabase } from "../lib/supabaseClient";
+import i18n from "../lib/i18n";
 import {
   newTimesheetPayloadSchema,
   timesheetEntryUpdatePayloadSchema,
@@ -34,7 +35,7 @@ export async function fetchUserTimesheets(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
+  if (!user) throw new Error(i18n.t("errors.notAuthenticated"));
 
   const resolvedUserId = targetUserId ?? user.id;
   const { monthStart, nextMonthStart } = getMonthBounds(dateYearMonth);
@@ -62,7 +63,7 @@ export async function fetchSelectableCompanyUsers(
 
   if (!includeAllCompanies) {
     if (!companyId) {
-      throw new Error("Company id is required to load selectable users");
+      throw new Error(i18n.t("errors.companyIdRequired"));
     }
 
     query = query.eq("company_id", companyId).neq("role", "super_admin");
@@ -85,7 +86,7 @@ export async function createTimesheetEntry(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
+  if (!user) throw new Error(i18n.t("errors.notAuthenticated"));
 
   const { data, error } = await supabase
     .from("timesheets")
