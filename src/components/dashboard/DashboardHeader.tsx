@@ -1,12 +1,15 @@
 import React from "react";
 import { Calendar } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Button } from "../shared/Button";
+import { downloadSzamlamellekletReport } from "../../utils/downloadExcelReport";
 
 interface DashboardHeaderProps {
   startDate: string;
   endDate: string;
   onStartDateChange: (value: string) => void;
   onEndDateChange: (value: string) => void;
+  companyId: string;
 }
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -14,8 +17,20 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   endDate,
   onStartDateChange,
   onEndDateChange,
+  companyId,
 }) => {
   const { t } = useTranslation();
+  const previousMonthStartDate = (() => {
+    const date = new Date();
+    date.setDate(1);
+    date.setMonth(date.getMonth() - 1);
+    return date.toISOString().split("T")[0];
+  })();
+  const previousMonthEndDate = (() => {
+    const date = new Date();
+    date.setDate(0);
+    return date.toISOString().split("T")[0];
+  })();
 
   return (
     <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -41,6 +56,20 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           onChange={(e) => onEndDateChange(e.target.value)}
           className="border-none bg-transparent outline-none text-text font-semibold text-xs cursor-pointer pr-2"
         />
+      </div>
+
+      <div className="w-full flex items-center justify-end fixed bottom-0 left-0 right-0 px-8 py-4">
+        <Button
+          onClick={() => {
+            downloadSzamlamellekletReport({
+              companyId,
+              startDate: previousMonthStartDate,
+              endDate: previousMonthEndDate,
+            });
+          }}
+        >
+          {t("dashboard.downloadReport")}
+        </Button>
       </div>
     </header>
   );

@@ -98,7 +98,8 @@
     "breakdownProjectsSubtitle": "Resource allocation by project",
     "breakdownProjectsEmpty": "No project breakdown data available.",
     "failedToLoad": "Failed to load dashboard metrics:",
-    "dailyTrendLegend": "Legend"
+    "dailyTrendLegend": "Legend",
+    "downloadReport": "Download Report"
   },
   "companyManagement": {
     "brand": "ChronoTrack",

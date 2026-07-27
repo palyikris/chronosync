@@ -98,7 +98,8 @@
     "breakdownProjectsSubtitle": "Erőforrás-eloszlás projektenként",
     "breakdownProjectsEmpty": "Nincs elérhető projektbontási adat.",
     "failedToLoad": "Nem sikerült betölteni a vezérlőpult mérőszámait:",
-    "dailyTrendLegend": "Jelmagyarázat"
+    "dailyTrendLegend": "Jelmagyarázat",
+    "downloadReport": "Számlamelléklet letöltése"
   },
   "companyManagement": {
     "brand": "ChronoTrack",

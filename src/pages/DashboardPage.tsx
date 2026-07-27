@@ -46,6 +46,7 @@ export const AdminDashboardPage: React.FC = () => {
         endDate={endDate}
         onStartDateChange={setStartDate}
         onEndDateChange={setEndDate}
+        companyId={profile?.company_id || ""}
       />
 
       {isLoading ? (
