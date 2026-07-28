@@ -25,9 +25,8 @@ export const Modal: React.FC<ModalProps> = ({ open, title, onClose, children, cl
             size="icon"
             onClick={onClose}
             aria-label={t("common.closeDialog")}
-          >
-            <X className="h-5 w-5 text-muted" />
-          </Button>
+            icon={<X className="h-5 w-5 text-muted" />}
+          ></Button>
         </div>
         {children}
       </div>

@@ -1,5 +1,5 @@
 import React from "react";
-import { Calendar as CalendarIcon, Clock } from "lucide-react";
+import { Calendar as CalendarIcon, Check, Clock, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../shared/Button";
 import { Input } from "../shared/Input";
@@ -149,6 +149,7 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
             variant="outline"
             className="flex-1 rounded-full"
             onClick={onClose}
+            icon={<X className="h-4 w-4" />}
           >
             {t("timesheet.cancel")}
           </Button>
@@ -156,6 +157,7 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
             type="submit"
             className="flex-1 rounded-full"
             disabled={isSaving}
+            icon={<Check className="h-4 w-4" />}
           >
             {isSaving
               ? t("timesheet.saving")

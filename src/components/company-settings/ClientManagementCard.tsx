@@ -1,11 +1,13 @@
 // src/components/company-settings/ClientManagementCard.tsx
 import React, { useState } from "react";
 import {
+  Check,
   PencilLine,
   Plus,
   ToggleLeft,
   ToggleRight,
   Trash2,
+  X,
   Users,
 } from "lucide-react";
 import { type Client } from "../../types/client-project";
@@ -127,8 +129,8 @@ export const ClientManagementCard: React.FC<Props> = ({
             type="submit"
             disabled={loading || !newClientName.trim()}
             className="gap-1 rounded-xl px-4"
+            icon={<Plus className="h-4 w-4" />}
           >
-            <Plus className="h-4 w-4" />
             Add
           </Button>
         </form>
@@ -160,32 +162,31 @@ export const ClientManagementCard: React.FC<Props> = ({
                     variant="secondary"
                     onClick={() => handleToggleActivity(client)}
                     disabled={loading}
-                    className="gap-1 rounded-xl px-3"
-                  >
-                    {client.is_active ? (
-                      <ToggleRight className="h-4 w-4" />
-                    ) : (
-                      <ToggleLeft className="h-4 w-4" />
-                    )}
-                  </Button>
+                    className="rounded-xl px-3"
+                    icon={
+                      client.is_active ? (
+                        <ToggleRight className="h-4 w-4" />
+                      ) : (
+                        <ToggleLeft className="h-4 w-4" />
+                      )
+                    }
+                  ></Button>
                   <Button
                     size="sm"
                     variant="secondary"
                     onClick={() => setEditingClient(client)}
                     disabled={loading}
-                    className="gap-1 rounded-xl px-3"
-                  >
-                    <PencilLine className="h-4 w-4" />
-                  </Button>
+                    className="rounded-xl px-3"
+                    icon={<PencilLine className="h-4 w-4" />}
+                  ></Button>
                   <Button
                     size="sm"
                     variant="danger"
                     onClick={() => setDeletingClientId(client.id)}
                     disabled={loading}
-                    className="gap-1 rounded-xl px-3"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                    className="rounded-xl px-3"
+                    icon={<Trash2 className="h-4 w-4" />}
+                  ></Button>
                 </div>
               </div>
             ))
@@ -213,6 +214,7 @@ export const ClientManagementCard: React.FC<Props> = ({
                 variant="secondary"
                 onClick={() => setEditingClient(null)}
                 className="rounded-xl"
+                icon={<X className="h-4 w-4" />}
               >
                 Cancel
               </Button>
@@ -220,6 +222,7 @@ export const ClientManagementCard: React.FC<Props> = ({
                 onClick={handleUpdate}
                 disabled={loading}
                 className="rounded-xl"
+                icon={<Check className="h-4 w-4" />}
               >
                 Save Changes
               </Button>
@@ -245,6 +248,7 @@ export const ClientManagementCard: React.FC<Props> = ({
                 variant="secondary"
                 onClick={() => setDeletingClientId(null)}
                 className="rounded-xl"
+                icon={<X className="h-4 w-4" />}
               >
                 Cancel
               </Button>
@@ -253,6 +257,7 @@ export const ClientManagementCard: React.FC<Props> = ({
                 onClick={handleDelete}
                 disabled={loading}
                 className="rounded-xl"
+                icon={<Trash2 className="h-4 w-4" />}
               >
                 Confirm Delete
               </Button>

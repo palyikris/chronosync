@@ -7,11 +7,14 @@ import { CompanySettingsHeader } from "../components/company-settings/CompanySet
 import { ClientManagementCard } from "../components/company-settings/ClientManagementCard";
 import { ProjectManagementCard } from "../components/company-settings/ProjectManagementCard";
 import type { Client, Project } from "../types/client-project";
+import { CompanyLogoCard } from "../components/company-settings/CompanyLogoCard";
+import { getCompanyLogoUrl } from "../services/companyLogoService";
 
 export const CompanySettingsPage: React.FC = () => {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
+  const companyId = profile?.company_id || "";
 
   const { data: clients = [] } = useQuery<Client[]>({
     queryKey: ["clients", profile?.id, profile?.company_id],
@@ -45,14 +48,20 @@ export const CompanySettingsPage: React.FC = () => {
         <ClientManagementCard
           clients={clients}
           onRefresh={refreshCompanySettings}
-          companyId={profile?.company_id || ""}
+          companyId={companyId}
         />
 
         <ProjectManagementCard
-          companyId={profile?.company_id || ""}
+          companyId={companyId}
           clients={clients}
           projects={projects}
           onRefresh={refreshCompanySettings}
+        />
+
+        <CompanyLogoCard
+          key={companyId}
+          companyId={companyId}
+          initialLogoUrl={companyId ? getCompanyLogoUrl(companyId) : null}
         />
       </div>
     </div>

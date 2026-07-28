@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import {
+  Check,
   FolderPlus,
   PencilLine,
   Plus,
   ToggleLeft,
   ToggleRight,
   Trash2,
+  X,
 } from "lucide-react";
 import { Button } from "../shared/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "../shared/Card";
@@ -167,8 +169,8 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                 !newProjectClientId || !newProjectName.trim() || loading
               }
               className="gap-1 rounded-xl px-4"
+              icon={<Plus className="h-4 w-4" />}
             >
-              <Plus className="h-4 w-4" />
               Add
             </Button>
           </div>
@@ -212,32 +214,31 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                     variant="secondary"
                     onClick={() => handleToggleActivity(project)}
                     disabled={loading}
-                    className="gap-1 rounded-xl px-3"
-                  >
-                    {project.is_active ? (
-                      <ToggleRight className="h-4 w-4" />
-                    ) : (
-                      <ToggleLeft className="h-4 w-4" />
-                    )}
-                  </Button>
+                    className="rounded-xl px-3"
+                    icon={
+                      project.is_active ? (
+                        <ToggleRight className="h-4 w-4" />
+                      ) : (
+                        <ToggleLeft className="h-4 w-4" />
+                      )
+                    }
+                  ></Button>
                   <Button
                     size="sm"
                     variant="secondary"
                     onClick={() => setEditingProject(project)}
                     disabled={loading}
-                    className="gap-1 rounded-xl px-3"
-                  >
-                    <PencilLine className="h-4 w-4" />
-                  </Button>
+                    className="rounded-xl px-3"
+                    icon={<PencilLine className="h-4 w-4" />}
+                  ></Button>
                   <Button
                     size="sm"
                     variant="danger"
                     onClick={() => setDeletingProjectId(project.id)}
                     disabled={loading}
-                    className="gap-1 rounded-xl px-3"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                    className="rounded-xl px-3"
+                    icon={<Trash2 className="h-4 w-4" />}
+                  ></Button>
                 </div>
               </div>
             ))
@@ -267,6 +268,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                 variant="secondary"
                 onClick={() => setEditingProject(null)}
                 className="rounded-xl"
+                icon={<X className="h-4 w-4" />}
               >
                 Cancel
               </Button>
@@ -274,6 +276,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                 onClick={handleUpdate}
                 disabled={loading}
                 className="rounded-xl"
+                icon={<Check className="h-4 w-4" />}
               >
                 Save Changes
               </Button>
@@ -298,6 +301,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                 variant="secondary"
                 onClick={() => setDeletingProjectId(null)}
                 className="rounded-xl"
+                icon={<X className="h-4 w-4" />}
               >
                 Cancel
               </Button>
@@ -306,6 +310,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                 onClick={handleDelete}
                 disabled={loading}
                 className="rounded-xl"
+                icon={<Trash2 className="h-4 w-4" />}
               >
                 Confirm Delete
               </Button>

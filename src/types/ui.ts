@@ -15,8 +15,8 @@ export type ButtonSize = "sm" | "md" | "lg" | "icon";
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
+  icon?: React.ReactNode;
 }
-
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   leftIcon?: React.ReactNode;

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ShieldCheck } from "lucide-react";
+import { KeyRound, ShieldCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "../../lib/supabaseClient";
 import { updatePasswordSchema } from "../../lib/zodSchemas";
@@ -125,7 +125,12 @@ export const PasswordSecurityCard: React.FC = () => {
             />
           </div>
 
-          <Button type="submit" disabled={isSubmittingPassword} className="rounded-xl px-5">
+          <Button
+            type="submit"
+            disabled={isSubmittingPassword}
+            className="rounded-xl px-5"
+            icon={<KeyRound className="h-4 w-4" />}
+          >
             {isSubmittingPassword
               ? t("userSettings.updatingPassword")
               : t("userSettings.updatePassword")}

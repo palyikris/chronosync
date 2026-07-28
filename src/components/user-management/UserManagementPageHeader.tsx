@@ -1,6 +1,7 @@
 import React from "react";
 import { UserPlus } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Button } from "../shared/Button";
 
 interface UserManagementPageHeaderProps {
   onInviteClick: () => void;
@@ -14,21 +15,18 @@ export const UserManagementPageHeader: React.FC<UserManagementPageHeaderProps> =
   return (
     <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div>
-        <h1 className="text-2xl font-bold text-[#191c1d]">
-          {t("users.title")}
-        </h1>
-        <p className="text-sm text-[#5e5e62] mt-1">{t("users.subtitle")}</p>
+        <h1 className="text-2xl font-bold text-text">{t("users.title")}</h1>
+        <p className="mt-1 text-sm text-muted">{t("users.subtitle")}</p>
       </div>
 
-      <button
+      <Button
         type="button"
         onClick={onInviteClick}
-        style={{ backgroundColor: "#ABDB11" }}
-        className="hover:opacity-90 text-[#151f00] flex items-center gap-2 px-6 py-3 rounded-full font-bold transition shadow-sm active:scale-95 text-sm"
+        className="px-6 py-3 text-sm"
+        icon={<UserPlus className="h-5 w-5" />}
       >
-        <UserPlus className="w-5 h-5" />
         {t("users.inviteNewUser")}
-      </button>
+      </Button>
     </header>
   );
 };

@@ -93,9 +93,8 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
                       disabled={isUpdating}
                       className="h-8 w-8 rounded-full text-primary-strong hover:bg-[#e6f0d6]"
                       aria-label={t("timesheet.editEntry")}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
+                      icon={<Edit className="h-4 w-4" />}
+                    ></Button>
 
                     <Button
                       variant="ghost"
@@ -104,9 +103,8 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
                       disabled={isDeleting}
                       className="h-8 w-8 rounded-full text-danger hover:bg-red-50"
                       aria-label={t("timesheet.deleteEntry")}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                      icon={<Trash2 className="h-4 w-4" />}
+                    ></Button>
                   </div>
                 ) : (
                   <>
@@ -128,8 +126,9 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
             variant="primary"
             className="w-full rounded-xl"
             onClick={onAddEntry}
+            icon={<Plus className="h-4 w-4" />}
           >
-            <Plus className="h-4 w-4" /> {t("timesheet.addEntry")}
+            {t("timesheet.addEntry")}
           </Button>
         </CardFooter>
       ) : null}

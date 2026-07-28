@@ -1,5 +1,5 @@
 import React from "react";
-import { Calendar } from "lucide-react";
+import { Calendar, Download } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../shared/Button";
 import { downloadSzamlamellekletReport } from "../../utils/downloadExcelReport";
@@ -67,6 +67,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               endDate: previousMonthEndDate,
             });
           }}
+          icon={<Download className="h-4 w-4" />}
         >
           {t("dashboard.downloadReport")}
         </Button>

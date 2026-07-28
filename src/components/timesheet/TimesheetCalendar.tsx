@@ -67,17 +67,15 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
             size="icon"
             onClick={onPreviousMonth}
             aria-label={t("common.previousMonth")}
-          >
-            <ChevronLeft className="h-5 w-5 text-muted" />
-          </Button>
+            icon={<ChevronLeft className="h-5 w-5 text-muted" />}
+          ></Button>
           <Button
             variant="ghost"
             size="icon"
             onClick={onNextMonth}
             aria-label={t("common.nextMonth")}
-          >
-            <ChevronRight className="h-5 w-5 text-muted" />
-          </Button>
+            icon={<ChevronRight className="h-5 w-5 text-muted" />}
+          ></Button>
         </div>
       </CardHeader>
 
