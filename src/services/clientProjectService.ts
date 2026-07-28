@@ -1,5 +1,9 @@
 import { supabase } from "../lib/supabaseClient";
-import { type Client, type Project } from "../types/client-project";
+import {
+  type Client,
+  type InvoiceAttachmentLanguage,
+  type Project,
+} from "../types/client-project";
 
 // --- CLIENTS ---
 export async function fetchClients(companyId: string): Promise<Client[]> {
@@ -26,10 +30,15 @@ export async function fetchActiveClients(companyId: string): Promise<Client[]> {
 export async function createClient(
   companyId: string,
   name: string,
+  invoiceAttachmentLanguage: InvoiceAttachmentLanguage,
 ): Promise<Client> {
   const { data, error } = await supabase
     .from("clients")
-    .insert({ company_id: companyId, name })
+    .insert({
+      company_id: companyId,
+      name,
+      invoice_attachment_language: invoiceAttachmentLanguage,
+    })
     .select()
     .single();
   if (error) throw error;
@@ -39,10 +48,14 @@ export async function createClient(
 export async function updateClient(
   clientId: string,
   name: string,
+  invoiceAttachmentLanguage: InvoiceAttachmentLanguage,
 ): Promise<Client> {
   const { data, error } = await supabase
     .from("clients")
-    .update({ name })
+    .update({
+      name,
+      invoice_attachment_language: invoiceAttachmentLanguage,
+    })
     .eq("id", clientId)
     .select()
     .single();

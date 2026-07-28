@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Check,
   FolderPlus,
@@ -28,6 +29,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   projects,
   onRefresh,
 }) => {
+  const { t } = useTranslation();
   const [newProjectName, setNewProjectName] = useState("");
   const [newProjectClientId, setNewProjectClientId] = useState("");
   const [editingProject, setEditingProject] = useState<Project | null>(null);
@@ -57,7 +59,9 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
       onRefresh();
     } catch (error) {
       alert(
-        error instanceof Error ? error.message : "Failed to create project",
+        error instanceof Error
+          ? error.message
+          : t("companySettings.failedCreateProject"),
       );
     } finally {
       setLoading(false);
@@ -74,7 +78,9 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
       onRefresh();
     } catch (error) {
       alert(
-        error instanceof Error ? error.message : "Failed to update project",
+        error instanceof Error
+          ? error.message
+          : t("companySettings.failedUpdateProject"),
       );
     } finally {
       setLoading(false);
@@ -90,7 +96,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
       alert(
         error instanceof Error
           ? error.message
-          : "Failed to update project activity",
+          : t("companySettings.failedUpdateProjectActivity"),
       );
     } finally {
       setLoading(false);
@@ -109,7 +115,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
       alert(
         error instanceof Error
           ? error.message
-          : "Failed to delete project. Check dependent records first.",
+          : t("companySettings.failedDeleteProject"),
       );
     } finally {
       setLoading(false);
@@ -125,10 +131,10 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
           </div>
           <div>
             <CardTitle className="text-lg font-bold text-text">
-              2. Manage Projects
+              {t("companySettings.projectsTitle")}
             </CardTitle>
             <p className="mt-1 text-sm text-muted-strong">
-              Create, rename, and remove project records from one place.
+              {t("companySettings.projectsSubtitle")}
             </p>
           </div>
         </div>
@@ -143,7 +149,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
               onChange={(event) => setNewProjectClientId(event.target.value)}
               className="h-11 rounded-xl border border-border-strong bg-bg px-3 text-sm text-text outline-none transition focus:border-primary"
             >
-              <option value="">Select a client first...</option>
+              <option value="">{t("companySettings.selectClientFirst")}</option>
               {clients.map((client) => (
                 <option key={client.id} value={client.id}>
                   {client.name}
@@ -156,7 +162,9 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
               required
               disabled={!newProjectClientId}
               placeholder={
-                newProjectClientId ? "New project name" : "Select client"
+                newProjectClientId
+                  ? t("companySettings.newProjectName")
+                  : t("companySettings.selectClient")
               }
               value={newProjectName}
               onChange={(event) => setNewProjectName(event.target.value)}
@@ -171,13 +179,15 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
               className="gap-1 rounded-xl px-4"
               icon={<Plus className="h-4 w-4" />}
             >
-              Add
+              {t("common.add")}
             </Button>
           </div>
           <p className="text-xs text-muted-strong">
             {selectedClient
-              ? `Creating under ${selectedClient.name}`
-              : "Pick a client to attach the new project."}
+              ? t("companySettings.creatingUnder", {
+                  clientName: selectedClient.name,
+                })
+              : t("companySettings.pickClientToCreate")}
           </p>
         </form>
 
@@ -185,8 +195,10 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
           {visibleProjects.length === 0 ? (
             <p className="rounded-xl border border-dashed border-border-strong bg-bg-accent px-4 py-3 text-sm text-muted-strong">
               {selectedClient
-                ? `No projects found for ${selectedClient.name}.`
-                : "No projects yet. Add your first project above to get started."}
+                ? t("companySettings.noProjectsForClient", {
+                    clientName: selectedClient.name,
+                  })
+                : t("companySettings.noProjects")}
             </p>
           ) : (
             visibleProjects.map((project) => (
@@ -202,10 +214,12 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                   </p>
                   <p className="mt-1 text-xs text-muted-strong">
                     {clients.find((client) => client.id === project.client_id)
-                      ?.name ?? "Unknown client"}
+                      ?.name ?? t("companySettings.unknownClient")}
                   </p>
                   <p className="mt-1 text-xs text-muted-strong">
-                    {project.is_active ? "Active" : "Inactive"}
+                    {project.is_active
+                      ? t("common.active")
+                      : t("common.inactive")}
                   </p>
                 </div>
                 <div className="flex shrink-0 gap-2">
@@ -250,11 +264,11 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
         <Modal
           open={!!editingProject}
           onClose={() => setEditingProject(null)}
-          title="Edit Project"
+          title={t("companySettings.editProject")}
         >
           <div className="space-y-4 p-4">
             <Input
-              placeholder="Project Name"
+              placeholder={t("companySettings.projectNamePlaceholder")}
               value={editingProject.name}
               onChange={(event) =>
                 setEditingProject({
@@ -270,7 +284,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                 className="rounded-xl"
                 icon={<X className="h-4 w-4" />}
               >
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button
                 onClick={handleUpdate}
@@ -278,7 +292,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                 className="rounded-xl"
                 icon={<Check className="h-4 w-4" />}
               >
-                Save Changes
+                {t("companySettings.saveChanges")}
               </Button>
             </div>
           </div>
@@ -289,12 +303,11 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
         <Modal
           open={!!deletingProjectId}
           onClose={() => setDeletingProjectId(null)}
-          title="Delete Project"
+          title={t("companySettings.deleteProject")}
         >
           <div className="space-y-4 p-4">
             <p className="text-sm text-slate-600">
-              Are you sure you want to delete this project? Deleting a project
-              may fail if dependent records exist.
+              {t("companySettings.confirmDeleteProject")}
             </p>
             <div className="flex justify-end gap-2">
               <Button
@@ -303,7 +316,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                 className="rounded-xl"
                 icon={<X className="h-4 w-4" />}
               >
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button
                 variant="danger"
@@ -312,7 +325,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                 className="rounded-xl"
                 icon={<Trash2 className="h-4 w-4" />}
               >
-                Confirm Delete
+                {t("companySettings.confirmDelete")}
               </Button>
             </div>
           </div>

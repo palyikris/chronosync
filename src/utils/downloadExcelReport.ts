@@ -5,6 +5,7 @@ interface DownloadReportParams {
   periodText?: string;
   startDate?: string;
   endDate?: string;
+  language: string;
 }
 
 export async function downloadSzamlamellekletReport(
@@ -12,7 +13,7 @@ export async function downloadSzamlamellekletReport(
 ): Promise<void> {
 
 
-  const { companyId, periodText, startDate, endDate } = params;
+  const { companyId, periodText, startDate, endDate, language } = params;
   // Retrieve current active session token from Supabase Auth
   const {
     data: { session },
@@ -51,7 +52,8 @@ export async function downloadSzamlamellekletReport(
   const downloadUrl = window.URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = downloadUrl;
-  link.download = `szamlamelleklet_${periodText?.replace(/\s+/g, "_")}.xlsx`;
+  link.download =
+    language === "hu" ? `szamlamelleklet.xlsx` : `invoice_attachment.xlsx`;
   document.body.appendChild(link);
   link.click();
   link.remove();

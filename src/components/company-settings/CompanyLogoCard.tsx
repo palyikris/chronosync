@@ -1,5 +1,6 @@
 // src/components/company-settings/CompanyLogoCard.tsx
 import React, { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Image as ImageIcon, Trash2, Upload } from "lucide-react";
 import {
   uploadCompanyLogo,
@@ -18,6 +19,7 @@ export const CompanyLogoCard: React.FC<CompanyLogoCardProps> = ({
   companyId,
   initialLogoUrl,
 }) => {
+  const { t } = useTranslation();
   const [logoUrl, setLogoUrl] = useState<string | null>(initialLogoUrl);
   const [isUploading, setIsUploading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -37,7 +39,7 @@ export const CompanyLogoCard: React.FC<CompanyLogoCardProps> = ({
       if (err instanceof Error) {
         setErrorMessage(err.message);
       } else {
-        setErrorMessage("Failed to upload company logo.");
+        setErrorMessage(t("companySettings.logoUploadError"));
       }
     } finally {
       setIsUploading(false);
@@ -58,7 +60,7 @@ export const CompanyLogoCard: React.FC<CompanyLogoCardProps> = ({
       if (err instanceof Error) {
         setErrorMessage(err.message);
       } else {
-        setErrorMessage("Failed to remove logo.");
+        setErrorMessage(t("companySettings.logoRemoveError"));
       }
     } finally {
       setIsUploading(false);
@@ -74,11 +76,10 @@ export const CompanyLogoCard: React.FC<CompanyLogoCardProps> = ({
           </div>
           <div>
             <CardTitle className="text-lg font-bold text-text">
-              Company Branding
+              {t("companySettings.companyBrandingTitle")}
             </CardTitle>
             <p className="mt-1 text-sm text-muted-strong">
-              Upload a logo to display on generated attachments
-              (Számlamelléklet).
+              {t("companySettings.companyBrandingSubtitle")}
             </p>
           </div>
         </div>
@@ -94,8 +95,8 @@ export const CompanyLogoCard: React.FC<CompanyLogoCardProps> = ({
         <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
           <MediaPreviewTile
             src={logoUrl}
-            alt="Company Logo"
-            emptyLabel="No Logo"
+            alt={t("companySettings.companyLogoAlt")}
+            emptyLabel={t("companySettings.noLogo")}
           />
 
           <div className="space-y-3">
@@ -116,10 +117,10 @@ export const CompanyLogoCard: React.FC<CompanyLogoCardProps> = ({
                 icon={<Upload className="h-4 w-4" />}
               >
                 {isUploading
-                  ? "Uploading..."
+                  ? t("companySettings.uploading")
                   : logoUrl
-                    ? "Change Logo"
-                    : "Upload Logo"}
+                    ? t("companySettings.changeLogo")
+                    : t("companySettings.uploadLogo")}
               </Button>
 
               {logoUrl && (
@@ -130,15 +131,14 @@ export const CompanyLogoCard: React.FC<CompanyLogoCardProps> = ({
                   onClick={handleRemoveLogo}
                   className="gap-2 rounded-xl px-4"
                   icon={<Trash2 className="h-4 w-4" />}
-                  
                 >
-                  Remove
+                  {t("companySettings.removeLogo")}
                 </Button>
               )}
             </div>
 
             <p className="text-xs text-muted-strong">
-              Supported formats: PNG, JPEG, WebP, SVG. Max file size: 2MB.
+              {t("companySettings.supportedFormats")}
             </p>
           </div>
         </div>

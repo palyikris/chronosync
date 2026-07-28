@@ -1,5 +1,6 @@
 // src/components/company-settings/ClientManagementCard.tsx
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Check,
   PencilLine,
@@ -10,7 +11,6 @@ import {
   X,
   Users,
 } from "lucide-react";
-import { type Client } from "../../types/client-project";
 import { Input } from "../shared/Input";
 import { Button } from "../shared/Button";
 import { Modal } from "../shared/Modal";
@@ -21,6 +21,19 @@ import {
   updateClientActivity,
   updateClient,
 } from "../../services/clientProjectService";
+import {
+  type Client,
+  type InvoiceAttachmentLanguage,
+} from "../../types/client-project";
+import { Select } from "../shared/Select";
+
+const DEFAULT_INVOICE_ATTACHMENT_LANGUAGE: InvoiceAttachmentLanguage = "en";
+
+const normalizeInvoiceAttachmentLanguage = (
+  language: InvoiceAttachmentLanguage | null | undefined,
+): InvoiceAttachmentLanguage => {
+  return language === "hu" ? "hu" : "en";
+};
 
 interface Props {
   companyId: string;
@@ -33,7 +46,10 @@ export const ClientManagementCard: React.FC<Props> = ({
   clients,
   onRefresh,
 }) => {
+  const { t } = useTranslation();
   const [newClientName, setNewClientName] = useState("");
+  const [newClientLanguage, setNewClientLanguage] =
+    useState<InvoiceAttachmentLanguage>(DEFAULT_INVOICE_ATTACHMENT_LANGUAGE);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [deletingClientId, setDeletingClientId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -43,11 +59,16 @@ export const ClientManagementCard: React.FC<Props> = ({
     if (!newClientName.trim()) return;
     try {
       setLoading(true);
-      await createClient(companyId, newClientName.trim());
+      await createClient(companyId, newClientName.trim(), newClientLanguage);
       setNewClientName("");
+      setNewClientLanguage(DEFAULT_INVOICE_ATTACHMENT_LANGUAGE);
       onRefresh();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to create client");
+      alert(
+        err instanceof Error
+          ? err.message
+          : t("companySettings.failedCreateClient"),
+      );
     } finally {
       setLoading(false);
     }
@@ -57,11 +78,21 @@ export const ClientManagementCard: React.FC<Props> = ({
     if (!editingClient || !editingClient.name.trim()) return;
     try {
       setLoading(true);
-      await updateClient(editingClient.id, editingClient.name.trim());
+      await updateClient(
+        editingClient.id,
+        editingClient.name.trim(),
+        normalizeInvoiceAttachmentLanguage(
+          editingClient.invoice_attachment_language,
+        ),
+      );
       setEditingClient(null);
       onRefresh();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to update client");
+      alert(
+        err instanceof Error
+          ? err.message
+          : t("companySettings.failedUpdateClient"),
+      );
     } finally {
       setLoading(false);
     }
@@ -74,7 +105,9 @@ export const ClientManagementCard: React.FC<Props> = ({
       onRefresh();
     } catch (err) {
       alert(
-        err instanceof Error ? err.message : "Failed to update client activity",
+        err instanceof Error
+          ? err.message
+          : t("companySettings.failedUpdateClientActivity"),
       );
     } finally {
       setLoading(false);
@@ -92,7 +125,7 @@ export const ClientManagementCard: React.FC<Props> = ({
       alert(
         err instanceof Error
           ? err.message
-          : "Failed to delete client. Check dependent projects/timesheets.",
+          : t("companySettings.failedDeleteClient"),
       );
     } finally {
       setLoading(false);
@@ -108,37 +141,56 @@ export const ClientManagementCard: React.FC<Props> = ({
           </div>
           <div>
             <CardTitle className="text-lg font-bold text-text">
-              1. Manage Clients
+              {t("companySettings.clientsTitle")}
             </CardTitle>
             <p className="mt-1 text-sm text-muted-strong">
-              Create, rename, and remove client records from one place.
+              {t("companySettings.clientsSubtitle")}
             </p>
           </div>
         </div>
       </CardHeader>
 
       <CardContent className="space-y-6 px-0 pb-0">
-        <form onSubmit={handleCreate} className="flex gap-2">
+        <form
+          onSubmit={handleCreate}
+          className="flex flex-col gap-2 md:flex-row"
+        >
           <Input
-            placeholder="New client name"
+            placeholder={t("companySettings.newClientName")}
             value={newClientName}
             onChange={(e) => setNewClientName(e.target.value)}
             className="flex-1"
           />
+          <Select
+            value={newClientLanguage}
+            onChange={(event) =>
+              setNewClientLanguage(
+                event.target.value as InvoiceAttachmentLanguage,
+              )
+            }
+            className="md:w-44"
+          >
+            <option value="en">
+              {t("companySettings.invoiceAttachmentLanguageEn")}
+            </option>
+            <option value="hu">
+              {t("companySettings.invoiceAttachmentLanguageHu")}
+            </option>
+          </Select>
           <Button
             type="submit"
             disabled={loading || !newClientName.trim()}
             className="gap-1 rounded-xl px-4"
             icon={<Plus className="h-4 w-4" />}
           >
-            Add
+            {t("common.add")}
           </Button>
         </form>
 
         <div className="max-h-72 space-y-2 overflow-y-auto px-2">
           {clients.length === 0 ? (
             <p className="rounded-xl border border-dashed border-border-strong bg-bg-accent px-4 py-3 text-sm text-muted-strong">
-              No clients yet. Add your first client above to get started.
+              {t("companySettings.noClients")}
             </p>
           ) : (
             clients.map((client) => (
@@ -152,8 +204,16 @@ export const ClientManagementCard: React.FC<Props> = ({
                   <span className="block truncate font-medium text-text">
                     {client.name}
                   </span>
+                  <span className="mt-1 block text-xs text-muted-strong">
+                    {t("companySettings.invoiceAttachmentLabel")}{" "}
+                    {normalizeInvoiceAttachmentLanguage(
+                      client.invoice_attachment_language,
+                    ).toUpperCase()}
+                  </span>
                   <span className="mt-1 text-xs text-muted-strong">
-                    {client.is_active ? "Active" : "Inactive"}
+                    {client.is_active
+                      ? t("common.active")
+                      : t("common.inactive")}
                   </span>
                 </div>
                 <div className="flex gap-2">
@@ -174,7 +234,15 @@ export const ClientManagementCard: React.FC<Props> = ({
                   <Button
                     size="sm"
                     variant="secondary"
-                    onClick={() => setEditingClient(client)}
+                    onClick={() =>
+                      setEditingClient({
+                        ...client,
+                        invoice_attachment_language:
+                          normalizeInvoiceAttachmentLanguage(
+                            client.invoice_attachment_language,
+                          ),
+                      })
+                    }
                     disabled={loading}
                     className="rounded-xl px-3"
                     icon={<PencilLine className="h-4 w-4" />}
@@ -199,16 +267,35 @@ export const ClientManagementCard: React.FC<Props> = ({
         <Modal
           open={!!editingClient}
           onClose={() => setEditingClient(null)}
-          title="Edit Client"
+          title={t("companySettings.editClient")}
         >
           <div className="space-y-4 p-4">
             <Input
-              placeholder="Client Name"
+              placeholder={t("companySettings.clientNamePlaceholder")}
               value={editingClient.name}
               onChange={(e) =>
                 setEditingClient({ ...editingClient, name: e.target.value })
               }
             />
+            <Select
+              value={normalizeInvoiceAttachmentLanguage(
+                editingClient.invoice_attachment_language,
+              )}
+              onChange={(event) =>
+                setEditingClient({
+                  ...editingClient,
+                  invoice_attachment_language: event.target
+                    .value as InvoiceAttachmentLanguage,
+                })
+              }
+            >
+              <option value="en">
+                {t("companySettings.invoiceAttachmentLanguageLabelEn")}
+              </option>
+              <option value="hu">
+                {t("companySettings.invoiceAttachmentLanguageLabelHu")}
+              </option>
+            </Select>
             <div className="flex justify-end gap-2">
               <Button
                 variant="secondary"
@@ -216,7 +303,7 @@ export const ClientManagementCard: React.FC<Props> = ({
                 className="rounded-xl"
                 icon={<X className="h-4 w-4" />}
               >
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button
                 onClick={handleUpdate}
@@ -224,7 +311,7 @@ export const ClientManagementCard: React.FC<Props> = ({
                 className="rounded-xl"
                 icon={<Check className="h-4 w-4" />}
               >
-                Save Changes
+                {t("companySettings.saveChanges")}
               </Button>
             </div>
           </div>
@@ -236,12 +323,11 @@ export const ClientManagementCard: React.FC<Props> = ({
         <Modal
           open={!!deletingClientId}
           onClose={() => setDeletingClientId(null)}
-          title="Delete Client"
+          title={t("companySettings.deleteClient")}
         >
           <div className="space-y-4 p-4">
             <p className="text-sm text-slate-600">
-              Are you sure you want to delete this client? Deleting a client may
-              fail if active projects or timesheet entries depend on it.
+              {t("companySettings.confirmDeleteClient")}
             </p>
             <div className="flex justify-end gap-2">
               <Button
@@ -250,7 +336,7 @@ export const ClientManagementCard: React.FC<Props> = ({
                 className="rounded-xl"
                 icon={<X className="h-4 w-4" />}
               >
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button
                 variant="danger"
@@ -259,7 +345,7 @@ export const ClientManagementCard: React.FC<Props> = ({
                 className="rounded-xl"
                 icon={<Trash2 className="h-4 w-4" />}
               >
-                Confirm Delete
+                {t("companySettings.confirmDelete")}
               </Button>
             </div>
           </div>

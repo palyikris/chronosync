@@ -1,5 +1,5 @@
 import React from "react";
-import { Briefcase, Clock, TrendingUp, Users, type LucideIcon } from "lucide-react";
+import { Briefcase, Clock, Users, type LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { DashboardKPIs } from "../../types/dashboard";
 
@@ -71,12 +71,12 @@ export const KpiSummaryCards: React.FC<KpiSummaryCardsProps> = ({ kpis }) => {
         subtitle={t("dashboard.kpiTotalHoursSubtitle")}
         icon={Clock}
         valueSuffix=" hrs"
-        footer={
-          <div className="flex items-center gap-1 text-xs text-primary-strong font-medium">
-            <TrendingUp className="w-3.5 h-3.5" />{" "}
-            {t("dashboard.kpiTotalHoursFooter")}
-          </div>
-        }
+        // footer={
+        //   <div className="flex items-center gap-1 text-xs text-primary-strong font-medium">
+        //     <TrendingUp className="w-3.5 h-3.5" />{" "}
+        //     {t("dashboard.kpiTotalHoursFooter")}
+        //   </div>
+        // }
       />
 
       <KpiCard

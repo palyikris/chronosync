@@ -1,12 +1,15 @@
 import { z } from "zod";
 import { trimmedNonEmptyStringSchema, uuidSchema } from "../lib/zodSchemas";
 
+export type InvoiceAttachmentLanguage = "hu" | "en";
+
 export interface Client {
   id: string;
-  company_id: string;
   name: string;
+  company_id: string;
   is_active: boolean;
-  created_at: string;
+  invoice_attachment_language: InvoiceAttachmentLanguage | null;
+  created_at?: string;
 }
 
 export interface Project {
@@ -22,6 +25,7 @@ export const createClientPayloadSchema = z
   .object({
     name: trimmedNonEmptyStringSchema("Client name is required", 120),
     company_id: uuidSchema,
+    invoice_attachment_language: z.enum(["hu", "en"]).optional(),
   })
   .strict();
 

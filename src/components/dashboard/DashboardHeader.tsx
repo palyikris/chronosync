@@ -19,7 +19,8 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onEndDateChange,
   companyId,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const language = i18n.resolvedLanguage || i18n.language || "en";
   const previousMonthStartDate = (() => {
     const date = new Date();
     date.setDate(1);
@@ -65,6 +66,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               companyId,
               startDate: previousMonthStartDate,
               endDate: previousMonthEndDate,
+              language,
             });
           }}
           icon={<Download className="h-4 w-4" />}
