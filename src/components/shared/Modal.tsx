@@ -14,7 +14,7 @@ export const Modal: React.FC<ModalProps> = ({ open, title, onClose, children, cl
     <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm">
       <div
         className={cn(
-          "w-full max-w-lg overflow-hidden rounded-3xl bg-surface-strong shadow-2xl",
+          "w-full overflow-hidden rounded-3xl bg-surface-strong shadow-2xl",
           className,
         )}
       >

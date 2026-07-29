@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { Button } from "../shared/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "../shared/Card";
-import { Input } from "../shared/Input";
 import { Modal } from "../shared/Modal";
 import type { ProjectManagementCardProps } from "../../types/company-settings";
 import {
@@ -22,6 +21,8 @@ import {
   updateProject,
 } from "../../services/clientProjectService";
 import type { Project } from "../../types/client-project";
+import { Select } from "../shared/Select";
+import { Input } from "../shared/Input";
 
 export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   companyId,
@@ -143,11 +144,13 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
       <CardContent className="space-y-6 px-0 pb-0">
         <form onSubmit={handleCreate} className="space-y-3">
           <div className="grid gap-3 md:grid-cols-[1fr_1.1fr_auto] md:items-end">
-            <select
+            <Select
+              id="new-project-client"
+              label={t("companySettings.projectClientLabel")}
+              leftIcon="person"
               required
               value={newProjectClientId}
               onChange={(event) => setNewProjectClientId(event.target.value)}
-              className="h-11 rounded-xl border border-border-strong bg-bg px-3 text-sm text-text outline-none transition focus:border-primary"
             >
               <option value="">{t("companySettings.selectClientFirst")}</option>
               {clients.map((client) => (
@@ -155,17 +158,15 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                   {client.name}
                 </option>
               ))}
-            </select>
+            </Select>
 
             <Input
+              id="new-project-name"
               type="text"
+              label={t("companySettings.projectNameLabel")}
+              leftIcon="folder_open"
               required
               disabled={!newProjectClientId}
-              placeholder={
-                newProjectClientId
-                  ? t("companySettings.newProjectName")
-                  : t("companySettings.selectClient")
-              }
               value={newProjectName}
               onChange={(event) => setNewProjectName(event.target.value)}
               className="disabled:cursor-not-allowed disabled:bg-[#f3f4f5]"
@@ -268,7 +269,10 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
         >
           <div className="space-y-4 p-4">
             <Input
-              placeholder={t("companySettings.projectNamePlaceholder")}
+              id="edit-project-name"
+              type="text"
+              label={t("companySettings.projectNamePlaceholder")}
+              leftIcon="folder_open"
               value={editingProject.name}
               onChange={(event) =>
                 setEditingProject({

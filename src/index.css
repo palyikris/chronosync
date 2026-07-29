@@ -101,6 +101,8 @@ body {
 
 .auth-field {
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .auth-field-icon {
@@ -139,6 +141,12 @@ body {
   transform-origin: left top;
   color: var(--color-muted);
   transition: transform var(--transition-fast), color var(--transition-fast), background-color var(--transition-fast), padding var(--transition-fast);
+  will-change: transform, color, background-color, padding;
+}
+
+.auth-field select ~ label {
+  opacity: 0;
+  transition: transform var(--transition-fast), color var(--transition-fast), background-color var(--transition-fast), padding var(--transition-fast), opacity var(--transition-fast);
 }
 
 .auth-field:focus-within label,
@@ -147,6 +155,11 @@ body {
   background-color: var(--color-surface-strong);
   padding: 0 0.25rem;
   color: var(--color-primary-strong);
+}
+
+.auth-field:focus-within select ~ label,
+.auth-field.has-value select ~ label {
+  opacity: 1;
 }
 
 .auth-field-action {

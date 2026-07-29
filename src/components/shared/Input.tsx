@@ -3,24 +3,31 @@ import { cn } from "../../utils/cn";
 import type { InputProps } from "../../types/ui";
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, leftIcon, rightIcon, ...props }, ref) => {
+  (
+    { className, leftIcon, rightIcon, label, id, value, placeholder, ...props },
+    ref,
+  ) => {
+    const hasValue = value !== undefined && value !== null && value !== "";
+
     return (
-      <div className="relative">
+      <div className={cn("auth-field", hasValue && "has-value", className)}>
         {leftIcon ? (
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted">
+          <span
+            className="material-symbols-outlined auth-field-icon"
+            aria-hidden="true"
+          >
             {leftIcon}
           </span>
         ) : null}
         <input
           ref={ref}
-          className={cn(
-            "w-full rounded-xl border border-border-strong bg-transparent px-3 py-2.5 text-sm text-text outline-none transition focus:ring-2 focus:ring-primary-strong",
-            !!leftIcon && "pl-9",
-            !!rightIcon && "pr-9",
-            className,
-          )}
+          id={id}
+          value={value}
+          placeholder={placeholder ?? " "}
+          className="auth-input"
           {...props}
         />
+        {label ? <label htmlFor={id}>{label}</label> : null}
         {rightIcon ? (
           <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted">
             {rightIcon}

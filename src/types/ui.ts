@@ -21,6 +21,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  label?: string;
 }
 
 export interface ModalProps {
@@ -33,7 +34,10 @@ export interface ModalProps {
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {}
 
-export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {}
+export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+  leftIcon?: React.ReactNode;
+  label?: string;
+}
 
 export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
 

@@ -11,8 +11,9 @@ import {
   X,
   Users,
 } from "lucide-react";
-import { Input } from "../shared/Input";
 import { Button } from "../shared/Button";
+import { Input } from "../shared/Input";
+import { Select } from "../shared/Select";
 import { Modal } from "../shared/Modal";
 import { Card, CardContent, CardHeader, CardTitle } from "../shared/Card";
 import {
@@ -25,7 +26,6 @@ import {
   type Client,
   type InvoiceAttachmentLanguage,
 } from "../../types/client-project";
-import { Select } from "../shared/Select";
 
 const DEFAULT_INVOICE_ATTACHMENT_LANGUAGE: InvoiceAttachmentLanguage = "en";
 
@@ -33,6 +33,12 @@ const normalizeInvoiceAttachmentLanguage = (
   language: InvoiceAttachmentLanguage | null | undefined,
 ): InvoiceAttachmentLanguage => {
   return language === "hu" ? "hu" : "en";
+};
+
+const normalizeNumericInputValue = (value: string): number => {
+  if (value === "") return 0;
+  const parsedValue = Number(value);
+  return Number.isNaN(parsedValue) ? 0 : parsedValue;
 };
 
 interface Props {
@@ -50,6 +56,9 @@ export const ClientManagementCard: React.FC<Props> = ({
   const [newClientName, setNewClientName] = useState("");
   const [newClientLanguage, setNewClientLanguage] =
     useState<InvoiceAttachmentLanguage>(DEFAULT_INVOICE_ATTACHMENT_LANGUAGE);
+  const [newClientAvailableHours, setNewClientAvailableHours] = useState(0);
+  const [newClientHoursFromPreviousMonth, setNewClientHoursFromPreviousMonth] =
+    useState(0);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [deletingClientId, setDeletingClientId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -59,9 +68,17 @@ export const ClientManagementCard: React.FC<Props> = ({
     if (!newClientName.trim()) return;
     try {
       setLoading(true);
-      await createClient(companyId, newClientName.trim(), newClientLanguage);
+      await createClient(
+        companyId,
+        newClientName.trim(),
+        newClientLanguage,
+        newClientAvailableHours,
+        newClientHoursFromPreviousMonth,
+      );
       setNewClientName("");
       setNewClientLanguage(DEFAULT_INVOICE_ATTACHMENT_LANGUAGE);
+      setNewClientAvailableHours(0);
+      setNewClientHoursFromPreviousMonth(0);
       onRefresh();
     } catch (err) {
       alert(
@@ -84,6 +101,8 @@ export const ClientManagementCard: React.FC<Props> = ({
         normalizeInvoiceAttachmentLanguage(
           editingClient.invoice_attachment_language,
         ),
+        editingClient.available_hours_per_month ?? 0,
+        editingClient.hours_from_previous_month ?? 0,
       );
       setEditingClient(null);
       onRefresh();
@@ -151,40 +170,77 @@ export const ClientManagementCard: React.FC<Props> = ({
       </CardHeader>
 
       <CardContent className="space-y-6 px-0 pb-0">
-        <form
-          onSubmit={handleCreate}
-          className="flex flex-col gap-2 md:flex-row"
-        >
-          <Input
-            placeholder={t("companySettings.newClientName")}
-            value={newClientName}
-            onChange={(e) => setNewClientName(e.target.value)}
-            className="flex-1"
-          />
-          <Select
-            value={newClientLanguage}
-            onChange={(event) =>
-              setNewClientLanguage(
-                event.target.value as InvoiceAttachmentLanguage,
-              )
-            }
-            className="md:w-44"
-          >
-            <option value="en">
-              {t("companySettings.invoiceAttachmentLanguageEn")}
-            </option>
-            <option value="hu">
-              {t("companySettings.invoiceAttachmentLanguageHu")}
-            </option>
-          </Select>
-          <Button
-            type="submit"
-            disabled={loading || !newClientName.trim()}
-            className="gap-1 rounded-xl px-4"
-            icon={<Plus className="h-4 w-4" />}
-          >
-            {t("common.add")}
-          </Button>
+        <form onSubmit={handleCreate} className="space-y-3">
+          <div className="flex flex-col gap-3 md:flex-row">
+            <Input
+              id="new-client-name"
+              type="text"
+              label={t("companySettings.clientNameLabel")}
+              leftIcon="person"
+              value={newClientName}
+              onChange={(e) => setNewClientName(e.target.value)}
+              className="md:flex-1"
+            />
+            <Select
+              id="new-client-language"
+              label={t("companySettings.invoiceAttachmentLanguageLabel")}
+              leftIcon="translate"
+              value={newClientLanguage}
+              onChange={(event) =>
+                setNewClientLanguage(
+                  event.target.value as InvoiceAttachmentLanguage,
+                )
+              }
+              className="md:w-100"
+            >
+              <option value="en">
+                {t("companySettings.invoiceAttachmentLanguageEn")}
+              </option>
+              <option value="hu">
+                {t("companySettings.invoiceAttachmentLanguageHu")}
+              </option>
+            </Select>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <Input
+              id="new-client-available-hours"
+              type="number"
+              min="0"
+              step="1"
+              label={t("companySettings.availableHoursPerMonthLabel")}
+              leftIcon="schedule"
+              value={newClientAvailableHours}
+              onChange={(event) =>
+                setNewClientAvailableHours(
+                  normalizeNumericInputValue(event.target.value),
+                )
+              }
+            />
+            <Input
+              id="new-client-prev-hours"
+              type="number"
+              min="0"
+              step="1"
+              label={t("companySettings.hoursFromPreviousMonthLabel")}
+              leftIcon="history"
+              value={newClientHoursFromPreviousMonth}
+              onChange={(event) =>
+                setNewClientHoursFromPreviousMonth(
+                  normalizeNumericInputValue(event.target.value),
+                )
+              }
+            />
+          </div>
+          <div className="flex justify-end">
+            <Button
+              type="submit"
+              disabled={loading || !newClientName.trim()}
+              className="gap-1 rounded-xl px-4"
+              icon={<Plus className="h-4 w-4" />}
+            >
+              {t("common.add")}
+            </Button>
+          </div>
         </form>
 
         <div className="max-h-72 space-y-2 overflow-y-auto px-2">
@@ -209,6 +265,14 @@ export const ClientManagementCard: React.FC<Props> = ({
                     {normalizeInvoiceAttachmentLanguage(
                       client.invoice_attachment_language,
                     ).toUpperCase()}
+                  </span>
+                  <span className="mt-1 block text-xs text-muted-strong">
+                    {t("companySettings.availableHoursPerMonth")}:{" "}
+                    {client.available_hours_per_month ?? 0}
+                  </span>
+                  <span className="mt-1 block text-xs text-muted-strong">
+                    {t("companySettings.hoursFromPreviousMonth")}:{" "}
+                    {client.hours_from_previous_month ?? 0}
                   </span>
                   <span className="mt-1 text-xs text-muted-strong">
                     {client.is_active
@@ -241,6 +305,10 @@ export const ClientManagementCard: React.FC<Props> = ({
                           normalizeInvoiceAttachmentLanguage(
                             client.invoice_attachment_language,
                           ),
+                        available_hours_per_month:
+                          client.available_hours_per_month ?? 0,
+                        hours_from_previous_month:
+                          client.hours_from_previous_month ?? 0,
                       })
                     }
                     disabled={loading}
@@ -268,16 +336,23 @@ export const ClientManagementCard: React.FC<Props> = ({
           open={!!editingClient}
           onClose={() => setEditingClient(null)}
           title={t("companySettings.editClient")}
+          className="w-xl max-w-full"
         >
           <div className="space-y-4 p-4">
             <Input
-              placeholder={t("companySettings.clientNamePlaceholder")}
+              id="edit-client-name"
+              type="text"
+              label={t("companySettings.clientNameLabel")}
+              leftIcon="person"
               value={editingClient.name}
               onChange={(e) =>
                 setEditingClient({ ...editingClient, name: e.target.value })
               }
             />
             <Select
+              id="edit-client-language"
+              label={t("companySettings.invoiceAttachmentLanguageLabel")}
+              leftIcon="translate"
               value={normalizeInvoiceAttachmentLanguage(
                 editingClient.invoice_attachment_language,
               )}
@@ -296,6 +371,42 @@ export const ClientManagementCard: React.FC<Props> = ({
                 {t("companySettings.invoiceAttachmentLanguageLabelHu")}
               </option>
             </Select>
+            <div className="grid gap-3 md:grid-cols-2">
+              <Input
+                id="edit-client-available-hours"
+                type="number"
+                min="0"
+                step="1"
+                label={t("companySettings.availableHoursPerMonthLabel")}
+                leftIcon="schedule"
+                value={editingClient.available_hours_per_month ?? 0}
+                onChange={(event) =>
+                  setEditingClient({
+                    ...editingClient,
+                    available_hours_per_month: normalizeNumericInputValue(
+                      event.target.value,
+                    ),
+                  })
+                }
+              />
+              <Input
+                id="edit-client-prev-hours"
+                type="number"
+                min="0"
+                step="1"
+                label={t("companySettings.hoursFromPreviousMonthLabel")}
+                leftIcon="history"
+                value={editingClient.hours_from_previous_month ?? 0}
+                onChange={(event) =>
+                  setEditingClient({
+                    ...editingClient,
+                    hours_from_previous_month: normalizeNumericInputValue(
+                      event.target.value,
+                    ),
+                  })
+                }
+              />
+            </div>
             <div className="flex justify-end gap-2">
               <Button
                 variant="secondary"

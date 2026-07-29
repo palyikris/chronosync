@@ -31,6 +31,8 @@ export async function createClient(
   companyId: string,
   name: string,
   invoiceAttachmentLanguage: InvoiceAttachmentLanguage,
+  availableHoursPerMonth: number,
+  hoursFromPreviousMonth: number,
 ): Promise<Client> {
   const { data, error } = await supabase
     .from("clients")
@@ -38,6 +40,8 @@ export async function createClient(
       company_id: companyId,
       name,
       invoice_attachment_language: invoiceAttachmentLanguage,
+      available_hours_per_month: availableHoursPerMonth,
+      hours_from_previous_month: hoursFromPreviousMonth,
     })
     .select()
     .single();
@@ -49,12 +53,16 @@ export async function updateClient(
   clientId: string,
   name: string,
   invoiceAttachmentLanguage: InvoiceAttachmentLanguage,
+  availableHoursPerMonth: number,
+  hoursFromPreviousMonth: number,
 ): Promise<Client> {
   const { data, error } = await supabase
     .from("clients")
     .update({
       name,
       invoice_attachment_language: invoiceAttachmentLanguage,
+      available_hours_per_month: availableHoursPerMonth,
+      hours_from_previous_month: hoursFromPreviousMonth,
     })
     .eq("id", clientId)
     .select()

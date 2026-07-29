@@ -44,7 +44,7 @@ export const CompanySettingsPage: React.FC = () => {
         subtitle={t("companySettings.subtitle")}
       />
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[0.92fr_1.08fr]">
+      <div className="flex flex-col gap-8">
         <ClientManagementCard
           clients={clients}
           onRefresh={refreshCompanySettings}
