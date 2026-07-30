@@ -1,5 +1,5 @@
 import React from "react";
-import { Calendar as CalendarIcon, Check, Clock, X } from "lucide-react";
+import { Calendar as CalendarIcon, Check, Clock, Info, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../shared/Button";
 import { Input } from "../shared/Input";
@@ -20,6 +20,11 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
   isSaving,
 }) => {
   const { t } = useTranslation();
+  const selectedClient = clients.find(
+    (client) => client.id === formData.client_id,
+  );
+  const showEnglishDescriptionHint =
+    selectedClient?.invoice_attachment_language === "en";
 
   return (
     <Modal
@@ -75,6 +80,12 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
           <label className="mb-1 block text-xs font-semibold text-muted">
             {t("timesheet.taskDescription")}
           </label>
+          {showEnglishDescriptionHint ? (
+            <div className="mb-2 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+              <Info className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{t("timesheet.englishDescriptionWarning")}</span>
+            </div>
+          ) : null}
           <Textarea
             rows={3}
             required

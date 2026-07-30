@@ -24,6 +24,13 @@ import type { Project } from "../../types/client-project";
 import { Select } from "../shared/Select";
 import { Input } from "../shared/Input";
 
+const normalizeEstimatedHours = (value: string) => {
+  if (value === "") return 0;
+
+  const parsedValue = Number(value);
+  return Number.isNaN(parsedValue) || parsedValue < 0 ? 0 : parsedValue;
+};
+
 export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   companyId,
   clients,
@@ -33,6 +40,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   const { t } = useTranslation();
   const [newProjectName, setNewProjectName] = useState("");
   const [newProjectClientId, setNewProjectClientId] = useState("");
+  const [newProjectEstimatedHours, setNewProjectEstimatedHours] = useState(0);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deletingProjectId, setDeletingProjectId] = useState<string | null>(
     null,
@@ -54,9 +62,15 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
 
     try {
       setLoading(true);
-      await createProject(companyId, newProjectClientId, newProjectName.trim());
+      await createProject(
+        companyId,
+        newProjectClientId,
+        newProjectName.trim(),
+        newProjectEstimatedHours,
+      );
       setNewProjectName("");
       setNewProjectClientId("");
+      setNewProjectEstimatedHours(0);
       onRefresh();
     } catch (error) {
       alert(
@@ -74,7 +88,11 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
 
     try {
       setLoading(true);
-      await updateProject(editingProject.id, editingProject.name.trim());
+      await updateProject(
+        editingProject.id,
+        editingProject.name.trim(),
+        editingProject.estimated_hours_per_month ?? 0,
+      );
       setEditingProject(null);
       onRefresh();
     } catch (error) {
@@ -143,7 +161,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
 
       <CardContent className="space-y-6 px-0 pb-0">
         <form onSubmit={handleCreate} className="space-y-3">
-          <div className="grid gap-3 md:grid-cols-[1fr_1.1fr_auto] md:items-end">
+          <div className="grid gap-3 md:grid-cols-[1fr_1.1fr_0.8fr_auto] md:items-end">
             <Select
               id="new-project-client"
               label={t("companySettings.projectClientLabel")}
@@ -170,6 +188,22 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
               value={newProjectName}
               onChange={(event) => setNewProjectName(event.target.value)}
               className="disabled:cursor-not-allowed disabled:bg-[#f3f4f5]"
+            />
+
+            <Input
+              id="new-project-estimated-hours"
+              type="number"
+              min="0"
+              step="1"
+              label={t("companySettings.estimatedHoursPerMonthLabel")}
+              leftIcon="schedule"
+              required
+              value={newProjectEstimatedHours}
+              onChange={(event) =>
+                setNewProjectEstimatedHours(
+                  normalizeEstimatedHours(event.target.value),
+                )
+              }
             />
 
             <Button
@@ -216,6 +250,10 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                   <p className="mt-1 text-xs text-muted-strong">
                     {clients.find((client) => client.id === project.client_id)
                       ?.name ?? t("companySettings.unknownClient")}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-strong">
+                    {t("companySettings.estimatedHoursPerMonthLabel")}:{" "}
+                    {project.estimated_hours_per_month}
                   </p>
                   <p className="mt-1 text-xs text-muted-strong">
                     {project.is_active
@@ -278,6 +316,24 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                 setEditingProject({
                   ...editingProject,
                   name: event.target.value,
+                })
+              }
+            />
+            <Input
+              id="edit-project-estimated-hours"
+              type="number"
+              min="0"
+              step="1"
+              label={t("companySettings.estimatedHoursPerMonthLabel")}
+              leftIcon="schedule"
+              required
+              value={editingProject.estimated_hours_per_month}
+              onChange={(event) =>
+                setEditingProject({
+                  ...editingProject,
+                  estimated_hours_per_month: normalizeEstimatedHours(
+                    event.target.value,
+                  ),
                 })
               }
             />

@@ -30,6 +30,7 @@ export async function fetchActiveClients(companyId: string): Promise<Client[]> {
 export async function createClient(
   companyId: string,
   name: string,
+  clientCode: string,
   invoiceAttachmentLanguage: InvoiceAttachmentLanguage,
   availableHoursPerMonth: number,
   hoursFromPreviousMonth: number,
@@ -39,6 +40,7 @@ export async function createClient(
     .insert({
       company_id: companyId,
       name,
+      client_code: clientCode,
       invoice_attachment_language: invoiceAttachmentLanguage,
       available_hours_per_month: availableHoursPerMonth,
       hours_from_previous_month: hoursFromPreviousMonth,
@@ -52,6 +54,7 @@ export async function createClient(
 export async function updateClient(
   clientId: string,
   name: string,
+  clientCode: string,
   invoiceAttachmentLanguage: InvoiceAttachmentLanguage,
   availableHoursPerMonth: number,
   hoursFromPreviousMonth: number,
@@ -60,6 +63,7 @@ export async function updateClient(
     .from("clients")
     .update({
       name,
+      client_code: clientCode,
       invoice_attachment_language: invoiceAttachmentLanguage,
       available_hours_per_month: availableHoursPerMonth,
       hours_from_previous_month: hoursFromPreviousMonth,
@@ -133,11 +137,18 @@ export async function createProject(
   companyId: string,
   clientId: string,
   name: string,
+  estimatedHoursPerMonth: number,
   description?: string,
 ): Promise<Project> {
   const { data, error } = await supabase
     .from("projects")
-    .insert({ company_id: companyId, client_id: clientId, name, description })
+    .insert({
+      company_id: companyId,
+      client_id: clientId,
+      name,
+      estimated_hours_per_month: estimatedHoursPerMonth,
+      description,
+    })
     .select("*, clients(name)")
     .single();
   if (error) throw error;
@@ -147,11 +158,16 @@ export async function createProject(
 export async function updateProject(
   projectId: string,
   name: string,
+  estimatedHoursPerMonth: number,
   description?: string,
 ): Promise<Project> {
   const { data, error } = await supabase
     .from("projects")
-    .update({ name, description })
+    .update({
+      name,
+      estimated_hours_per_month: estimatedHoursPerMonth,
+      description,
+    })
     .eq("id", projectId)
     .select("*, clients(name)")
     .single();

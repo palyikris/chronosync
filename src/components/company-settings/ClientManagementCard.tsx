@@ -28,6 +28,7 @@ import {
 } from "../../types/client-project";
 
 const DEFAULT_INVOICE_ATTACHMENT_LANGUAGE: InvoiceAttachmentLanguage = "en";
+const CLIENT_CODE_MAX_LENGTH = 3;
 
 const normalizeInvoiceAttachmentLanguage = (
   language: InvoiceAttachmentLanguage | null | undefined,
@@ -39,6 +40,27 @@ const normalizeNumericInputValue = (value: string): number => {
   if (value === "") return 0;
   const parsedValue = Number(value);
   return Number.isNaN(parsedValue) ? 0 : parsedValue;
+};
+
+const normalizeClientCode = (value: string) => value.trim();
+
+const hasDuplicateClientCode = (
+  clients: Client[],
+  clientCode: string,
+  excludedClientId?: string,
+) => {
+  const normalizedClientCode = normalizeClientCode(clientCode).toLowerCase();
+
+  if (!normalizedClientCode) {
+    return false;
+  }
+
+  return clients.some(
+    (client) =>
+      client.id !== excludedClientId &&
+      normalizeClientCode(client.client_code).toLowerCase() ===
+        normalizedClientCode,
+  );
 };
 
 interface Props {
@@ -54,6 +76,7 @@ export const ClientManagementCard: React.FC<Props> = ({
 }) => {
   const { t } = useTranslation();
   const [newClientName, setNewClientName] = useState("");
+  const [newClientCode, setNewClientCode] = useState("");
   const [newClientLanguage, setNewClientLanguage] =
     useState<InvoiceAttachmentLanguage>(DEFAULT_INVOICE_ATTACHMENT_LANGUAGE);
   const [newClientAvailableHours, setNewClientAvailableHours] = useState(0);
@@ -65,22 +88,35 @@ export const ClientManagementCard: React.FC<Props> = ({
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newClientName.trim()) return;
+    const clientName = newClientName.trim();
+    const clientCode = normalizeClientCode(newClientCode);
+
+    if (!clientName || !clientCode) return;
+    if (hasDuplicateClientCode(clients, clientCode)) {
+      alert(t("companySettings.duplicateClientCode"));
+      return;
+    }
     try {
       setLoading(true);
       await createClient(
         companyId,
-        newClientName.trim(),
+        clientName,
+        clientCode,
         newClientLanguage,
         newClientAvailableHours,
         newClientHoursFromPreviousMonth,
       );
       setNewClientName("");
+      setNewClientCode("");
       setNewClientLanguage(DEFAULT_INVOICE_ATTACHMENT_LANGUAGE);
       setNewClientAvailableHours(0);
       setNewClientHoursFromPreviousMonth(0);
       onRefresh();
     } catch (err) {
+      if (err instanceof Error && /duplicate|unique/i.test(err.message)) {
+        alert(t("companySettings.duplicateClientCode"));
+        return;
+      }
       alert(
         err instanceof Error
           ? err.message
@@ -92,12 +128,22 @@ export const ClientManagementCard: React.FC<Props> = ({
   };
 
   const handleUpdate = async () => {
-    if (!editingClient || !editingClient.name.trim()) return;
+    if (!editingClient) return;
+
+    const clientName = editingClient.name.trim();
+    const clientCode = normalizeClientCode(editingClient.client_code);
+
+    if (!clientName || !clientCode) return;
+    if (hasDuplicateClientCode(clients, clientCode, editingClient.id)) {
+      alert(t("companySettings.duplicateClientCode"));
+      return;
+    }
     try {
       setLoading(true);
       await updateClient(
         editingClient.id,
-        editingClient.name.trim(),
+        clientName,
+        clientCode,
         normalizeInvoiceAttachmentLanguage(
           editingClient.invoice_attachment_language,
         ),
@@ -107,6 +153,10 @@ export const ClientManagementCard: React.FC<Props> = ({
       setEditingClient(null);
       onRefresh();
     } catch (err) {
+      if (err instanceof Error && /duplicate|unique/i.test(err.message)) {
+        alert(t("companySettings.duplicateClientCode"));
+        return;
+      }
       alert(
         err instanceof Error
           ? err.message
@@ -179,6 +229,18 @@ export const ClientManagementCard: React.FC<Props> = ({
               leftIcon="person"
               value={newClientName}
               onChange={(e) => setNewClientName(e.target.value)}
+              required
+              className="md:flex-1"
+            />
+            <Input
+              id="new-client-code"
+              type="text"
+              label={t("companySettings.clientCodeLabel")}
+              leftIcon="badge"
+              value={newClientCode}
+              onChange={(e) => setNewClientCode(e.target.value)}
+              maxLength={CLIENT_CODE_MAX_LENGTH}
+              required
               className="md:flex-1"
             />
             <Select
@@ -261,6 +323,9 @@ export const ClientManagementCard: React.FC<Props> = ({
                     {client.name}
                   </span>
                   <span className="mt-1 block text-xs text-muted-strong">
+                    {t("companySettings.clientCodeLabel")}: {client.client_code}
+                  </span>
+                  <span className="mt-1 block text-xs text-muted-strong">
                     {t("companySettings.invoiceAttachmentLabel")}{" "}
                     {normalizeInvoiceAttachmentLanguage(
                       client.invoice_attachment_language,
@@ -309,6 +374,7 @@ export const ClientManagementCard: React.FC<Props> = ({
                           client.available_hours_per_month ?? 0,
                         hours_from_previous_month:
                           client.hours_from_previous_month ?? 0,
+                        client_code: client.client_code,
                       })
                     }
                     disabled={loading}
@@ -348,6 +414,22 @@ export const ClientManagementCard: React.FC<Props> = ({
               onChange={(e) =>
                 setEditingClient({ ...editingClient, name: e.target.value })
               }
+              required
+            />
+            <Input
+              id="edit-client-code"
+              type="text"
+              label={t("companySettings.clientCodeLabel")}
+              leftIcon="badge"
+              value={editingClient.client_code}
+              onChange={(e) =>
+                setEditingClient({
+                  ...editingClient,
+                  client_code: e.target.value,
+                })
+              }
+              maxLength={CLIENT_CODE_MAX_LENGTH}
+              required
             />
             <Select
               id="edit-client-language"

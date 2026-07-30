@@ -6,6 +6,7 @@ export type InvoiceAttachmentLanguage = "hu" | "en";
 export interface Client {
   id: string;
   name: string;
+  client_code: string;
   company_id: string;
   is_active: boolean;
   invoice_attachment_language: InvoiceAttachmentLanguage | null;
@@ -19,6 +20,7 @@ export interface Project {
   client_id: string;
   company_id: string;
   name: string;
+  estimated_hours_per_month: number;
   is_active: boolean;
   created_at: string;
 }
@@ -26,6 +28,7 @@ export interface Project {
 export const createClientPayloadSchema = z
   .object({
     name: trimmedNonEmptyStringSchema("Client name is required", 120),
+    client_code: trimmedNonEmptyStringSchema("Client code is required", 60),
     company_id: uuidSchema,
     invoice_attachment_language: z.enum(["hu", "en"]).optional(),
     available_hours_per_month: z.number().nonnegative().optional(),
@@ -38,6 +41,7 @@ export const createProjectPayloadSchema = z
     name: trimmedNonEmptyStringSchema("Project name is required", 120),
     client_id: uuidSchema,
     company_id: uuidSchema,
+    estimated_hours_per_month: z.number().nonnegative(),
   })
   .strict();
 
