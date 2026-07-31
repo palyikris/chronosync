@@ -2,7 +2,7 @@ import React from "react";
 import { Calendar, Download } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../shared/Button";
-import { downloadSzamlamellekletReport } from "../../utils/downloadExcelReport";
+import { InvoiceAttachmentModal } from "./InvoiceAttachmentModal";
 
 interface DashboardHeaderProps {
   startDate: string;
@@ -20,6 +20,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   companyId,
 }) => {
   const { t, i18n } = useTranslation();
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = React.useState(false);
   const language = i18n.resolvedLanguage || i18n.language || "en";
   const previousMonthStartDate = (() => {
     const date = new Date();
@@ -61,19 +62,21 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
       <div className="w-full flex items-center justify-end fixed bottom-0 left-0 right-0 px-8 py-4">
         <Button
-          onClick={() => {
-            downloadSzamlamellekletReport({
-              companyId,
-              startDate: previousMonthStartDate,
-              endDate: previousMonthEndDate,
-              language,
-            });
-          }}
+          onClick={() => setIsInvoiceModalOpen(true)}
           icon={<Download className="h-4 w-4" />}
         >
           {t("dashboard.downloadReport")}
         </Button>
       </div>
+
+      <InvoiceAttachmentModal
+        open={isInvoiceModalOpen}
+        companyId={companyId}
+        startDate={previousMonthStartDate}
+        endDate={previousMonthEndDate}
+        language={language}
+        onClose={() => setIsInvoiceModalOpen(false)}
+      />
     </header>
   );
 };

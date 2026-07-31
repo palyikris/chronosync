@@ -102,7 +102,17 @@
     "projectUtilizationEmpty": "Nincs elérhető aktív ügyfél- és projektkihasználtsági adat.",
     "failedToLoad": "Nem sikerült betölteni a vezérlőpult mérőszámait:",
     "dailyTrendLegend": "Jelmagyarázat",
-    "downloadReport": "Számlamelléklet letöltése"
+    "downloadReport": "Számlamelléklet letöltése",
+    "invoiceAttachmentModalTitle": "Számlamellékletek generálása",
+    "invoiceAttachmentModalSubtitle": "Válaszd ki az exportba kerülő aktív ügyfeleket. Alapértelmezés szerint minden aktív ügyfél ki van jelölve.",
+    "invoiceAttachmentNoActiveClients": "Nincs elérhető aktív ügyfél a számlamellékletek generálásához.",
+    "invoiceAttachmentLoadFailed": "Nem sikerült betölteni az aktív ügyfeleket.",
+    "invoiceAttachmentGenerationFailed": "Nem sikerült generálni a számlamellékleteket.",
+    "clientCode": "Ügyfélkód",
+    "clientName": "Ügyfélnév",
+    "actions": "Műveletek",
+    "selectClientForInvoice": "{{clientName}} ügyfél kijelölése számlamelléklethez",
+    "generateInvoiceAttachments": "Számlamellékletek generálása"
   },
   "companyManagement": {
     "brand": "ChronoTrack",

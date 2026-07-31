@@ -102,7 +102,17 @@
     "projectUtilizationEmpty": "No active client and project utilization data available.",
     "failedToLoad": "Failed to load dashboard metrics:",
     "dailyTrendLegend": "Legend",
-    "downloadReport": "Download Report"
+    "downloadReport": "Download Report",
+    "invoiceAttachmentModalTitle": "Generate Invoice Attachments",
+    "invoiceAttachmentModalSubtitle": "Select the active clients to include in the export. All active clients are selected by default.",
+    "invoiceAttachmentNoActiveClients": "No active clients are available for invoice generation.",
+    "invoiceAttachmentLoadFailed": "Failed to load active clients.",
+    "invoiceAttachmentGenerationFailed": "Failed to generate invoice attachments.",
+    "clientCode": "Client Code",
+    "clientName": "Client Name",
+    "actions": "Actions",
+    "selectClientForInvoice": "Select client {{clientName}} for invoice generation",
+    "generateInvoiceAttachments": "Generate Invoice Attachments"
   },
   "companyManagement": {
     "brand": "ChronoTrack",

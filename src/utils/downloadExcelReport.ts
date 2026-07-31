@@ -1,19 +1,17 @@
 import { supabase } from "../lib/supabaseClient";
 
 interface DownloadReportParams {
-  companyId: string;
   periodText?: string;
   startDate?: string;
   endDate?: string;
+  clientCodes: string[];
   language: string;
 }
 
 export async function downloadSzamlamellekletReport(
   params: DownloadReportParams,
 ): Promise<void> {
-
-
-  const { companyId, periodText, startDate, endDate, language } = params;
+  const { clientCodes, periodText, startDate, endDate, language } = params;
   // Retrieve current active session token from Supabase Auth
   const {
     data: { session },
@@ -32,7 +30,7 @@ export async function downloadSzamlamellekletReport(
         Authorization: `Bearer ${session.access_token}`,
       },
       body: JSON.stringify({
-        company_id: companyId,
+        client_codes: clientCodes,
         period_text: periodText,
         start_date: startDate,
         end_date: endDate,
