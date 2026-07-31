@@ -1,5 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabaseClient";
+import { createClient } from "@supabase/supabase-js";
 import {
   createCompanyUserPayloadSchema,
   deleteCompanyUserIdSchema,
@@ -57,7 +57,6 @@ export async function fetchCompanyMembers(
   return data as UserProfile[];
 }
 
-
 export async function createCompanyUser(payload: CreateCompanyUserPayload) {
   const validatedPayload = createCompanyUserPayloadSchema.parse(payload);
   const targetPassword = validatedPayload.password || "TempPassword123!";
@@ -82,10 +81,7 @@ export async function createCompanyUser(payload: CreateCompanyUserPayload) {
 /**
  * Assign/Update User Roles or Details (US-04)
  */
-export async function updateUserRole(
-  userId: string,
-  role: CompanyUserRole,
-) {
+export async function updateUserRole(userId: string, role: CompanyUserRole) {
   const validatedPayload = updateUserRolePayloadSchema.parse({ userId, role });
 
   const { data, error } = await supabase
@@ -134,7 +130,6 @@ export async function sendUserPasswordReset(email: string) {
 
   if (error) throw error;
 }
-
 
 /**
  * Permanently hard-delete a user profile and auth account (US-03)

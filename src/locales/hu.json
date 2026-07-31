@@ -97,6 +97,9 @@
     "breakdownProjectsTitle": "Ügyfél- és projektmegoszlás",
     "breakdownProjectsSubtitle": "Erőforrás-eloszlás projektenként",
     "breakdownProjectsEmpty": "Nincs elérhető projektbontási adat.",
+    "projectUtilizationTitle": "Projekt terhelés vs becslés",
+    "projectUtilizationSubtitle": "Hasonlítsd össze a becsült havi óraszámot a ténylegesen rögzített idővel minden aktív ügyfélnél és projektnél.",
+    "projectUtilizationEmpty": "Nincs elérhető aktív ügyfél- és projektkihasználtsági adat.",
     "failedToLoad": "Nem sikerült betölteni a vezérlőpult mérőszámait:",
     "dailyTrendLegend": "Jelmagyarázat",
     "downloadReport": "Számlamelléklet letöltése"

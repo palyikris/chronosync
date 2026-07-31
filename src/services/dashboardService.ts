@@ -4,6 +4,7 @@ import {
   type DashboardData,
   type DashboardKPIs,
   type ClientProjectBreakdown,
+  type ClientProjectUtilizationGroup,
   type UserWorkBreakdown,
   type DailyLoggingTrend,
 } from "../types/dashboard";
@@ -13,12 +14,28 @@ import {
  * @param endDate YYYY-MM-DD
  */
 export async function fetchAdminDashboardData(
+  companyId: string,
   startDate: string,
   endDate: string,
 ): Promise<DashboardData> {
-  // 1. Parallel Execution: Fetch active company profiles & timesheet entries with joins
-  const [profilesResult, timesheetsResult] = await Promise.all([
+  // 1. Parallel execution: fetch active company profiles, projects, and timesheet entries.
+  const [profilesResult, projectsResult, timesheetsResult] = await Promise.all([
     supabase.from("profiles").select("id, is_active").eq("is_active", true),
+
+    supabase
+      .from("projects")
+      .select(
+        `
+        id,
+        client_id,
+        name,
+        estimated_hours_per_month,
+        clients!inner ( id, name, is_active )
+      `,
+      )
+      .eq("company_id", companyId)
+      .eq("is_active", true)
+      .eq("clients.is_active", true),
 
     supabase
       .from("timesheets")
@@ -40,9 +57,11 @@ export async function fetchAdminDashboardData(
   ]);
 
   if (profilesResult.error) throw profilesResult.error;
+  if (projectsResult.error) throw projectsResult.error;
   if (timesheetsResult.error) throw timesheetsResult.error;
 
   const activeProfiles = profilesResult.data || [];
+  const activeProjects = projectsResult.data || [];
   const timesheetEntries = timesheetsResult.data || [];
 
   // --- KPI AGGREGATIONS ---
@@ -60,6 +79,71 @@ export async function fetchAdminDashboardData(
   const breakdownMap = new Map<string, ClientProjectBreakdown>();
   const userBreakdownMap = new Map<string, UserWorkBreakdown>();
   const dailyMap = new Map<string, number>();
+  const projectUtilizationMap = new Map<
+    string,
+    {
+      clientId: string;
+      clientName: string;
+      projectId: string;
+      projectName: string;
+      estimatedHours: number;
+      loggedHours: number;
+    }
+  >();
+  const clientUtilizationMap = new Map<
+    string,
+    {
+      clientId: string;
+      clientName: string;
+      estimatedHours: number;
+      loggedHours: number;
+      projects: Array<{
+        projectId: string;
+        projectName: string;
+        estimatedHours: number;
+        loggedHours: number;
+      }>;
+    }
+  >();
+
+  activeProjects.forEach((projectRow: any) => {
+    const projectClient = Array.isArray(projectRow.clients)
+      ? projectRow.clients[0]
+      : projectRow.clients;
+    const clientId = projectRow.client_id;
+    const clientName = projectClient?.name || i18n.t("common.unknown");
+    const projectId = projectRow.id;
+    const projectName = projectRow.name || i18n.t("common.unknown");
+    const estimatedHours = Number(projectRow.estimated_hours_per_month) || 0;
+
+    projectUtilizationMap.set(projectId, {
+      clientId,
+      clientName,
+      projectId,
+      projectName,
+      estimatedHours,
+      loggedHours: 0,
+    });
+
+    if (!clientUtilizationMap.has(clientId)) {
+      clientUtilizationMap.set(clientId, {
+        clientId,
+        clientName,
+        estimatedHours: 0,
+        loggedHours: 0,
+        projects: [],
+      });
+    }
+
+    const clientGroup = clientUtilizationMap.get(clientId)!;
+    clientGroup.estimatedHours += estimatedHours;
+    clientGroup.projects.push({
+      projectId,
+      projectName,
+      estimatedHours,
+      loggedHours: 0,
+    });
+  });
 
   timesheetEntries.forEach((entry) => {
     const hours = Number(entry.hours_logged) || 0;
@@ -118,6 +202,25 @@ export async function fetchAdminDashboardData(
     // --- 3. Daily Trend Grouping ---
     const dateKey = entry.work_date;
     dailyMap.set(dateKey, (dailyMap.get(dateKey) || 0) + hours);
+
+    // --- 4. Project utilization grouping ---
+    const utilizationProject = projectUtilizationMap.get(entry.project_id);
+    if (utilizationProject) {
+      utilizationProject.loggedHours += hours;
+
+      const utilizationClient = clientUtilizationMap.get(
+        utilizationProject.clientId,
+      );
+      if (utilizationClient) {
+        utilizationClient.loggedHours += hours;
+        const projectEntry = utilizationClient.projects.find(
+          (project) => project.projectId === utilizationProject.projectId,
+        );
+        if (projectEntry) {
+          projectEntry.loggedHours += hours;
+        }
+      }
+    }
   });
 
   // Capacity Utilization Calculation (~160 hours standard work capacity per active user per month)
@@ -149,6 +252,58 @@ export async function fetchAdminDashboardData(
     }))
     .sort((a, b) => b.totalHours - a.totalHours);
 
+  const clientProjectUtilization: ClientProjectUtilizationGroup[] = Array.from(
+    clientUtilizationMap.values(),
+  )
+    .map((group) => {
+      const projects = group.projects
+        .map((project) => {
+          const utilizationPct =
+            project.estimatedHours > 0
+              ? Math.round((project.loggedHours / project.estimatedHours) * 100)
+              : project.loggedHours > 0
+                ? 999
+                : 0;
+
+          return {
+            ...project,
+            loggedHours: Math.round(project.loggedHours * 10) / 10,
+            estimatedHours: Math.round(project.estimatedHours * 10) / 10,
+            utilizationPct,
+          };
+        })
+        .sort((a, b) => {
+          const percentageDelta = b.utilizationPct - a.utilizationPct;
+          if (percentageDelta !== 0) return percentageDelta;
+          const loggedDelta = b.loggedHours - a.loggedHours;
+          if (loggedDelta !== 0) return loggedDelta;
+          return a.projectName.localeCompare(b.projectName);
+        });
+
+      const utilizationPct =
+        group.estimatedHours > 0
+          ? Math.round((group.loggedHours / group.estimatedHours) * 100)
+          : group.loggedHours > 0
+            ? 999
+            : 0;
+
+      return {
+        ...group,
+        loggedHours: Math.round(group.loggedHours * 10) / 10,
+        estimatedHours: Math.round(group.estimatedHours * 10) / 10,
+        utilizationPct,
+        projects,
+      };
+    })
+    .filter((group) => group.projects.length > 0)
+    .sort((a, b) => {
+      const percentageDelta = b.utilizationPct - a.utilizationPct;
+      if (percentageDelta !== 0) return percentageDelta;
+      const loggedDelta = b.loggedHours - a.loggedHours;
+      if (loggedDelta !== 0) return loggedDelta;
+      return a.clientName.localeCompare(b.clientName);
+    });
+
   // Convert user map to array, compute percentage share, and sort descending
   const userBreakdown: UserWorkBreakdown[] = Array.from(
     userBreakdownMap.values(),
@@ -174,6 +329,7 @@ export async function fetchAdminDashboardData(
   return {
     kpis,
     clientProjectBreakdown,
+    clientProjectUtilization,
     userBreakdown,
     dailyTrends,
   };

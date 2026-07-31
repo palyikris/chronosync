@@ -1,4 +1,2 @@
-client code for clients should be manually managable
-kliens nyelve legyen warning az entry description-nél
 minden ugyfel minden projektjere kell egy becsult havi ido oszlop. ezutan a dashboardon meg kell jeleniteni barcharttal meg szamokkal hogy az osszes projekten hogy all a tervezett a tenyleges logolthoz kepest
 szamlamelleklet generalaskor lehessen ugyfeleket valasztani egy modalban. legyen a ceges beallitasok kozott egy default szamlamelleklet lista, es azt lehessen hasznalni generalaskor. a modalban a kovetkezo dolgokat kell tudni: minden ugyfel kijelolese, minden kijeloles torlese, default ugyfelek kijelolese, illetve egyesevel is lehessen ugyfeleket kivalasztani kis checkboxokkal

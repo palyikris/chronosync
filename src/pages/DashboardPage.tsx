@@ -8,6 +8,7 @@ import { KpiSummaryCards } from "../components/dashboard/KpiSummaryCards";
 import { DailyTrendChart } from "../components/dashboard/DailyTrendChart";
 import { UserBreakdownPanel } from "../components/dashboard/UserBreakdownPanel";
 import { ProjectBreakdownPanel } from "../components/dashboard/ProjectBreakdownPanel";
+import { ProjectUtilizationPanel } from "../components/dashboard/ProjectUtilizationPanel";
 
 export const AdminDashboardPage: React.FC = () => {
   const { profile } = useAuth();
@@ -31,8 +32,9 @@ export const AdminDashboardPage: React.FC = () => {
   const [endDate, setEndDate] = useState(getEndOfMonth());
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["adminDashboard", startDate, endDate],
-    queryFn: () => fetchAdminDashboardData(startDate, endDate),
+    queryKey: ["adminDashboard", profile?.company_id, startDate, endDate],
+    queryFn: () =>
+      fetchAdminDashboardData(profile?.company_id || "", startDate, endDate),
     enabled: !!profile?.company_id,
   });
 
@@ -67,6 +69,10 @@ export const AdminDashboardPage: React.FC = () => {
             />
             <UserBreakdownPanel breakdown={data?.userBreakdown || []} />
           </div>
+
+          <ProjectUtilizationPanel
+            groups={data?.clientProjectUtilization || []}
+          />
 
           <DailyTrendChart dailyTrends={dailyTrends} />
         </>

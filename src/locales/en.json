@@ -97,6 +97,9 @@
     "breakdownProjectsTitle": "Client & Project Share",
     "breakdownProjectsSubtitle": "Resource allocation by project",
     "breakdownProjectsEmpty": "No project breakdown data available.",
+    "projectUtilizationTitle": "Project workload vs estimate",
+    "projectUtilizationSubtitle": "Compare estimated monthly hours with actual logged time for each active client and project.",
+    "projectUtilizationEmpty": "No active client and project utilization data available.",
     "failedToLoad": "Failed to load dashboard metrics:",
     "dailyTrendLegend": "Legend",
     "downloadReport": "Download Report"

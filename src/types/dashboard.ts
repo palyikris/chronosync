@@ -14,6 +14,23 @@ export interface ClientProjectBreakdown {
   percentage: number;
 }
 
+export interface ProjectUtilizationItem {
+  projectId: string;
+  projectName: string;
+  estimatedHours: number;
+  loggedHours: number;
+  utilizationPct: number;
+}
+
+export interface ClientProjectUtilizationGroup {
+  clientId: string;
+  clientName: string;
+  estimatedHours: number;
+  loggedHours: number;
+  utilizationPct: number;
+  projects: ProjectUtilizationItem[];
+}
+
 export interface UserWorkBreakdown {
   userId: string;
   userName: string;
@@ -38,6 +55,7 @@ export interface DailyLoggingTrend {
 export interface DashboardData {
   kpis: DashboardKPIs;
   clientProjectBreakdown: ClientProjectBreakdown[];
+  clientProjectUtilization: ClientProjectUtilizationGroup[];
   userBreakdown: UserWorkBreakdown[];
   dailyTrends: DailyLoggingTrend[];
 }
