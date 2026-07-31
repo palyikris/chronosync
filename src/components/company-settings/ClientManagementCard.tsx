@@ -5,6 +5,7 @@ import {
   Check,
   PencilLine,
   Plus,
+  Star,
   ToggleLeft,
   ToggleRight,
   Trash2,
@@ -82,6 +83,7 @@ export const ClientManagementCard: React.FC<Props> = ({
   const [newClientAvailableHours, setNewClientAvailableHours] = useState(0);
   const [newClientHoursFromPreviousMonth, setNewClientHoursFromPreviousMonth] =
     useState(0);
+  const [newClientIsDefault, setNewClientIsDefault] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [deletingClientId, setDeletingClientId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -105,12 +107,14 @@ export const ClientManagementCard: React.FC<Props> = ({
         newClientLanguage,
         newClientAvailableHours,
         newClientHoursFromPreviousMonth,
+        newClientIsDefault,
       );
       setNewClientName("");
       setNewClientCode("");
       setNewClientLanguage(DEFAULT_INVOICE_ATTACHMENT_LANGUAGE);
       setNewClientAvailableHours(0);
       setNewClientHoursFromPreviousMonth(0);
+      setNewClientIsDefault(false);
       onRefresh();
     } catch (err) {
       if (err instanceof Error && /duplicate|unique/i.test(err.message)) {
@@ -149,6 +153,7 @@ export const ClientManagementCard: React.FC<Props> = ({
         ),
         editingClient.available_hours_per_month ?? 0,
         editingClient.hours_from_previous_month ?? 0,
+        editingClient.is_default ?? false,
       );
       setEditingClient(null);
       onRefresh();
@@ -177,6 +182,30 @@ export const ClientManagementCard: React.FC<Props> = ({
         err instanceof Error
           ? err.message
           : t("companySettings.failedUpdateClientActivity"),
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleDefault = async (client: Client) => {
+    try {
+      setLoading(true);
+      await updateClient(
+        client.id,
+        client.name,
+        client.client_code,
+        normalizeInvoiceAttachmentLanguage(client.invoice_attachment_language),
+        client.available_hours_per_month ?? 0,
+        client.hours_from_previous_month ?? 0,
+        !(client.is_default ?? false),
+      );
+      onRefresh();
+    } catch (err) {
+      alert(
+        err instanceof Error
+          ? err.message
+          : t("companySettings.failedUpdateClient"),
       );
     } finally {
       setLoading(false);
@@ -293,6 +322,27 @@ export const ClientManagementCard: React.FC<Props> = ({
               }
             />
           </div>
+          <div className="flex items-center justify-between rounded-xl border border-border-strong bg-bg-accent px-4 py-3">
+            <div>
+              <p className="text-sm font-medium text-text">
+                {t("companySettings.defaultLabel")}
+              </p>
+              <p className="text-xs text-muted-strong">
+                {newClientIsDefault
+                  ? t("companySettings.defaultClientSelected")
+                  : t("companySettings.defaultClientNotSelected")}
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant={newClientIsDefault ? "primary" : "secondary"}
+              onClick={() => setNewClientIsDefault((value) => !value)}
+              className="rounded-xl px-4"
+              icon={<Star className="h-4 w-4" />}
+            >
+              {t("companySettings.defaultLabel")}
+            </Button>
+          </div>
           <div className="flex justify-end">
             <Button
               type="submit"
@@ -344,6 +394,11 @@ export const ClientManagementCard: React.FC<Props> = ({
                       ? t("common.active")
                       : t("common.inactive")}
                   </span>
+                  <span className="mt-1 block text-xs text-muted-strong">
+                    {client.is_default
+                      ? t("companySettings.defaultLabel")
+                      : t("companySettings.defaultClientNotSelected")}
+                  </span>
                 </div>
                 <div className="flex gap-2">
                   <Button
@@ -359,6 +414,14 @@ export const ClientManagementCard: React.FC<Props> = ({
                         <ToggleLeft className="h-4 w-4" />
                       )
                     }
+                  ></Button>
+                  <Button
+                    size="sm"
+                    variant={client.is_default ? "primary" : "secondary"}
+                    onClick={() => handleToggleDefault(client)}
+                    disabled={loading}
+                    className="rounded-xl px-3"
+                    icon={<Star className="h-4 w-4" />}
                   ></Button>
                   <Button
                     size="sm"
@@ -488,6 +551,32 @@ export const ClientManagementCard: React.FC<Props> = ({
                   })
                 }
               />
+            </div>
+            <div className="flex items-center justify-between rounded-xl border border-border-strong bg-bg-accent px-4 py-3">
+              <div>
+                <p className="text-sm font-medium text-text">
+                  {t("companySettings.defaultLabel")}
+                </p>
+                <p className="text-xs text-muted-strong">
+                  {editingClient.is_default
+                    ? t("companySettings.defaultClientSelected")
+                    : t("companySettings.defaultClientNotSelected")}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant={editingClient.is_default ? "primary" : "secondary"}
+                onClick={() =>
+                  setEditingClient({
+                    ...editingClient,
+                    is_default: !editingClient.is_default,
+                  })
+                }
+                className="rounded-xl px-4"
+                icon={<Star className="h-4 w-4" />}
+              >
+                {t("companySettings.defaultLabel")}
+              </Button>
             </div>
             <div className="flex justify-end gap-2">
               <Button

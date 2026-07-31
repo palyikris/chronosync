@@ -9,6 +9,7 @@ export interface Client {
   client_code: string;
   company_id: string;
   is_active: boolean;
+  is_default: boolean;
   invoice_attachment_language: InvoiceAttachmentLanguage | null;
   available_hours_per_month: number;
   hours_from_previous_month: number;
@@ -33,6 +34,7 @@ export const createClientPayloadSchema = z
     invoice_attachment_language: z.enum(["hu", "en"]).optional(),
     available_hours_per_month: z.number().nonnegative().optional(),
     hours_from_previous_month: z.number().nonnegative().optional(),
+    is_default: z.boolean().optional(),
   })
   .strict();
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { fetchActiveClients } from "../../services/clientProjectService";
@@ -25,39 +25,104 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
   onClose,
 }) => {
   const { t } = useTranslation();
-  const [selectedClientCodes, setSelectedClientCodes] = useState<string[]>([]);
+  const [selectionMode, setSelectionMode] = useState<
+    "defaults" | "all" | "manual"
+  >("defaults");
+  const [manualSelectedClientCodes, setManualSelectedClientCodes] = useState<
+    string[]
+  >([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const initializedRef = useRef(false);
 
-  const { data: clients = [], isLoading, isError } = useQuery<Client[]>({
+  const {
+    data: clients = [],
+    isLoading,
+    isError,
+  } = useQuery<Client[]>({
     queryKey: ["activeClients", companyId],
     queryFn: () => fetchActiveClients(companyId),
     enabled: open && Boolean(companyId),
   });
 
-  useEffect(() => {
-    if (!open) {
-      initializedRef.current = false;
-      setSelectedClientCodes([]);
-      setSubmitError(null);
-      setIsGenerating(false);
-      return;
+  const selectedClientCodes = useMemo(() => {
+    if (selectionMode === "all") {
+      return clients.map((client) => client.client_code);
     }
 
-    if (!initializedRef.current && clients.length > 0) {
-      setSelectedClientCodes(clients.map((client) => client.client_code));
-      initializedRef.current = true;
+    if (selectionMode === "defaults") {
+      return clients
+        .filter((client) => client.is_default)
+        .map((client) => client.client_code);
     }
-  }, [open, clients]);
+
+    return manualSelectedClientCodes;
+  }, [clients, manualSelectedClientCodes, selectionMode]);
+
+  const selectedClients = useMemo(
+    () =>
+      clients.filter((client) =>
+        selectedClientCodes.includes(client.client_code),
+      ),
+    [clients, selectedClientCodes],
+  );
+
+  const periodLocale = useMemo(() => {
+    const selectedLanguage = selectedClients[0]?.invoice_attachment_language;
+
+    return selectedLanguage === "hu" ? "hu-HU" : "en-US";
+  }, [selectedClients]);
+
+  const periodText = useMemo(() => {
+    const date = new Date(startDate);
+    const year = new Intl.DateTimeFormat(periodLocale, {
+      year: "numeric",
+    }).format(date);
+    const month = new Intl.DateTimeFormat(periodLocale, {
+      month: "long",
+    }).format(date);
+
+    return `${year} ${month}`;
+  }, [periodLocale, startDate]);
+
+  const handleClose = () => {
+    setSelectionMode("defaults");
+    setManualSelectedClientCodes([]);
+    setSubmitError(null);
+    setIsGenerating(false);
+    onClose();
+  };
 
   const toggleClient = (clientCode: string) => {
     setSubmitError(null);
-    setSelectedClientCodes((current) =>
-      current.includes(clientCode)
-        ? current.filter((code) => code !== clientCode)
-        : [...current, clientCode],
+    setSelectionMode("manual");
+    setManualSelectedClientCodes((current) =>
+      (selectionMode === "manual" ? current : selectedClientCodes).includes(
+        clientCode,
+      )
+        ? (selectionMode === "manual" ? current : selectedClientCodes).filter(
+            (code) => code !== clientCode,
+          )
+        : [
+            ...(selectionMode === "manual" ? current : selectedClientCodes),
+            clientCode,
+          ],
     );
+  };
+
+  const selectAllClients = () => {
+    setSubmitError(null);
+    setSelectionMode("all");
+  };
+
+  const unselectAllClients = () => {
+    setSubmitError(null);
+    setSelectionMode("manual");
+    setManualSelectedClientCodes([]);
+  };
+
+  const useDefaultCompanies = () => {
+    setSubmitError(null);
+    setSelectionMode("defaults");
   };
 
   const handleGenerate = async () => {
@@ -74,8 +139,9 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
         startDate,
         endDate,
         language,
+        periodText,
       });
-      onClose();
+      handleClose();
     } catch (error) {
       setSubmitError(
         error instanceof Error
@@ -93,7 +159,7 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
     <Modal
       open={open}
       title={t("dashboard.invoiceAttachmentModalTitle")}
-      onClose={onClose}
+      onClose={handleClose}
       className="max-w-4xl"
     >
       <div className="p-6 space-y-5">
@@ -114,13 +180,65 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
             {t("dashboard.invoiceAttachmentNoActiveClients")}
           </div>
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-border-strong bg-white shadow-sm">
+          <div className="overflow-hidden rounded-3xl border border-border-strong bg-surface shadow-sm">
+            <div className="border-b border-border-strong bg-bg-accent/80 px-5 py-4">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-text">
+                    {t("dashboard.invoiceAttachmentSelectionTitle")}
+                  </p>
+                  <p className="mt-1 text-sm text-muted">
+                    {t("dashboard.invoiceAttachmentDefaultCompaniesHint")}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={selectAllClients}
+                  >
+                    {t("dashboard.selectAllCompanies")}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={unselectAllClients}
+                    disabled={!hasSelection}
+                  >
+                    {t("dashboard.unselectAllCompanies")}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={useDefaultCompanies}
+                    disabled={clients.every((client) => !client.is_default)}
+                  >
+                    {t("dashboard.useDefaultCompanies")}
+                  </Button>
+                </div>
+              </div>
+              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-strong">
+                <span className="rounded-full border border-border-strong bg-bg px-3 py-1">
+                  {t("dashboard.invoiceAttachmentSelectedCount", {
+                    count: selectedClientCodes.length,
+                  })}
+                </span>
+                <span className="rounded-full border border-border-strong bg-bg px-3 py-1">
+                  {t("dashboard.invoiceAttachmentClientCount", {
+                    count: clients.length,
+                  })}
+                </span>
+              </div>
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left">
-                <thead className="bg-bg-accent text-xs font-semibold uppercase tracking-wide text-text">
+                <thead className="bg-surface text-xs font-semibold uppercase tracking-wide text-muted-strong">
                   <tr>
                     <th className="px-5 py-4">{t("dashboard.clientCode")}</th>
                     <th className="px-5 py-4">{t("dashboard.clientName")}</th>
+                    <th className="px-5 py-4 text-center">
+                      {t("dashboard.defaultClientBadge")}
+                    </th>
                     <th className="px-5 py-4 text-center">
                       {t("dashboard.actions")}
                     </th>
@@ -133,11 +251,25 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
                     );
 
                     return (
-                      <tr key={client.id} className="transition hover:bg-bg-accent/50">
+                      <tr
+                        key={client.id}
+                        className="transition hover:bg-bg-accent/50"
+                      >
                         <td className="px-5 py-4 font-medium text-text">
                           {client.client_code}
                         </td>
                         <td className="px-5 py-4 text-muted">{client.name}</td>
+                        <td className="px-5 py-4 text-center">
+                          {client.is_default ? (
+                            <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary-strong">
+                              {t("dashboard.defaultClientBadge")}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center rounded-full bg-bg-accent px-3 py-1 text-xs font-medium text-muted-strong">
+                              {t("dashboard.notDefaultClientBadge")}
+                            </span>
+                          )}
+                        </td>
                         <td className="px-5 py-4 text-center">
                           <input
                             type="checkbox"
@@ -165,7 +297,11 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
         ) : null}
 
         <div className="flex flex-col-reverse gap-3 border-t border-border-strong pt-4 sm:flex-row sm:justify-end">
-          <Button variant="outline" onClick={onClose} disabled={isGenerating}>
+          <Button
+            variant="outline"
+            onClick={handleClose}
+            disabled={isGenerating}
+          >
             {t("common.cancel")}
           </Button>
           <Button

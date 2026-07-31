@@ -34,6 +34,7 @@ export async function createClient(
   invoiceAttachmentLanguage: InvoiceAttachmentLanguage,
   availableHoursPerMonth: number,
   hoursFromPreviousMonth: number,
+  isDefault = false,
 ): Promise<Client> {
   const { data, error } = await supabase
     .from("clients")
@@ -44,6 +45,7 @@ export async function createClient(
       invoice_attachment_language: invoiceAttachmentLanguage,
       available_hours_per_month: availableHoursPerMonth,
       hours_from_previous_month: hoursFromPreviousMonth,
+      is_default: isDefault,
     })
     .select()
     .single();
@@ -58,6 +60,7 @@ export async function updateClient(
   invoiceAttachmentLanguage: InvoiceAttachmentLanguage,
   availableHoursPerMonth: number,
   hoursFromPreviousMonth: number,
+  isDefault = false,
 ): Promise<Client> {
   const { data, error } = await supabase
     .from("clients")
@@ -67,6 +70,7 @@ export async function updateClient(
       invoice_attachment_language: invoiceAttachmentLanguage,
       available_hours_per_month: availableHoursPerMonth,
       hours_from_previous_month: hoursFromPreviousMonth,
+      is_default: isDefault,
     })
     .eq("id", clientId)
     .select()
