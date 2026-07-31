@@ -1,6 +1,5 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
 import { useAuth } from "./context/useAuth";
 import { LoginPage } from "./pages/LoginPage";
 import { getHomeRouteForRole } from "./utils/navigation";
@@ -12,6 +11,7 @@ import { UserManagementPage } from "./pages/UserManagementPage";
 import { AdminDashboardPage } from "./pages/DashboardPage";
 import { CompanyManagementPage } from "./pages/CompanyManagementPage";
 import { UserSettingsPage } from "./pages/UserSettingsPage";
+import { AuthProvider } from "./context/AuthContext";
 
 // Dynamic Index Redirect Component
 const RootRedirect: React.FC = () => {
@@ -20,7 +20,7 @@ const RootRedirect: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ABDB11]"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }

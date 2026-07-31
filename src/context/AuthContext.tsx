@@ -3,7 +3,7 @@ import { type User, type Session } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabaseClient";
 import { type UserProfile } from "../types/auth";
 import i18n from "../lib/i18n";
-import { AuthContext } from "./authContext";
+import { AuthContext } from "./authContextBase";
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
