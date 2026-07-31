@@ -13,16 +13,28 @@ import type {
   CreateCompanyUserPayload,
 } from "../types/user-management";
 
-const tempAuthClient = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-  {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
+let tempAuthClient: ReturnType<typeof createClient> | null = null;
+
+const getTempAuthClient = () => {
+  if (tempAuthClient) {
+    return tempAuthClient;
+  }
+
+  tempAuthClient = createClient(
+    import.meta.env.VITE_SUPABASE_URL,
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+        storageKey: "chronosync-temp-auth",
+      },
     },
-  },
-);
+  );
+
+  return tempAuthClient;
+};
 
 /**
  * Fetch team members for the Company Admin table
@@ -49,8 +61,9 @@ export async function fetchCompanyMembers(
 export async function createCompanyUser(payload: CreateCompanyUserPayload) {
   const validatedPayload = createCompanyUserPayloadSchema.parse(payload);
   const targetPassword = validatedPayload.password || "TempPassword123!";
+  const authClient = getTempAuthClient();
 
-  const { data, error } = await tempAuthClient.auth.signUp({
+  const { data, error } = await authClient.auth.signUp({
     email: validatedPayload.email,
     password: targetPassword,
     options: {

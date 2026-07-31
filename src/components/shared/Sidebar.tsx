@@ -9,7 +9,7 @@ import {
   LogOut,
   Settings,
 } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/useAuth";
 import { getRoleLabel } from "../../utils/getRoleLabel";
 import type { NavItem } from "../../types/ui";
 import { useTranslation } from "react-i18next";

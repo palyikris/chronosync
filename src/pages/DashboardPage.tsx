@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { fetchAdminDashboardData } from "../services/dashboardService";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import { DashboardHeader } from "../components/dashboard/DashboardHeader";
 import { KpiSummaryCards } from "../components/dashboard/KpiSummaryCards";
 import { DailyTrendChart } from "../components/dashboard/DailyTrendChart";

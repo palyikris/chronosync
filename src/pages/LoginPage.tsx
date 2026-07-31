@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { signInUser } from "../services/authService";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import { getHomeRouteForRole } from "../utils/navigation";
 
 export const LoginPage: React.FC = () => {
@@ -34,6 +34,7 @@ export const LoginPage: React.FC = () => {
       setErrorMsg(
         err instanceof Error ? err.message : t("auth.invalidCredentials"),
       );
+    } finally {
       setLoading(false);
     }
   };

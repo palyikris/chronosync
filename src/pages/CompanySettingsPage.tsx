@@ -1,7 +1,7 @@
 import React from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import { fetchClients, fetchProjects } from "../services/clientProjectService";
 import { CompanySettingsHeader } from "../components/company-settings/CompanySettingsHeader";
 import { ClientManagementCard } from "../components/company-settings/ClientManagementCard";
