@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { Calendar, ChevronLeft, ChevronRight, List } from "lucide-react";
 import { useAuth } from "../context/useAuth";
 import {
   TIMESHEET_REFRESH_EVENT,
@@ -18,6 +19,7 @@ import {
 import { TimesheetCalendar } from "../components/timesheet/TimesheetCalendar";
 import { TimesheetEntryList } from "../components/timesheet/TimesheetEntryList";
 import { TimesheetEntryModal } from "../components/timesheet/TimesheetEntryModal";
+import { Button } from "../components/shared/Button";
 import { Card } from "../components/shared/Card";
 import { Select } from "../components/shared/Select";
 import { getRoleLabel } from "../utils/getRoleLabel";
@@ -27,6 +29,7 @@ import type {
   TimesheetEntry,
   TimesheetEntryUpdatePayload,
   TimesheetFormData,
+  TimesheetViewMode,
 } from "../types/timesheet";
 
 const pad = (value: number) => String(value).padStart(2, "0");
@@ -36,6 +39,19 @@ const getLocalDateValue = (date: Date) =>
 
 const getMonthKey = (date: Date) =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}`;
+
+const TIMESHEET_VIEW_STORAGE_KEY = "chronosync:timesheet:view";
+
+const getViewPreference = (): TimesheetViewMode => {
+  if (typeof window === "undefined") return "calendar";
+
+  const stored = window.localStorage.getItem(TIMESHEET_VIEW_STORAGE_KEY);
+  if (stored === "grid" || stored === "calendar" || stored === "list") {
+    return stored;
+  }
+
+  return "calendar";
+};
 
 export const TimesheetPage: React.FC = () => {
   const { profile, user } = useAuth();
@@ -53,6 +69,8 @@ export const TimesheetPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editEntryId, setEditEntryId] = useState<string | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [viewMode, setViewMode] =
+    useState<TimesheetViewMode>(getViewPreference);
 
   // Form State
   const [formData, setFormData] = useState<TimesheetFormData>({
@@ -65,6 +83,12 @@ export const TimesheetPage: React.FC = () => {
   });
 
   const yearMonth = getMonthKey(currentDate);
+  const previousMonthKey = getMonthKey(
+    new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1),
+  );
+  const nextMonthKey = getMonthKey(
+    new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1),
+  );
   const isSuperAdmin = profile?.role === "super_admin";
   const isCompanyAdmin = profile?.role === "company_admin";
 
@@ -132,11 +156,47 @@ export const TimesheetPage: React.FC = () => {
   // --------------------------------------------------------------------------
   // TanStack Query: Fetch Logs
   // --------------------------------------------------------------------------
-  const { data: timesheets = [], isLoading } = useQuery({
+  const {
+    data: currentMonthTimesheets = [],
+    isLoading: isLoadingCurrentMonth,
+  } = useQuery({
     queryKey: ["timesheets", targetUserId, yearMonth],
     enabled: Boolean(targetUserId),
     queryFn: () => fetchUserTimesheets(yearMonth, targetUserId),
   });
+
+  const { data: previousMonthTimesheets = [] } = useQuery({
+    queryKey: ["timesheets", targetUserId, previousMonthKey],
+    enabled: Boolean(targetUserId),
+    queryFn: () => fetchUserTimesheets(previousMonthKey, targetUserId),
+  });
+
+  const { data: nextMonthTimesheets = [] } = useQuery({
+    queryKey: ["timesheets", targetUserId, nextMonthKey],
+    enabled: Boolean(targetUserId),
+    queryFn: () => fetchUserTimesheets(nextMonthKey, targetUserId),
+  });
+
+  const isLoading = isLoadingCurrentMonth;
+
+  const timesheets = React.useMemo(() => {
+    const mergedMap = new Map<string, TimesheetEntry>();
+
+    for (const entry of [
+      ...currentMonthTimesheets,
+      ...previousMonthTimesheets,
+      ...nextMonthTimesheets,
+    ]) {
+      mergedMap.set(entry.id, entry);
+    }
+
+    return Array.from(mergedMap.values());
+  }, [currentMonthTimesheets, previousMonthTimesheets, nextMonthTimesheets]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(TIMESHEET_VIEW_STORAGE_KEY, viewMode);
+  }, [viewMode]);
 
   useEffect(() => {
     const handleTimesheetRefresh = () => {
@@ -160,10 +220,11 @@ export const TimesheetPage: React.FC = () => {
     0,
   );
 
-  const totalMonthlyHours = timesheets.reduce(
+  const totalCurrentMonthHours = currentMonthTimesheets.reduce(
     (acc, log) => acc + Number(log.hours_logged),
     0,
   );
+
 
   const resetForm = (date = selectedDate) => {
     setFormData({
@@ -213,9 +274,7 @@ export const TimesheetPage: React.FC = () => {
   const createMutation = useMutation({
     mutationFn: createTimesheetEntry,
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["timesheets", targetUserId, yearMonth],
-      });
+      queryClient.invalidateQueries({ queryKey: ["timesheets", targetUserId] });
       closeModal();
       resetForm();
     },
@@ -233,9 +292,7 @@ export const TimesheetPage: React.FC = () => {
       payload: TimesheetEntryUpdatePayload;
     }) => updateTimesheetEntry(id, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["timesheets", targetUserId, yearMonth],
-      });
+      queryClient.invalidateQueries({ queryKey: ["timesheets", targetUserId] });
       closeModal();
     },
   });
@@ -246,9 +303,7 @@ export const TimesheetPage: React.FC = () => {
   const deleteMutation = useMutation({
     mutationFn: deleteTimesheetEntry,
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["timesheets", targetUserId, yearMonth],
-      });
+      queryClient.invalidateQueries({ queryKey: ["timesheets", targetUserId] });
     },
   });
 
@@ -256,7 +311,7 @@ export const TimesheetPage: React.FC = () => {
     mutationFn: cloneEntry,
     onMutate: async (entryId: string) => {
       await queryClient.cancelQueries({
-        queryKey: ["timesheets", targetUserId, yearMonth],
+        queryKey: ["timesheets", targetUserId],
       });
 
       const previousTimesheets =
@@ -312,10 +367,16 @@ export const TimesheetPage: React.FC = () => {
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: ["timesheets", targetUserId, yearMonth],
+        queryKey: ["timesheets", targetUserId],
       });
     },
   });
+
+  const applySelectedDate = (nextDate: Date) => {
+    const nextDateValue = getLocalDateValue(nextDate);
+    setSelectedDate(nextDateValue);
+    setCurrentDate(new Date(nextDate.getFullYear(), nextDate.getMonth(), 1));
+  };
 
   const handlePrevMonth = () => {
     applyMonthChange(
@@ -327,6 +388,22 @@ export const TimesheetPage: React.FC = () => {
     applyMonthChange(
       new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1),
     );
+  };
+
+  const handlePreviousWeek = () => {
+    const selected = new Date(`${selectedDate}T12:00:00`);
+    selected.setDate(selected.getDate() - 7);
+    applySelectedDate(selected);
+  };
+
+  const handleNextWeek = () => {
+    const selected = new Date(`${selectedDate}T12:00:00`);
+    selected.setDate(selected.getDate() + 7);
+    applySelectedDate(selected);
+  };
+
+  const handleGoToToday = () => {
+    applySelectedDate(new Date());
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
@@ -363,56 +440,133 @@ export const TimesheetPage: React.FC = () => {
 
   return (
     <div className="mx-auto max-w-7xl space-y-5">
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.75fr)] lg:items-stretch">
-        <TimesheetCalendar
-          currentDate={currentDate}
-          selectedDate={selectedDate}
-          timesheets={timesheets}
-          totalMonthlyHours={totalMonthlyHours}
-          onSelectDate={setSelectedDate}
-          onPreviousMonth={handlePrevMonth}
-          onNextMonth={handleNextMonth}
-        />
+      {isSuperAdmin || isCompanyAdmin ? (
+        <>
+          <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+            {t("timesheet.viewingFor")}
+          </label>
+          <Select
+            value={targetUserId ?? ""}
+            onChange={handleSelectedUserChange}
+            disabled={!availableUsers.length}
+          >
+            {availableUsers.map((candidate) => (
+              <option key={candidate.id} value={candidate.id}>
+                {candidate.full_name} · {getRoleLabel(candidate.role)}
+              </option>
+            ))}
+          </Select>
+        </>
+      ) : null}
 
-        <div className="flex h-full flex-col lg:sticky lg:top-6">
-          {isSuperAdmin || isCompanyAdmin ? (
-            <Card className="mb-4 shrink-0 p-4">
-              <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-muted">
-                {t("timesheet.viewingFor")}
-              </label>
-              <Select
-                value={targetUserId ?? ""}
-                onChange={handleSelectedUserChange}
-                disabled={!availableUsers.length}
-              >
-                {availableUsers.map((candidate) => (
-                  <option key={candidate.id} value={candidate.id}>
-                    {candidate.full_name} · {getRoleLabel(candidate.role)}
-                  </option>
-                ))}
-              </Select>
-            </Card>
-          ) : null}
+      <Card className="p-4">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+          <div className="inline-flex w-full flex-wrap items-center gap-2 rounded-full border border-border-strong bg-bg-accent p-1 xl:w-auto">
+            <Button
+              variant={viewMode === "calendar" ? "primary" : "ghost"}
+              size="sm"
+              className="rounded-full"
+              onClick={() => setViewMode("calendar")}
+              icon={<Calendar className="h-4 w-4" />}
+            >
+              Calendar View
+            </Button>
+            <Button
+              variant={viewMode === "list" ? "primary" : "ghost"}
+              size="sm"
+              className="rounded-full"
+              onClick={() => setViewMode("list")}
+              icon={<List className="h-4 w-4" />}
+            >
+              List View
+            </Button>
+          </div>
 
-          <div className="flex min-h-0 flex-1 flex-col">
-            <TimesheetEntryList
-              selectedDate={selectedDate}
-              totalDailyHours={totalDailyHours}
-              entries={selectedDayLogs}
-              loading={isLoading}
-              onAddEntry={openCreateModal}
-              onEditEntry={openEditModal}
-              onDuplicateEntry={(entry) => duplicateMutation.mutate(entry.id)}
-              onDeleteEntry={(entryId) => deleteMutation.mutate(entryId)}
-              isUpdating={updateMutation.isPending}
-              isDuplicating={duplicateMutation.isPending}
-              isDeleting={deleteMutation.isPending}
-              clients={clients}
-              canManageTarget={canManageTarget}
-            />
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full"
+              onClick={handlePreviousWeek}
+              icon={<ChevronLeft className="h-4 w-4" />}
+            >
+              Previous Week
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full"
+              onClick={handleGoToToday}
+            >
+              Today
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full"
+              onClick={handleNextWeek}
+              icon={<ChevronRight className="h-4 w-4" />}
+            >
+              Next Week
+            </Button>
           </div>
         </div>
-      </div>
+      </Card>
+
+      {viewMode === "calendar" ? (
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.75fr)] lg:items-stretch">
+          <TimesheetCalendar
+            currentDate={currentDate}
+            selectedDate={selectedDate}
+            timesheets={currentMonthTimesheets}
+            totalMonthlyHours={totalCurrentMonthHours}
+            onSelectDate={(date) => {
+              setSelectedDate(date);
+              setCurrentDate(new Date(`${date}T12:00:00`));
+            }}
+            onPreviousMonth={handlePrevMonth}
+            onNextMonth={handleNextMonth}
+          />
+
+          <div className="flex h-full flex-col lg:sticky lg:top-6">
+            <div className="flex min-h-0 flex-1 flex-col">
+              <TimesheetEntryList
+                selectedDate={selectedDate}
+                totalDailyHours={totalDailyHours}
+                entries={selectedDayLogs}
+                loading={isLoading}
+                onAddEntry={openCreateModal}
+                onEditEntry={openEditModal}
+                onDuplicateEntry={(entry) => duplicateMutation.mutate(entry.id)}
+                onDeleteEntry={(entryId) => deleteMutation.mutate(entryId)}
+                isUpdating={updateMutation.isPending}
+                isDuplicating={duplicateMutation.isPending}
+                isDeleting={deleteMutation.isPending}
+                clients={clients}
+                canManageTarget={canManageTarget}
+              />
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {viewMode === "list" ? (
+        <TimesheetEntryList
+          selectedDate={selectedDate}
+          totalDailyHours={totalDailyHours}
+          entries={selectedDayLogs}
+          loading={isLoading}
+          onAddEntry={openCreateModal}
+          onEditEntry={openEditModal}
+          onDuplicateEntry={(entry) => duplicateMutation.mutate(entry.id)}
+          onDeleteEntry={(entryId) => deleteMutation.mutate(entryId)}
+          isUpdating={updateMutation.isPending}
+          isDuplicating={duplicateMutation.isPending}
+          isDeleting={deleteMutation.isPending}
+          clients={clients}
+          canManageTarget={canManageTarget}
+        />
+      ) : null}
 
       <TimesheetEntryModal
         open={isModalOpen}

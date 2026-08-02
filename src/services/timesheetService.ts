@@ -10,6 +10,7 @@ import type {
   SelectableTimesheetUser,
   TimesheetEntry,
   TimesheetEntryUpdatePayload,
+  UpsertDailyEntryParams,
 } from "../types/timesheet";
 
 const pad = (value: number) => String(value).padStart(2, "0");
@@ -332,6 +333,78 @@ export async function updateTimesheetEntry(
       }),
     })
     .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as TimesheetEntry;
+}
+
+export async function upsertDailyEntry(
+  params: UpsertDailyEntryParams,
+): Promise<TimesheetEntry | null> {
+  const user = await getCurrentUser();
+  const resolvedUserId = params.target_user_id ?? user.id;
+  const parsedHours =
+    typeof params.hours_logged === "number"
+      ? params.hours_logged
+      : Number(params.hours_logged);
+  const normalizedHours = Number.isFinite(parsedHours)
+    ? Number(parsedHours.toFixed(2))
+    : 0;
+
+  const { data: existingEntries, error: findError } = await supabase
+    .from("timesheets")
+    .select("*")
+    .eq("user_id", resolvedUserId)
+    .eq("work_date", params.work_date)
+    .eq("project_id", params.project_id)
+    .eq("description", params.description)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (findError) throw findError;
+
+  const existingEntry = existingEntries?.[0] as TimesheetEntry | undefined;
+
+  if (normalizedHours <= 0) {
+    if (!existingEntry) return null;
+
+    await deleteTimesheetEntry(existingEntry.id);
+    return null;
+  }
+
+  const durationMinutes = Math.max(1, Math.round(normalizedHours * 60));
+
+  if (existingEntry) {
+    const { data, error } = await supabase
+      .from("timesheets")
+      .update({
+        hours_logged: normalizedHours,
+        duration_minutes: durationMinutes,
+      })
+      .eq("id", existingEntry.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data as TimesheetEntry;
+  }
+
+  const { data, error } = await supabase
+    .from("timesheets")
+    .insert([
+      {
+        user_id: resolvedUserId,
+        company_id: params.company_id,
+        client_id: params.client_id,
+        project_id: params.project_id,
+        work_date: params.work_date,
+        hours_logged: normalizedHours,
+        duration_minutes: durationMinutes,
+        description: params.description,
+      },
+    ])
     .select()
     .single();
 

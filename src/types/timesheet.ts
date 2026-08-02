@@ -84,7 +84,12 @@ export type SelectableTimesheetUser = Pick<
 
 export type TimesheetFormData = Pick<
   NewTimesheetPayload,
-  "work_date" | "hours_logged" | "description" | "company_id" | "client_id" | "project_id"
+  | "work_date"
+  | "hours_logged"
+  | "description"
+  | "company_id"
+  | "client_id"
+  | "project_id"
 >;
 
 export interface TimesheetCalendarProps {
@@ -127,4 +132,34 @@ export interface TimesheetEntryModalProps {
 
 export interface TimesheetSummaryProps {
   totalMonthlyHours: number;
+}
+
+export type TimesheetViewMode = "grid" | "calendar" | "list";
+
+export interface TimesheetGridRow {
+  id: string;
+  project_id: string;
+  project_name: string;
+  description: string;
+  dailyHours: Record<string, number>;
+  weeklyTotal: number;
+}
+
+export interface TimesheetGridDailyTotals {
+  dailyTotals: Record<string, number>;
+  weeklyTotal: number;
+}
+
+export interface TimesheetGridAdapterResult extends TimesheetGridDailyTotals {
+  rows: TimesheetGridRow[];
+}
+
+export interface UpsertDailyEntryParams {
+  work_date: string;
+  project_id: string;
+  description: string;
+  hours_logged: number | string;
+  company_id: string;
+  client_id: string;
+  target_user_id?: string;
 }
