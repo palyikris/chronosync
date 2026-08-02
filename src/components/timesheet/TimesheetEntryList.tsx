@@ -1,5 +1,5 @@
 import React from "react";
-import { Edit, History, Plus, Trash2 } from "lucide-react";
+import { Copy, Edit, History, Plus, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../shared/Button";
 import { Card, CardContent, CardFooter, CardHeader } from "../shared/Card";
@@ -12,8 +12,10 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
   loading,
   onAddEntry,
   onEditEntry,
+  onDuplicateEntry,
   onDeleteEntry,
   isUpdating,
+  isDuplicating,
   isDeleting,
   clients,
   canManageTarget,
@@ -94,6 +96,16 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
                       className="h-8 w-8 rounded-full text-primary-strong hover:bg-[#e6f0d6]"
                       aria-label={t("timesheet.editEntry")}
                       icon={<Edit className="h-4 w-4" />}
+                    ></Button>
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onDuplicateEntry(entry)}
+                      disabled={isDuplicating}
+                      className="h-8 w-8 rounded-full text-indigo-600 hover:bg-indigo-50"
+                      aria-label={t("timesheet.duplicateToToday")}
+                      icon={<Copy className="h-4 w-4" />}
                     ></Button>
 
                     <Button

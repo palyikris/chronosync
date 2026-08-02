@@ -25,6 +25,12 @@ export const newTimesheetPayloadSchema = z
     company_id: timesheetIdSchema,
     client_id: timesheetIdSchema,
     project_id: timesheetIdSchema,
+    duration_minutes: z
+      .number()
+      .int()
+      .positive()
+      .max(24 * 60)
+      .optional(),
     target_user_id: timesheetIdSchema.optional(),
   })
   .strict();
@@ -50,8 +56,17 @@ export interface TimesheetEntry {
   project_id: string;
   work_date: string;
   hours_logged: number;
+  duration_minutes?: number;
   description: string;
   created_at: string;
+}
+
+export interface ActiveTimerState {
+  started_at: string;
+  project_id: string;
+  description: string;
+  company_id: string;
+  client_id?: string;
 }
 
 export type NewTimesheetPayload = z.infer<typeof newTimesheetPayloadSchema>;
@@ -89,8 +104,10 @@ export interface TimesheetEntryListProps {
   loading: boolean;
   onAddEntry: () => void;
   onEditEntry: (entry: TimesheetEntry) => void;
+  onDuplicateEntry: (entry: TimesheetEntry) => void;
   onDeleteEntry: (entryId: string) => void;
   isUpdating: boolean;
+  isDuplicating: boolean;
   isDeleting: boolean;
   clients: Client[];
   canManageTarget: boolean;

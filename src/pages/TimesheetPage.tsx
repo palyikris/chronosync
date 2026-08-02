@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/useAuth";
 import {
+  TIMESHEET_REFRESH_EVENT,
+  cloneEntry,
   fetchUserTimesheets,
   fetchSelectableCompanyUsers,
   createTimesheetEntry,
@@ -16,6 +18,7 @@ import {
 import { TimesheetCalendar } from "../components/timesheet/TimesheetCalendar";
 import { TimesheetEntryList } from "../components/timesheet/TimesheetEntryList";
 import { TimesheetEntryModal } from "../components/timesheet/TimesheetEntryModal";
+import { Card } from "../components/shared/Card";
 import { Select } from "../components/shared/Select";
 import { getRoleLabel } from "../utils/getRoleLabel";
 import type { Client, Project } from "../types/client-project";
@@ -135,6 +138,20 @@ export const TimesheetPage: React.FC = () => {
     queryFn: () => fetchUserTimesheets(yearMonth, targetUserId),
   });
 
+  useEffect(() => {
+    const handleTimesheetRefresh = () => {
+      queryClient.invalidateQueries({ queryKey: ["timesheets"] });
+    };
+
+    window.addEventListener(TIMESHEET_REFRESH_EVENT, handleTimesheetRefresh);
+    return () => {
+      window.removeEventListener(
+        TIMESHEET_REFRESH_EVENT,
+        handleTimesheetRefresh,
+      );
+    };
+  }, [queryClient]);
+
   const selectedDayLogs = timesheets.filter(
     (log) => log.work_date === selectedDate,
   );
@@ -235,6 +252,71 @@ export const TimesheetPage: React.FC = () => {
     },
   });
 
+  const duplicateMutation = useMutation({
+    mutationFn: cloneEntry,
+    onMutate: async (entryId: string) => {
+      await queryClient.cancelQueries({
+        queryKey: ["timesheets", targetUserId, yearMonth],
+      });
+
+      const previousTimesheets =
+        queryClient.getQueryData<TimesheetEntry[]>([
+          "timesheets",
+          targetUserId,
+          yearMonth,
+        ]) ?? [];
+      const sourceEntry = previousTimesheets.find(
+        (entry) => entry.id === entryId,
+      );
+
+      if (!sourceEntry) {
+        return { previousTimesheets, optimisticEntryId: null };
+      }
+
+      const optimisticEntry: TimesheetEntry = {
+        ...sourceEntry,
+        id: `optimistic-${entryId}-${Date.now()}`,
+        work_date: getLocalDateValue(new Date()),
+        created_at: new Date().toISOString(),
+      };
+
+      queryClient.setQueryData<TimesheetEntry[]>(
+        ["timesheets", targetUserId, yearMonth],
+        (currentTimesheets = []) => [optimisticEntry, ...currentTimesheets],
+      );
+
+      return { previousTimesheets, optimisticEntryId: optimisticEntry.id };
+    },
+    onError: (error, _entryId, context) => {
+      if (context?.previousTimesheets) {
+        queryClient.setQueryData(
+          ["timesheets", targetUserId, yearMonth],
+          context.previousTimesheets,
+        );
+      }
+
+      const message =
+        error instanceof Error ? error.message : t("timesheet.duplicateFailed");
+      window.alert(message);
+    },
+    onSuccess: (createdEntry, _entryId, context) => {
+      if (!context?.optimisticEntryId) return;
+
+      queryClient.setQueryData<TimesheetEntry[]>(
+        ["timesheets", targetUserId, yearMonth],
+        (currentTimesheets = []) =>
+          currentTimesheets.map((entry) =>
+            entry.id === context.optimisticEntryId ? createdEntry : entry,
+          ),
+      );
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["timesheets", targetUserId, yearMonth],
+      });
+    },
+  });
+
   const handlePrevMonth = () => {
     applyMonthChange(
       new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1),
@@ -280,36 +362,8 @@ export const TimesheetPage: React.FC = () => {
   };
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-text">
-            {t("timesheet.title")}
-          </h1>
-          <p className="mt-1 text-sm text-muted">{t("timesheet.subtitle")}</p>
-        </div>
-
-        {(isSuperAdmin || isCompanyAdmin) && (
-          <div className="w-full sm:max-w-md">
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.2em] text-muted">
-              {t("timesheet.viewingFor")}
-            </label>
-            <Select
-              value={targetUserId ?? ""}
-              onChange={handleSelectedUserChange}
-              disabled={!availableUsers.length}
-            >
-              {availableUsers.map((candidate) => (
-                <option key={candidate.id} value={candidate.id}>
-                  {candidate.full_name} · {getRoleLabel(candidate.role)}
-                </option>
-              ))}
-            </Select>
-          </div>
-        )}
-      </div>
-
-      <div className="grid grid-cols-12 gap-6 items-start lg:items-stretch">
+    <div className="mx-auto max-w-7xl space-y-5">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.75fr)] lg:items-stretch">
         <TimesheetCalendar
           currentDate={currentDate}
           selectedDate={selectedDate}
@@ -320,20 +374,43 @@ export const TimesheetPage: React.FC = () => {
           onNextMonth={handleNextMonth}
         />
 
-        <div className="col-span-12 lg:col-span-4 lg:sticky lg:top-6">
-          <TimesheetEntryList
-            selectedDate={selectedDate}
-            totalDailyHours={totalDailyHours}
-            entries={selectedDayLogs}
-            loading={isLoading}
-            onAddEntry={openCreateModal}
-            onEditEntry={openEditModal}
-            onDeleteEntry={(entryId) => deleteMutation.mutate(entryId)}
-            isUpdating={updateMutation.isPending}
-            isDeleting={deleteMutation.isPending}
-            clients={clients}
-            canManageTarget={canManageTarget}
-          />
+        <div className="flex h-full flex-col lg:sticky lg:top-6">
+          {isSuperAdmin || isCompanyAdmin ? (
+            <Card className="mb-4 shrink-0 p-4">
+              <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+                {t("timesheet.viewingFor")}
+              </label>
+              <Select
+                value={targetUserId ?? ""}
+                onChange={handleSelectedUserChange}
+                disabled={!availableUsers.length}
+              >
+                {availableUsers.map((candidate) => (
+                  <option key={candidate.id} value={candidate.id}>
+                    {candidate.full_name} · {getRoleLabel(candidate.role)}
+                  </option>
+                ))}
+              </Select>
+            </Card>
+          ) : null}
+
+          <div className="flex min-h-0 flex-1 flex-col">
+            <TimesheetEntryList
+              selectedDate={selectedDate}
+              totalDailyHours={totalDailyHours}
+              entries={selectedDayLogs}
+              loading={isLoading}
+              onAddEntry={openCreateModal}
+              onEditEntry={openEditModal}
+              onDuplicateEntry={(entry) => duplicateMutation.mutate(entry.id)}
+              onDeleteEntry={(entryId) => deleteMutation.mutate(entryId)}
+              isUpdating={updateMutation.isPending}
+              isDuplicating={duplicateMutation.isPending}
+              isDeleting={deleteMutation.isPending}
+              clients={clients}
+              canManageTarget={canManageTarget}
+            />
+          </div>
         </div>
       </div>
 

@@ -5,6 +5,7 @@ import {
   timesheetEntryUpdatePayloadSchema,
 } from "../types/timesheet";
 import type {
+  ActiveTimerState,
   NewTimesheetPayload,
   SelectableTimesheetUser,
   TimesheetEntry,
@@ -12,6 +13,76 @@ import type {
 } from "../types/timesheet";
 
 const pad = (value: number) => String(value).padStart(2, "0");
+const ACTIVE_TIMER_STORAGE_PREFIX = "chronosync:active-timer";
+
+const isBrowser = () => typeof window !== "undefined";
+
+const getActiveTimerStorageKey = (userId: string) =>
+  `${ACTIVE_TIMER_STORAGE_PREFIX}:${userId}`;
+
+const safeReadActiveTimer = (userId: string): ActiveTimerState | null => {
+  if (!isBrowser()) return null;
+
+  try {
+    const rawValue = window.localStorage.getItem(
+      getActiveTimerStorageKey(userId),
+    );
+    if (!rawValue) return null;
+
+    const parsed = JSON.parse(rawValue) as ActiveTimerState;
+    if (
+      !parsed ||
+      typeof parsed.started_at !== "string" ||
+      typeof parsed.project_id !== "string" ||
+      typeof parsed.description !== "string" ||
+      typeof parsed.company_id !== "string"
+    ) {
+      window.localStorage.removeItem(getActiveTimerStorageKey(userId));
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const safeWriteActiveTimer = (userId: string, state: ActiveTimerState) => {
+  if (!isBrowser()) return;
+
+  try {
+    window.localStorage.setItem(
+      getActiveTimerStorageKey(userId),
+      JSON.stringify(state),
+    );
+  } catch (error) {
+    console.warn("Unable to persist active timer state", error);
+  }
+};
+
+const safeClearActiveTimer = (userId: string) => {
+  if (!isBrowser()) return;
+
+  try {
+    window.localStorage.removeItem(getActiveTimerStorageKey(userId));
+  } catch (error) {
+    console.warn("Unable to clear active timer state", error);
+  }
+};
+
+const getCurrentUser = async () => {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error(i18n.t("errors.notAuthenticated"));
+  }
+
+  return user;
+};
+
+export const TIMESHEET_REFRESH_EVENT = "chronosync:timesheet-updated";
 
 const getMonthBounds = (dateYearMonth: string) => {
   const [year, month] = dateYearMonth.split("-").map(Number);
@@ -83,10 +154,7 @@ export async function createTimesheetEntry(
 ): Promise<TimesheetEntry> {
   const validatedPayload = newTimesheetPayloadSchema.parse(payload);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error(i18n.t("errors.notAuthenticated"));
+  const user = await getCurrentUser();
 
   const { data, error } = await supabase
     .from("timesheets")
@@ -98,7 +166,125 @@ export async function createTimesheetEntry(
         project_id: validatedPayload.project_id,
         work_date: validatedPayload.work_date,
         hours_logged: validatedPayload.hours_logged,
+        ...(validatedPayload.duration_minutes !== undefined && {
+          duration_minutes: validatedPayload.duration_minutes,
+        }),
         description: validatedPayload.description,
+      },
+    ])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as TimesheetEntry;
+}
+
+export async function startTimer(
+  data: ActiveTimerState,
+): Promise<ActiveTimerState> {
+  const user = await getCurrentUser();
+  const activeTimerState: ActiveTimerState = {
+    started_at: data.started_at,
+    project_id: data.project_id,
+    description: data.description,
+    company_id: data.company_id,
+    ...(data.client_id ? { client_id: data.client_id } : {}),
+  };
+
+  safeWriteActiveTimer(user.id, activeTimerState);
+  return activeTimerState;
+}
+
+export async function getActiveTimerState(): Promise<ActiveTimerState | null> {
+  const user = await getCurrentUser();
+  return safeReadActiveTimer(user.id);
+}
+
+export async function stopTimer(
+  entryData: ActiveTimerState,
+): Promise<TimesheetEntry> {
+  const user = await getCurrentUser();
+  const startedAtMs = Date.parse(entryData.started_at);
+
+  if (Number.isNaN(startedAtMs)) {
+    throw new Error(i18n.t("errors.invalidActiveTimerState"));
+  }
+
+  const durationMinutes = Math.max(
+    1,
+    Math.round((Date.now() - startedAtMs) / 60000),
+  );
+
+  const { data: projectRow, error: projectError } = await supabase
+    .from("projects")
+    .select("client_id, company_id")
+    .eq("id", entryData.project_id)
+    .single();
+
+  if (projectError) throw projectError;
+
+  const resolvedClientId = entryData.client_id ?? projectRow?.client_id;
+
+  if (!resolvedClientId) {
+    throw new Error(i18n.t("errors.invalidActiveTimerState"));
+  }
+
+  if (
+    projectRow?.company_id &&
+    projectRow.company_id !== entryData.company_id
+  ) {
+    throw new Error(i18n.t("errors.invalidActiveTimerState"));
+  }
+
+  const createdEntry = await createTimesheetEntry({
+    work_date: new Date().toISOString().slice(0, 10),
+    hours_logged: Number((durationMinutes / 60).toFixed(2)),
+    description: entryData.description,
+    company_id: entryData.company_id,
+    client_id: resolvedClientId,
+    project_id: entryData.project_id,
+    duration_minutes: durationMinutes,
+    target_user_id: user.id,
+  });
+
+  safeClearActiveTimer(user.id);
+  return createdEntry;
+}
+
+export async function cloneEntry(entryId: string): Promise<TimesheetEntry> {
+  const user = await getCurrentUser();
+
+  const { data: existingEntry, error: fetchError } = await supabase
+    .from("timesheets")
+    .select("*")
+    .eq("id", entryId)
+    .single();
+
+  if (fetchError) throw fetchError;
+  if (!existingEntry) {
+    throw new Error(i18n.t("errors.timesheetEntryNotFound"));
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  const durationMinutes =
+    typeof existingEntry.duration_minutes === "number"
+      ? existingEntry.duration_minutes
+      : undefined;
+
+  const { data, error } = await supabase
+    .from("timesheets")
+    .insert([
+      {
+        user_id: user.id,
+        company_id: existingEntry.company_id,
+        client_id: existingEntry.client_id,
+        project_id: existingEntry.project_id,
+        work_date: today,
+        hours_logged: Number(existingEntry.hours_logged),
+        ...(durationMinutes !== undefined && {
+          duration_minutes: durationMinutes,
+        }),
+        description: existingEntry.description,
       },
     ])
     .select()

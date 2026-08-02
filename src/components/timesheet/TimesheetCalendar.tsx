@@ -47,7 +47,7 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
       : hours.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
 
   return (
-    <Card className="col-span-12 lg:col-span-8">
+    <Card className="h-full overflow-hidden">
       <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
           <div className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
