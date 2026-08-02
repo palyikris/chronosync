@@ -167,9 +167,6 @@ export async function createTimesheetEntry(
         project_id: validatedPayload.project_id,
         work_date: validatedPayload.work_date,
         hours_logged: validatedPayload.hours_logged,
-        ...(validatedPayload.duration_minutes !== undefined && {
-          duration_minutes: validatedPayload.duration_minutes,
-        }),
         description: validatedPayload.description,
       },
     ])
@@ -244,7 +241,6 @@ export async function stopTimer(
     company_id: entryData.company_id,
     client_id: resolvedClientId,
     project_id: entryData.project_id,
-    duration_minutes: durationMinutes,
     target_user_id: user.id,
   });
 
@@ -267,11 +263,6 @@ export async function cloneEntry(entryId: string): Promise<TimesheetEntry> {
   }
 
   const today = new Date().toISOString().slice(0, 10);
-  const durationMinutes =
-    typeof existingEntry.duration_minutes === "number"
-      ? existingEntry.duration_minutes
-      : undefined;
-
   const { data, error } = await supabase
     .from("timesheets")
     .insert([
@@ -282,9 +273,6 @@ export async function cloneEntry(entryId: string): Promise<TimesheetEntry> {
         project_id: existingEntry.project_id,
         work_date: today,
         hours_logged: Number(existingEntry.hours_logged),
-        ...(durationMinutes !== undefined && {
-          duration_minutes: durationMinutes,
-        }),
         description: existingEntry.description,
       },
     ])
@@ -374,14 +362,11 @@ export async function upsertDailyEntry(
     return null;
   }
 
-  const durationMinutes = Math.max(1, Math.round(normalizedHours * 60));
-
   if (existingEntry) {
     const { data, error } = await supabase
       .from("timesheets")
       .update({
         hours_logged: normalizedHours,
-        duration_minutes: durationMinutes,
       })
       .eq("id", existingEntry.id)
       .select()
@@ -401,7 +386,6 @@ export async function upsertDailyEntry(
         project_id: params.project_id,
         work_date: params.work_date,
         hours_logged: normalizedHours,
-        duration_minutes: durationMinutes,
         description: params.description,
       },
     ])
