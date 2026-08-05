@@ -367,7 +367,7 @@
     "companyIdRequired": "Company id is required to load selectable users",
     "missingSupabaseEnv": "Missing Supabase environment variables",
     "accountDeactivated": "Your account has been deactivated by your company admin.",
-    "activeCompanyDeactivated": "Your company account has been deactivated. Please contact your company administrator.",
+    "activeCompanyDeactivated": "Your company account has been deactivated.",
     "activeAccountDeactivated": "Your account has been deactivated. Please contact your company administrator.",
     "couldNotVerifyUser": "Could not verify user account status.",
     "couldNotVerifyCompany": "Could not verify company status.",

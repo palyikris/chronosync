@@ -5,6 +5,10 @@ import { type UserProfile } from "../types/auth";
 import i18n from "../lib/i18n";
 import { AuthContext } from "./authContextBase";
 
+type ProfileWithCompany = UserProfile & {
+  company: { is_active: boolean } | null;
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
@@ -16,9 +20,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const fetchProfile = async (userId: string) => {
     const { data: profileData, error } = await supabase
       .from("profiles")
-      .select("*")
+      .select("*, company:companies(is_active)")
       .eq("id", userId)
-      .single();
+      .single<ProfileWithCompany>();
 
     if (error || !profileData) {
       console.error("Error fetching profile:", error);
@@ -30,6 +34,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     if (profileData.is_active === false) {
       await supabase.auth.signOut();
       throw new Error(i18n.t("errors.accountDeactivated"));
+    }
+
+    if (
+      profileData.role !== "super_admin" &&
+      profileData.company?.is_active === false
+    ) {
+      await supabase.auth.signOut();
+      throw new Error(i18n.t("auth.companyDeactivatedContact"));
     }
 
     setProfile(profileData);

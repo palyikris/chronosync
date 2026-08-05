@@ -367,7 +367,7 @@
     "companyIdRequired": "A választható felhasználók betöltéséhez meg kell adni a cégazonosítót",
     "missingSupabaseEnv": "Hiányzó Supabase környezeti változók",
     "accountDeactivated": "A fiókodat a céges admin letiltotta.",
-    "activeCompanyDeactivated": "A céges fiókod le van tiltva. Vedd fel a kapcsolatot a céges adminisztrátorral.",
+    "activeCompanyDeactivated": "A céges fiókod le van tiltva.",
     "activeAccountDeactivated": "A fiókod le van tiltva. Vedd fel a kapcsolatot a céges adminisztrátorral.",
     "couldNotVerifyUser": "Nem sikerült ellenőrizni a felhasználói fiók állapotát.",
     "couldNotVerifyCompany": "Nem sikerült ellenőrizni a cég állapotát.",
