@@ -48,6 +48,12 @@ export const timesheetEntryUpdatePayloadSchema = z
     message: "At least one timesheet field must be provided",
   });
 
+export type TimesheetEntryStatus =
+  | "draft"
+  | "submitted"
+  | "approved"
+  | "rejected"
+  | "invoiced";
 export interface TimesheetEntry {
   id: string;
   user_id: string;
@@ -59,6 +65,11 @@ export interface TimesheetEntry {
   duration_minutes?: number;
   description: string;
   created_at: string;
+  status: TimesheetEntryStatus;
+  rejection_reason?: string;
+  approved_by?: string;
+  approved_at?: string;
+  submitted_at?: string;
 }
 
 export interface ActiveTimerState {
@@ -106,6 +117,7 @@ export interface TimesheetEntryListProps {
   selectedDate: string;
   totalDailyHours: number;
   entries: TimesheetEntry[];
+  allEntries: TimesheetEntry[];
   loading: boolean;
   onAddEntry: () => void;
   onEditEntry: (entry: TimesheetEntry) => void;

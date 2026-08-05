@@ -294,7 +294,15 @@
     "selectClient": "Ügyfél kiválasztása",
     "selectProject": "Projekt kiválasztása",
     "selectClientFirst": "Előbb válassz ügyfelet",
-    "editTimesheetFor": "Munkaidő megtekintése ehhez:"
+    "editTimesheetFor": "Munkaidő megtekintése ehhez:",
+    "draft": "Vázlat",
+    "submitted": "Beküldve",
+    "approved": "Jóváhagyva",
+    "rejected": "Elutasítva",
+    "invoiced": "Számlázva",
+    "day": "Nap",
+    "week": "Hét",
+    "month": "Hónap"
   },
   "users": {
     "title": "Csapattagok",

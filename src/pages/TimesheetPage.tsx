@@ -536,6 +536,7 @@ export const TimesheetPage: React.FC = () => {
                 selectedDate={selectedDate}
                 totalDailyHours={totalDailyHours}
                 entries={selectedDayLogs}
+                allEntries={timesheets}
                 loading={isLoading}
                 onAddEntry={openCreateModal}
                 onEditEntry={openEditModal}
@@ -558,6 +559,7 @@ export const TimesheetPage: React.FC = () => {
           selectedDate={selectedDate}
           totalDailyHours={totalDailyHours}
           entries={selectedDayLogs}
+          allEntries={timesheets}
           loading={isLoading}
           onAddEntry={openCreateModal}
           onEditEntry={openEditModal}

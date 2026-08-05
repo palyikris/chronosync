@@ -294,7 +294,15 @@
     "selectClient": "Select a client",
     "selectProject": "Select a project",
     "selectClientFirst": "Select a client first",
-    "editTimesheetFor": "Viewing Timesheet For"
+    "editTimesheetFor": "Viewing Timesheet For",
+    "draft": "Draft",
+    "submitted": "Submitted",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "invoiced": "Invoiced",
+    "day": "Day",
+    "week": "Week",
+    "month": "Month"
   },
   "users": {
     "title": "Team Members",

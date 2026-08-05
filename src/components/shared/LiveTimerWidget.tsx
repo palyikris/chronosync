@@ -1,13 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import {
-  Clock3,
-  Folder,
-  FolderKanban,
-  Play,
-  Square,
-} from "lucide-react";
+import { Clock3, Folder, FolderKanban, Play, Square } from "lucide-react";
 import { useAuth } from "../../context/useAuth";
 import { Button } from "./Button";
 import { Card, CardContent } from "./Card";
@@ -22,6 +16,7 @@ import {
   TIMESHEET_REFRESH_EVENT,
 } from "../../services/timesheetService";
 import type { ActiveTimerState } from "../../types/timesheet";
+import { Select } from "./Select";
 
 const formatElapsedTime = (elapsedMs: number) => {
   const totalSeconds = Math.max(0, Math.floor(elapsedMs / 1000));
@@ -56,7 +51,8 @@ export const LiveTimerWidget: React.FC = () => {
 
   const { data: activeProjects = [] } = useQuery({
     queryKey: ["active-projects", profile?.company_id ?? "", draftClientId],
-    queryFn: () => fetchActiveProjects(profile?.company_id ?? "", draftClientId),
+    queryFn: () =>
+      fetchActiveProjects(profile?.company_id ?? "", draftClientId),
     enabled: Boolean(profile?.company_id && draftClientId),
   });
 
@@ -138,7 +134,8 @@ export const LiveTimerWidget: React.FC = () => {
   const isActionDisabled =
     isHydratingTimer ||
     !profile?.company_id ||
-    (!isRunning && (!draftClientId || !draftDescription.trim() || !draftProjectId));
+    (!isRunning &&
+      (!draftClientId || !draftDescription.trim() || !draftProjectId));
 
   const handleClientChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setDraftClientId(event.target.value);
@@ -163,7 +160,9 @@ export const LiveTimerWidget: React.FC = () => {
       setNow(Date.now());
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : t("timesheet.timerStartFailed");
+        error instanceof Error
+          ? error.message
+          : t("timesheet.timerStartFailed");
       window.alert(message);
     }
   };
@@ -192,7 +191,6 @@ export const LiveTimerWidget: React.FC = () => {
 
       <CardContent className="flex flex-col gap-3 px-3 py-3 lg:px-4 lg:py-4">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-
           <div className="flex items-center gap-3 rounded-2xl border border-border-strong bg-bg-accent px-3 py-2">
             <div className="flex h-10 min-w-20 items-center justify-center rounded-xl border border-border-strong bg-surface-strong px-2.5">
               <div className="font-mono text-lg font-semibold tracking-[0.16em] text-text lg:text-xl">
@@ -205,7 +203,9 @@ export const LiveTimerWidget: React.FC = () => {
                 {t("timesheet.readyToStart")}
               </div>
               <div className="mt-0.5 text-[11px] text-muted-strong">
-                {isRunning ? t("timesheet.timerRunning") : t("timesheet.timerIdle")}
+                {isRunning
+                  ? t("timesheet.timerRunning")
+                  : t("timesheet.timerIdle")}
               </div>
             </div>
           </div>
@@ -232,7 +232,7 @@ export const LiveTimerWidget: React.FC = () => {
               <Folder className="h-3.5 w-3.5" />
               {t("timesheet.client")}
             </span>
-            <select
+            <Select
               value={draftClientId}
               onChange={handleClientChange}
               disabled={isRunning || !activeClients.length}
@@ -248,7 +248,7 @@ export const LiveTimerWidget: React.FC = () => {
                   {client.name}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
 
           <label className="flex flex-col gap-1.5 rounded-xl border border-border-strong bg-bg px-3 py-2 transition-colors focus-within:border-primary/40 focus-within:bg-bg-accent">
@@ -256,7 +256,7 @@ export const LiveTimerWidget: React.FC = () => {
               <FolderKanban className="h-3.5 w-3.5" />
               {t("timesheet.project")}
             </span>
-            <select
+            <Select
               value={draftProjectId}
               onChange={(event) => setDraftProjectId(event.target.value)}
               disabled={isRunning || !draftClientId || !activeProjects.length}
@@ -274,7 +274,7 @@ export const LiveTimerWidget: React.FC = () => {
                   {project.name}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
 
           <label className="flex flex-col gap-1.5 rounded-xl border border-border-strong bg-bg px-3 py-2 transition-colors focus-within:border-primary/40 focus-within:bg-bg-accent">
@@ -289,7 +289,6 @@ export const LiveTimerWidget: React.FC = () => {
               className="w-full border-0 bg-transparent text-sm text-text placeholder:text-muted focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
             />
           </label>
-
         </div>
       </CardContent>
     </Card>
