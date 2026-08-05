@@ -439,7 +439,7 @@ export const TimesheetPage: React.FC = () => {
   };
 
   return (
-    <div className="mx-auto max-w-7xl space-y-5">
+    <div className="mx-auto w-full space-y-5">
       {isSuperAdmin || isCompanyAdmin ? (
         <>
           <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-muted">
@@ -482,34 +482,36 @@ export const TimesheetPage: React.FC = () => {
             </Button>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-full"
-              onClick={handlePreviousWeek}
-              icon={<ChevronLeft className="h-4 w-4" />}
-            >
-              Previous Week
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-full"
-              onClick={handleGoToToday}
-            >
-              Today
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-full"
-              onClick={handleNextWeek}
-              icon={<ChevronRight className="h-4 w-4" />}
-            >
-              Next Week
-            </Button>
-          </div>
+          {viewMode === "list" ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full"
+                onClick={handlePreviousWeek}
+                icon={<ChevronLeft className="h-4 w-4" />}
+              >
+                Previous Week
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full"
+                onClick={handleGoToToday}
+              >
+                Today
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full"
+                onClick={handleNextWeek}
+                icon={<ChevronRight className="h-4 w-4" />}
+              >
+                Next Week
+              </Button>
+            </div>
+          ) : null}
         </div>
       </Card>
 
@@ -544,6 +546,7 @@ export const TimesheetPage: React.FC = () => {
                 isDeleting={deleteMutation.isPending}
                 clients={clients}
                 canManageTarget={canManageTarget}
+                viewMode={viewMode}
               />
             </div>
           </div>
@@ -565,6 +568,7 @@ export const TimesheetPage: React.FC = () => {
           isDeleting={deleteMutation.isPending}
           clients={clients}
           canManageTarget={canManageTarget}
+          viewMode={viewMode}
         />
       ) : null}
 

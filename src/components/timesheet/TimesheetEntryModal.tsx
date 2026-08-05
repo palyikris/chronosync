@@ -33,6 +33,7 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
         isEditing ? t("timesheet.entryTitleEdit") : t("timesheet.entryTitleNew")
       }
       onClose={onClose}
+      className="max-w-2xl"
     >
       <form onSubmit={onSubmit} className="space-y-5 p-6">
         <div className="grid grid-cols-2 gap-4">

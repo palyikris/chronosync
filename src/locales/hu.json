@@ -243,7 +243,7 @@
     "subtitle": "Napi munkaidő-bejegyzések áttekintése és kezelése",
     "viewingFor": "Munkaidő megtekintése ehhez:",
     "monthTotal": "Havi összesítés",
-    "hoursLogged": "rögzítve",
+    "hoursLogged": "óra rögzítve a mai napra",
     "monthLabel": "Havi nézet",
     "totalLogged": "Összes rögzítve",
     "selectedDay": "Kiválasztott nap",

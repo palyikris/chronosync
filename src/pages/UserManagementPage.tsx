@@ -125,8 +125,10 @@ export const UserManagementPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <UserManagementPageHeader onInviteClick={() => setIsInviteModalOpen(true)} />
+    <div className="w-full mx-auto space-y-6">
+      <UserManagementPageHeader
+        onInviteClick={() => setIsInviteModalOpen(true)}
+      />
 
       <UserManagementToolbar
         searchTerm={searchTerm}

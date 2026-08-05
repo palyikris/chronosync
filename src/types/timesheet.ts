@@ -116,6 +116,7 @@ export interface TimesheetEntryListProps {
   isDeleting: boolean;
   clients: Client[];
   canManageTarget: boolean;
+  viewMode: "grid" | "calendar" | "list";
 }
 
 export interface TimesheetEntryModalProps {

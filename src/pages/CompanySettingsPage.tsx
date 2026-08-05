@@ -38,7 +38,7 @@ export const CompanySettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
+    <div className="mx-auto w-full space-y-8">
       <CompanySettingsHeader
         title={t("companySettings.title")}
         subtitle={t("companySettings.subtitle")}

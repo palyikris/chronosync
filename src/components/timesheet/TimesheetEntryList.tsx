@@ -19,6 +19,7 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
   isDeleting,
   clients,
   canManageTarget,
+  viewMode,
 }) => {
   const { t, i18n } = useTranslation();
   const selectedDayLabel = new Date(
@@ -38,12 +39,6 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
               {t("timesheet.selectedDay")}
             </p>
             <h3 className="mt-1 font-bold text-text">{selectedDayLabel}</h3>
-            <p className="text-xs text-muted">
-              {totalDailyHours} {t("timesheet.hoursLogged")}
-            </p>
-          </div>
-          <div className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary-strong">
-            {t("timesheet.liveDetail")}
           </div>
         </div>
       </CardHeader>
@@ -133,15 +128,33 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
       </CardContent>
 
       {canManageTarget ? (
-        <CardFooter className="mt-auto bg-bg-accent/60">
+        <CardFooter
+          className={
+            viewMode === "calendar"
+              ? "flex items-center justify-between gap-3"
+              : "flex items-center justify-center gap-3 relative"
+          }
+        >
           <Button
             variant="primary"
-            className="w-full rounded-xl"
+            className="w-1/4 rounded-xl"
             onClick={onAddEntry}
             icon={<Plus className="h-4 w-4" />}
           >
             {t("timesheet.addEntry")}
           </Button>
+
+          <div
+            className={
+              viewMode === "calendar"
+                ? "absolute right-4 top-4 flex flex-col items-end gap-1"
+                : "absolute right-4 top-auto bottom-auto flex flex-col items-end gap-1"
+            }
+          >
+            <p className="text-sm text-muted">
+              {totalDailyHours} {t("timesheet.hoursLogged")}
+            </p>
+          </div>
         </CardFooter>
       ) : null}
     </Card>

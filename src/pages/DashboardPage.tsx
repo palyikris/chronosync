@@ -42,7 +42,7 @@ export const AdminDashboardPage: React.FC = () => {
   const dailyTrends = data?.dailyTrends || [];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-12">
+    <div className="w-full mx-auto space-y-8 pb-12">
       <DashboardHeader
         startDate={startDate}
         endDate={endDate}
