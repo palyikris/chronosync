@@ -102,9 +102,9 @@ export const UserManagementPage: React.FC = () => {
   });
 
   const filteredMembers = members.filter((member) => {
-    const matchesSearch = member.full_name
-      ?.toLowerCase()
-      .includes(searchTerm.toLowerCase()) ?? false;
+    const matchesSearch =
+      member.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ??
+      false;
 
     const matchesRole = filters.role === "all" || member.role === filters.role;
 
@@ -148,6 +148,7 @@ export const UserManagementPage: React.FC = () => {
         onToggleStatus={handleToggleStatus}
         onDeleteUser={(member) => handleDeleteUser(member.id, member.full_name)}
         onUpdateRole={handleUpdateRole}
+        isSuperAdmin={profile?.role === "super_admin"}
       />
 
       <InviteUserModal

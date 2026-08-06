@@ -44,6 +44,9 @@ export interface UserProfile {
   role: UserRole;
   is_active: boolean;
   created_at: string;
+  companies?: {
+    name: string;
+  };
 }
 
 export interface AuthContextType {

@@ -1,10 +1,12 @@
 import React from "react";
 import { Filter, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "../../context/useAuth";
 
 export interface UserFilterState {
   role: "all" | "company_admin" | "regular";
   status: "all" | "active" | "inactive";
+  company?: string; // Optional company filter for super_admins
 }
 
 interface UserFilterPopoverProps {
@@ -24,6 +26,7 @@ export const UserFilterPopover: React.FC<UserFilterPopoverProps> = ({
 }) => {
   const { t } = useTranslation();
   const hasActiveFilters = filters.role !== "all" || filters.status !== "all";
+  const { profile } = useAuth();
 
   return (
     <div className="relative inline-block text-left">
@@ -100,6 +103,27 @@ export const UserFilterPopover: React.FC<UserFilterPopoverProps> = ({
                 <option value="inactive">{t("users.inactiveOnly")}</option>
               </select>
             </div>
+
+            {/* Optional Filter by Company for Super Admins */}
+            {profile?.role === "super_admin" && (
+              <div>
+                <label className="block text-xs font-semibold text-[#5e5e62] mb-1.5">
+                  {t("users.company")}
+                </label>
+                <input
+                  type="text"
+                  value={filters.company}
+                  onChange={(e) =>
+                    onChange({
+                      ...filters,
+                      company: e.target.value,
+                    })
+                  }
+                  placeholder={t("users.companyPlaceholder")}
+                  className="w-full px-3 py-2 border border-[#C4C7C5] rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#4e6700] bg-white"
+                />
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -341,7 +341,8 @@
     "creating": "Creating...",
     "failedCreateUser": "Failed to create user",
     "placeholderFullName": "Elena Rivera",
-    "placeholderEmail": "elena.r@chronotrack.io"
+    "placeholderEmail": "elena.r@chronotrack.io",
+    "company": "Company"
   },
   "userSettings": {
     "title": "User Preferences",

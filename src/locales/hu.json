@@ -341,7 +341,8 @@
     "creating": "Létrehozás...",
     "failedCreateUser": "Nem sikerült létrehozni a felhasználót",
     "placeholderFullName": "Elena Rivera",
-    "placeholderEmail": "elena.r@chronotrack.io"
+    "placeholderEmail": "elena.r@chronotrack.io",
+    "company": "Company"
   },
   "userSettings": {
     "title": "Felhasználói beállítások",

@@ -43,7 +43,7 @@ export async function fetchCompanyMembers(
   companyId?: string,
   role?: string,
 ): Promise<UserProfile[]> {
-  let query = supabase.from("profiles").select("*");
+  let query = supabase.from("profiles").select("*, companies(name)");
 
   if (role !== "super_admin" && companyId) {
     query = query.eq("company_id", companyId);

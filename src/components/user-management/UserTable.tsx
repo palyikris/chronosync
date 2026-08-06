@@ -18,7 +18,11 @@ interface UserTableProps {
   onSendPasswordReset: (email: string) => void;
   onToggleStatus: (member: UserProfile) => void;
   onDeleteUser: (member: UserProfile) => void;
-  onUpdateRole: (member: UserProfile, role: "company_admin" | "regular") => void;
+  onUpdateRole: (
+    member: UserProfile,
+    role: "company_admin" | "regular",
+  ) => void;
+  isSuperAdmin: boolean;
 }
 
 export const UserTable: React.FC<UserTableProps> = ({
@@ -29,8 +33,12 @@ export const UserTable: React.FC<UserTableProps> = ({
   onToggleStatus,
   onDeleteUser,
   onUpdateRole,
+  isSuperAdmin,
 }) => {
   const { t } = useTranslation();
+
+  console.log("Rendering UserTable with members:", members);
+
   return (
     <div className="bg-white rounded-2xl border border-border-strong shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
@@ -38,6 +46,9 @@ export const UserTable: React.FC<UserTableProps> = ({
           <thead className="bg-[#f3f4f5] border-b border-border-strong text-xs font-semibold text-text">
             <tr>
               <th className="px-6 py-4">{t("users.member")}</th>
+              {isSuperAdmin && (
+                <th className="px-6 py-4">{t("users.company")}</th>
+              )}
               <th className="px-6 py-4">{t("users.roleSegment")}</th>
               <th className="px-6 py-4">{t("users.status")}</th>
               <th className="px-6 py-4 text-center">{t("users.actions")}</th>
@@ -76,6 +87,14 @@ export const UserTable: React.FC<UserTableProps> = ({
                       </div>
                     </div>
                   </td>
+
+                  {isSuperAdmin && (
+                    <td className="px-6 py-4">
+                      <span className="text-sm text-text">
+                        {member.companies?.name || "-"}
+                      </span>
+                    </td>
+                  )}
 
                   <td className="px-6 py-4">
                     {member.role === "super_admin" ? (
