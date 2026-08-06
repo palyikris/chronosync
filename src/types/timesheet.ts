@@ -32,6 +32,13 @@ export const newTimesheetPayloadSchema = z
       .max(24 * 60)
       .optional(),
     target_user_id: timesheetIdSchema.optional(),
+    status: z
+      .enum(["draft", "submitted", "approved", "rejected", "invoiced"])
+      .optional(),
+    submitted_at: z.string().optional(),
+    approved_by: timesheetIdSchema.optional(),
+    approved_at: z.string().optional(),
+    rejection_reason: z.string().optional(),
   })
   .strict();
 
@@ -48,6 +55,12 @@ export const timesheetEntryUpdatePayloadSchema = z
     message: "At least one timesheet field must be provided",
   });
 
+export type TimesheetEntryStatus =
+  | "draft"
+  | "submitted"
+  | "approved"
+  | "rejected"
+  | "invoiced";
 export interface TimesheetEntry {
   id: string;
   user_id: string;
@@ -59,6 +72,11 @@ export interface TimesheetEntry {
   duration_minutes?: number;
   description: string;
   created_at: string;
+  status: TimesheetEntryStatus;
+  rejection_reason?: string;
+  approved_by?: string;
+  approved_at?: string;
+  submitted_at?: string;
 }
 
 export interface ActiveTimerState {
@@ -90,6 +108,8 @@ export type TimesheetFormData = Pick<
   | "company_id"
   | "client_id"
   | "project_id"
+  | "status"
+  | "rejection_reason"
 >;
 
 export interface TimesheetCalendarProps {
@@ -106,6 +126,7 @@ export interface TimesheetEntryListProps {
   selectedDate: string;
   totalDailyHours: number;
   entries: TimesheetEntry[];
+  allEntries: TimesheetEntry[];
   loading: boolean;
   onAddEntry: () => void;
   onEditEntry: (entry: TimesheetEntry) => void;

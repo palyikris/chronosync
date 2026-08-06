@@ -319,6 +319,7 @@ export async function updateTimesheetEntry(
       ...(validatedPayload.project_id !== undefined && {
         project_id: validatedPayload.project_id,
       }),
+      status: "draft",
     })
     .eq("id", id)
     .select()
@@ -394,4 +395,32 @@ export async function upsertDailyEntry(
 
   if (error) throw error;
   return data as TimesheetEntry;
+}
+
+export async function submitTimesheetEntries(
+  entryIds: string[],
+): Promise<void> {
+  const { error } = await supabase
+    .from("timesheets")
+    .update({
+      status: "submitted",
+      submitted_at: new Date().toISOString(),
+    })
+    .in("id", entryIds);
+
+  if (error) throw error;
+}
+
+export async function revertSubmittedTimesheetEntries(
+  entryIds: string[],
+): Promise<void> {
+  const { error } = await supabase
+    .from("timesheets")
+    .update({
+      status: "draft",
+      submitted_at: null,
+    })
+    .in("id", entryIds);
+
+  if (error) throw error;
 }

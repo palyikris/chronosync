@@ -31,7 +31,10 @@
     "selectClientFirstShort": "Válassz ügyfelet",
     "selectProject": "Projekt kiválasztása",
     "selectProjectFirst": "Előbb válassz ügyfelet",
-    "select": "Választás"
+    "select": "Választás",
+    "approve": "Elfogadás",
+    "reject": "Elutasítás",
+    "revert": "Visszaállítás"
   },
   "validation": {
     "validEmail": "Adj meg egy érvényes e-mail címet",
@@ -74,7 +77,50 @@
     "portal": "Portál",
     "signOut": "Kijelentkezés",
     "userProfile": "Felhasználói profil",
-    "userSettings": "Felhasználói beáll."
+    "userSettings": "Felhasználói beáll.",
+    "timesheetReview": "Munkaidő ellenőrzés"
+  },
+  "review": {
+    "colEmployee": "Dolgozó",
+    "colDate": "Dátum",
+    "colProjectClient": "Projekt és ügyfél",
+    "colDescription": "Leírás",
+    "colDuration": "Időtartam",
+    "colStatus": "Státusz",
+    "colActions": "Műveletek",
+    "approveSelected": "Kijelölt bejegyzések jóváhagyása"
+  },
+  "timesheetReview": {
+    "kpiTotalSubmitted": "Összes beküldött óra",
+    "kpiTotalSubmittedSubtitle": "Az összes dolgozó által beküldött órák, jóváhagyásra várnak",
+    "kpiTotalApproved": "Összes jóváhagyott óra",
+    "kpiTotalApprovedSubtitle": "A céges adminok által jóváhagyott órák összesen",
+    "kpiPendingEmployees": "Függőben lévő dolgozók",
+    "kpiPendingEmployeesSubtitle": "Dolgozók, akiknek függőben lévő timesheet beküldése van",
+    "filters": "Szűrők",
+    "filterReview": "Munkaidő bejegyzések szűrése",
+    "resetFilters": "Szűrők visszaállítása",
+    "statusLabel": "Státusz",
+    "statusAll": "Minden státusz",
+    "statusSubmitted": "Beküldve",
+    "statusApproved": "Jóváhagyva",
+    "statusRejected": "Elutasítva",
+    "allClients": "Minden ügyfél",
+    "allProjects": "Minden projekt",
+    "noProjectsForClient": "Nincs projekt ehhez az ügyfélhez",
+    "userLabel": "Felhasználó",
+    "userPlaceholder": "Szűrés felhasználó alapján",
+    "startDateLabel": "Kezdő dátum",
+    "endDateLabel": "Záró dátum",
+    "projectLabel": "Projekt",
+    "projectPlaceholder": "Szűrés projekt alapján",
+    "clientLabel": "Ügyfél",
+    "clientPlaceholder": "Szűrés ügyfél alapján",
+    "rejectModalTitle": "Timesheet bejegyzés elutasítása",
+    "rejectModalDescription": "Adj meg egy elutasítási okot, mielőtt elutasítod ezt a bejegyzést.",
+    "rejectionReasonPlaceholder": "Adj meg egy elutasítási okot...",
+    "rejectionReasonLabel": "Elutasítás oka",
+    "confirmRejection": "Elutasítás megerősítése"
   },
   "dashboard": {
     "pageTitle": "Cég vezérlőpult",
@@ -294,7 +340,16 @@
     "selectClient": "Ügyfél kiválasztása",
     "selectProject": "Projekt kiválasztása",
     "selectClientFirst": "Előbb válassz ügyfelet",
-    "editTimesheetFor": "Munkaidő megtekintése ehhez:"
+    "editTimesheetFor": "Munkaidő megtekintése ehhez:",
+    "draft": "Vázlat",
+    "submitted": "Beküldve",
+    "approved": "Jóváhagyva",
+    "rejected": "Elutasítva",
+    "invoiced": "Számlázva",
+    "day": "Nap",
+    "week": "Hét",
+    "month": "Hónap",
+    "rejectionReasonLabel": "A bejegyzésed el lett utasítva az alábbi ok miatt:"
   },
   "users": {
     "title": "Csapattagok",

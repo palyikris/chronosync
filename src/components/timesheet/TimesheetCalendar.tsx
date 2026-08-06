@@ -3,7 +3,10 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../shared/Button";
 import { Card, CardContent, CardHeader } from "../shared/Card";
-import type { TimesheetCalendarProps } from "../../types/timesheet";
+import type {
+  TimesheetCalendarProps,
+  TimesheetEntryStatus,
+} from "../../types/timesheet";
 
 export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
   currentDate,
@@ -40,11 +43,29 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
     7;
 
   const yearMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}`;
+  const today = new Date();
+  const todayDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
   const formatHours = (hours: number) =>
     Number.isInteger(hours)
       ? `${hours}`
       : hours.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+
+  const getColorOfEntriesForEntries = (
+    entryStatuses: TimesheetEntryStatus[],
+  ): string => {
+    const statuses = new Set(entryStatuses);
+    if (statuses.has("rejected")) {
+      return "bg-red-200 text-red-800";
+    } else if (statuses.has("invoiced")) {
+      return "bg-purple-200 text-purple-800";
+    } else if (statuses.has("submitted")) {
+      return "bg-blue-200 text-blue-800";
+    } else if (statuses.has("approved")) {
+      return "bg-green-200 text-green-800";
+    }
+    return "bg-gray-200 text-gray-800"; // Default color for other statuses
+  };
 
   return (
     <Card className="h-full overflow-hidden">
@@ -104,6 +125,10 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
             );
             const hasLogs = dayLogs.length > 0;
             const isSelected = selectedDate === dateStr;
+            const isToday = dateStr === todayDateStr;
+
+            const entryStatuses = dayLogs.map((entry) => entry.status);
+            const colorClass = getColorOfEntriesForEntries(entryStatuses);
 
             return (
               <button
@@ -111,14 +136,26 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
                 type="button"
                 onClick={() => onSelectDate(dateStr)}
                 className={`flex min-h-17.5 cursor-pointer flex-col justify-between border-b border-r border-border-strong p-2 text-left transition-all hover:bg-bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-strong focus-visible:ring-inset ${
+                  isToday
+                    ? "relative bg-bg-accent/60 border border-primary"
+                    : ""
+                } ${
                   isSelected
                     ? "bg-primary/20 font-bold ring-2 ring-primary-strong ring-inset"
                     : ""
                 }`}
               >
+                {isToday ? (
+                  <span
+                    aria-hidden="true"
+                    className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary-strong shadow-sm"
+                  />
+                ) : null}
                 <span className="text-xs text-text">{dayNumber}</span>
                 {hasLogs ? (
-                  <div className="w-full truncate rounded bg-primary-strong px-1 py-0.5 text-center text-[10px] font-bold text-white">
+                  <div
+                    className={`w-full truncate rounded px-1 py-0.5 text-center text-[10px] font-bold ${colorClass}`}
+                  >
                     {dayLogs.reduce(
                       (sum, entry) => sum + Number(entry.hours_logged),
                       0,

@@ -1,10 +1,14 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Briefcase, Clock, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { fetchAdminDashboardData } from "../services/dashboardService";
 import { useAuth } from "../context/useAuth";
 import { DashboardHeader } from "../components/dashboard/DashboardHeader";
-import { KpiSummaryCards } from "../components/dashboard/KpiSummaryCards";
+import {
+  KpiSummaryCards,
+  type KpiSummaryCardItem,
+} from "../components/shared/KpiSummaryCards";
 import { DailyTrendChart } from "../components/dashboard/DailyTrendChart";
 import { UserBreakdownPanel } from "../components/dashboard/UserBreakdownPanel";
 import { ProjectBreakdownPanel } from "../components/dashboard/ProjectBreakdownPanel";
@@ -40,6 +44,41 @@ export const AdminDashboardPage: React.FC = () => {
 
   const kpis = data?.kpis;
   const dailyTrends = data?.dailyTrends || [];
+  const totalLoggedHours = kpis?.totalLoggedHours?.toFixed(1) ?? "0.0";
+  const activeLoggerText = `${kpis?.activeLoggersCount ?? 0} / ${kpis?.totalActiveMembers ?? 0}`;
+  const capacityUtilization = `${kpis?.capacityUtilizationPct ?? 0}%`;
+
+  const summaryCardItems: KpiSummaryCardItem[] = [
+    {
+      title: t("dashboard.kpiTotalHours"),
+      value: totalLoggedHours,
+      subtitle: t("dashboard.kpiTotalHoursSubtitle"),
+      icon: Clock,
+      valueSuffix: " hrs",
+    },
+    {
+      title: t("dashboard.kpiActiveRate"),
+      value: activeLoggerText,
+      subtitle: t("dashboard.kpiActiveRateSubtitle"),
+      icon: Users,
+    },
+    {
+      title: t("dashboard.kpiCapacity"),
+      value: capacityUtilization,
+      icon: Briefcase,
+      className: "col-span-1 sm:col-span-2 lg:col-span-1",
+      footer: (
+        <div className="w-full bg-[#e7e8e9] h-2 rounded-full mt-3 overflow-hidden">
+          <div
+            className="bg-primary-strong h-full rounded-full transition-all duration-500"
+            style={{
+              width: `${Math.min(100, kpis?.capacityUtilizationPct || 0)}%`,
+            }}
+          />
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="w-full mx-auto space-y-8 pb-12">
@@ -61,7 +100,7 @@ export const AdminDashboardPage: React.FC = () => {
         </div>
       ) : (
         <>
-          <KpiSummaryCards kpis={kpis} />
+          <KpiSummaryCards items={summaryCardItems} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <ProjectBreakdownPanel

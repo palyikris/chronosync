@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
-  Timer,
   LayoutDashboard,
   Clock,
   Users,
   Building2,
   LogOut,
   Settings,
+  ScanEye,
 } from "lucide-react";
 import { useAuth } from "../../context/useAuth";
 import { getRoleLabel } from "../../utils/getRoleLabel";
@@ -32,6 +32,12 @@ export const Sidebar: React.FC = () => {
       to: "/admin/dashboard",
       label: t("navigation.dashboard"),
       icon: LayoutDashboard,
+      roleRequired: "company_admin",
+    },
+    {
+      to: "/admin/review",
+      label: t("navigation.timesheetReview"),
+      icon: ScanEye,
       roleRequired: "company_admin",
     },
     {
@@ -84,8 +90,8 @@ export const Sidebar: React.FC = () => {
     >
       {/* Brand Header */}
       <div className="flex items-center px-4 gap-3">
-        <div className="w-12 h-12 rounded-xl bg-primary-strong flex items-center justify-center text-white shrink-0 shadow-sm">
-          <Timer className="w-6 h-6 text-primary" />
+        <div className="w-12 h-12 flex items-center justify-center text-white shrink-0">
+          <img src="/logo.png" alt="Logo image in sidebar" width={40} />
         </div>
         <div
           className={`overflow-hidden transition-all duration-300 ${

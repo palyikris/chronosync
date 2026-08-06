@@ -31,7 +31,10 @@
     "selectClientFirstShort": "Select client",
     "selectProject": "Select a project",
     "selectProjectFirst": "Select a client first",
-    "select": "Select"
+    "select": "Select",
+    "approve": "Approve",
+    "reject": "Reject",
+    "revert": "Revert"
   },
   "validation": {
     "validEmail": "Enter a valid email address",
@@ -74,7 +77,50 @@
     "portal": "Portal",
     "signOut": "Sign Out",
     "userProfile": "User Profile",
-    "userSettings": "User Settings"
+    "userSettings": "User Settings",
+    "timesheetReview": "Timesheet Review"
+  },
+  "review": {
+    "colEmployee": "Employee",
+    "colDate": "Date",
+    "colProjectClient": "Project & Client",
+    "colDescription": "Description",
+    "colDuration": "Duration",
+    "colStatus": "Status",
+    "colActions": "Actions",
+    "approveSelected": "Approve Selected Entries"
+  },
+  "timesheetReview": {
+    "kpiTotalSubmitted": "Total Submitted Hours",
+    "kpiTotalSubmittedSubtitle": "Total hours submitted by all employees, pending approval",
+    "kpiTotalApproved": "Total Approved Hours",
+    "kpiTotalApprovedSubtitle": "Total hours approved by company admins",
+    "kpiPendingEmployees": "Pending Employees",
+    "kpiPendingEmployeesSubtitle": "Employees with pending timesheet submissions",
+    "filters": "Filters",
+    "filterReview": "Filter review entries",
+    "resetFilters": "Reset filters",
+    "statusLabel": "Status",
+    "statusAll": "All statuses",
+    "statusSubmitted": "Submitted",
+    "statusApproved": "Approved",
+    "statusRejected": "Rejected",
+    "allClients": "All clients",
+    "allProjects": "All projects",
+    "noProjectsForClient": "No projects for this client",
+    "userLabel": "User",
+    "userPlaceholder": "Filter by user",
+    "startDateLabel": "Start date",
+    "endDateLabel": "End date",
+    "projectLabel": "Project",
+    "projectPlaceholder": "Filter by project",
+    "clientLabel": "Client",
+    "clientPlaceholder": "Filter by client",
+    "rejectModalTitle": "Reject Timesheet Entry",
+    "rejectModalDescription": "Provide a rejection reason before rejecting this entry.",
+    "rejectionReasonPlaceholder": "Enter a rejection reason...",
+    "rejectionReasonLabel": "Rejection reason",
+    "confirmRejection": "Confirm Rejection"
   },
   "dashboard": {
     "pageTitle": "Company Dashboard",
@@ -294,7 +340,16 @@
     "selectClient": "Select a client",
     "selectProject": "Select a project",
     "selectClientFirst": "Select a client first",
-    "editTimesheetFor": "Viewing Timesheet For"
+    "editTimesheetFor": "Viewing Timesheet For",
+    "draft": "Draft",
+    "submitted": "Submitted",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "invoiced": "Invoiced",
+    "day": "Day",
+    "week": "Week",
+    "month": "Month",
+    "rejectionReasonLabel": "Your entry has been rejected by a company admin, for this reason:"
   },
   "users": {
     "title": "Team Members",
