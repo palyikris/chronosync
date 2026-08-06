@@ -8,6 +8,7 @@ import {
   LogOut,
   Settings,
   ScanEye,
+  ScrollText,
 } from "lucide-react";
 import { useAuth } from "../../context/useAuth";
 import { getRoleLabel } from "../../utils/getRoleLabel";
@@ -59,6 +60,12 @@ export const Sidebar: React.FC = () => {
       roleRequired: "super_admin",
     },
     {
+      to: "/super-admin/logs",
+      label: t("navigation.logs"),
+      icon: ScrollText,
+      roleRequired: "super_admin",
+    },
+    {
       to: "/settings",
       label: t("navigation.userSettings"),
       icon: Settings,
@@ -70,6 +77,10 @@ export const Sidebar: React.FC = () => {
     if (!item.roleRequired) return true;
     // Hide company settings from super_admins
     if (item.to === "/admin/settings" && profile?.role === "super_admin")
+      return false;
+    if (item.to === "/admin/review" && profile?.role === "super_admin")
+      return false;
+    if (item.to === "/admin/dashboard" && profile?.role === "super_admin")
       return false;
     if (item.roleRequired === "super_admin")
       return profile?.role === "super_admin";
