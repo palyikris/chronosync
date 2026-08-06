@@ -11,12 +11,11 @@ export const getKPIsForCompany = async (companyId: string) => {
     throw new Error("Failed to fetch KPIs");
   }
 
-  console.log("Fetched KPIs data:", data);
 
   // Calculate KPIs
   const totalSubmittedHours =
     data
-      ?.filter((ts) => ts.status === "approved")
+      ?.filter((ts) => ts.status === "submitted")
       .reduce((sum, ts) => sum + (ts.hours_logged || 0), 0) || 0;
   const totalApprovedHours = data?.filter(ts => ts.status === "approved").reduce((sum, ts) => sum + (ts.hours_logged || 0), 0) || 0;
   const totalRejected = data?.filter(ts => ts.status === "rejected").length || 0;

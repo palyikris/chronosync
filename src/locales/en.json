@@ -88,7 +88,8 @@
     "colDuration": "Duration",
     "colStatus": "Status",
     "colActions": "Actions",
-    "approveSelected": "Approve Selected Entries"
+    "approveSelected": "Approve Selected Entries",
+    "kpiHours": "hrs"
   },
   "timesheetReview": {
     "kpiTotalSubmitted": "Total Submitted Hours",

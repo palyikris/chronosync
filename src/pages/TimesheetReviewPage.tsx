@@ -110,17 +110,17 @@ export default function TimesheetReviewPage() {
   const kpiItems: KpiSummaryCardItem[] = [
     {
       title: t("timesheetReview.kpiTotalSubmitted"),
-      value: kpis?.totalSubmitted ?? 0,
+      value: kpis?.totalSubmittedHours.toFixed(2) ?? 0,
       subtitle: t("timesheetReview.kpiTotalSubmittedSubtitle"),
       icon: ClockArrowUp,
-      valueSuffix: " hrs",
+      valueSuffix: " " + t("review.kpiHours"),
     },
     {
       title: t("timesheetReview.kpiTotalApproved"),
-      value: kpis?.totalApproved ?? 0,
+      value: kpis?.totalApprovedHours.toFixed(2) ?? 0,
       subtitle: t("timesheetReview.kpiTotalApprovedSubtitle"),
       icon: ClockCheck,
-      valueSuffix: " hrs",
+      valueSuffix: " " + t("review.kpiHours"),
     },
     // {
     //   title: "Total Rejected Hours",
@@ -135,7 +135,7 @@ export default function TimesheetReviewPage() {
       subtitle: t("timesheetReview.kpiPendingEmployeesSubtitle"),
       icon: UserRoundSearch,
     },
-  ]
+  ];
 
   return (
     <div className="w-full mx-auto space-y-8 pb-12">
