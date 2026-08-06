@@ -31,7 +31,10 @@
     "selectClientFirstShort": "Válassz ügyfelet",
     "selectProject": "Projekt kiválasztása",
     "selectProjectFirst": "Előbb válassz ügyfelet",
-    "select": "Választás"
+    "select": "Választás",
+    "approve": "Elfogadás",
+    "reject": "Elutasítás",
+    "revert": "Visszaállítás"
   },
   "validation": {
     "validEmail": "Adj meg egy érvényes e-mail címet",
@@ -84,7 +87,8 @@
     "colDescription": "Leírás",
     "colDuration": "Időtartam",
     "colStatus": "Státusz",
-    "colActions": "Műveletek"
+    "colActions": "Műveletek",
+    "approveSelected": "Kijelölt bejegyzések jóváhagyása"
   },
   "timesheetReview": {
     "kpiTotalSubmitted": "Összes beküldött óra",

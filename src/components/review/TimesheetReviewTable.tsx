@@ -237,7 +237,7 @@ export const TimesheetReviewTable: React.FC<TimesheetReviewTableProps> = ({
               className="h-9 px-5 rounded-full bg-emerald-600 text-white hover:bg-emerald-700 transition-colors text-xs font-medium flex items-center gap-2 shadow-sm disabled:opacity-50"
             >
               <Check className="w-4 h-4" />
-              {t("timesheetReview.approveSelected", "Approve Selected")} (
+              {t("review.approveSelected", "Approve Selected")} (
               {selectedIds.length})
             </button>
           </div>
@@ -295,7 +295,8 @@ export const TimesheetReviewTable: React.FC<TimesheetReviewTableProps> = ({
                   const isSelected = selectedIds.includes(entry.id);
                   const durationHours = entry.hours_logged;
                   const userEmail = entry.profiles?.full_name || entry.user_id;
-                  const projectName = entry.projects?.name || "Unassigned Project";
+                  const projectName =
+                    entry.projects?.name || "Unassigned Project";
                   const clientName = entry.clients?.name || "Internal";
 
                   return (
@@ -422,20 +423,22 @@ export const TimesheetReviewTable: React.FC<TimesheetReviewTableProps> = ({
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <div className="flex items-center gap-1 font-medium text-xs">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    type="button"
-                    onClick={() => setCurrentPage(page)}
-                    className={`w-8 h-8 flex items-center justify-center rounded ${
-                      currentPage === page
-                        ? "bg-primary text-white font-bold"
-                        : "bg-white border border-gray-200 hover:bg-gray-50"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <button
+                      key={page}
+                      type="button"
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-8 h-8 flex items-center justify-center rounded ${
+                        currentPage === page
+                          ? "bg-primary text-white font-bold"
+                          : "bg-white border border-gray-200 hover:bg-gray-50"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ),
+                )}
               </div>
               <button
                 type="button"

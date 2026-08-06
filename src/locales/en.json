@@ -31,7 +31,10 @@
     "selectClientFirstShort": "Select client",
     "selectProject": "Select a project",
     "selectProjectFirst": "Select a client first",
-    "select": "Select"
+    "select": "Select",
+    "approve": "Approve",
+    "reject": "Reject",
+    "revert": "Revert"
   },
   "validation": {
     "validEmail": "Enter a valid email address",
@@ -84,7 +87,8 @@
     "colDescription": "Description",
     "colDuration": "Duration",
     "colStatus": "Status",
-    "colActions": "Actions"
+    "colActions": "Actions",
+    "approveSelected": "Approve Selected Entries"
   },
   "timesheetReview": {
     "kpiTotalSubmitted": "Total Submitted Hours",
