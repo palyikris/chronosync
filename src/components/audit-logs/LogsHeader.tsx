@@ -38,15 +38,11 @@ export const AuditLogHeader: React.FC<AuditLogHeaderProps> = ({
           <h1 className="text-2xl font-bold tracking-tight text-text sm:text-3xl">
             {t("auditLogs.title")}
           </h1>
-          <div className="flex items-center gap-2 rounded-full border border-border-strong bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-            <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-            <span>{t("auditLogs.liveStream")}</span>
-          </div>
         </div>
 
         <div className="flex items-center gap-3">
           <Button
-            variant="outline"
+            variant="primary"
             onClick={onRefresh}
             disabled={isLoading}
             className="rounded-full"
@@ -77,7 +73,9 @@ export const AuditLogHeader: React.FC<AuditLogHeaderProps> = ({
           <span className="text-3xl font-bold leading-none text-primary">
             {t("auditLogs.primaryTargetValue")}
           </span>
-          <span className="text-xs text-muted">{t("auditLogs.primaryTargetSubtitle")}</span>
+          <span className="text-xs text-muted">
+            {t("auditLogs.primaryTargetSubtitle")}
+          </span>
         </Card>
 
         <Card className="p-5 flex flex-col gap-2">
@@ -114,13 +112,16 @@ export const AuditLogHeader: React.FC<AuditLogHeaderProps> = ({
           </div>
           <div className="flex justify-between text-xs text-muted px-1">
             <div className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-primary" /> {t("auditLogs.insLabel", { pct: insPct })}
+              <div className="w-2 h-2 rounded-full bg-primary" />{" "}
+              {t("auditLogs.insLabel", { pct: insPct })}
             </div>
             <div className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-primary/70" /> {t("auditLogs.updLabel", { pct: updPct })}
+              <div className="w-2 h-2 rounded-full bg-primary/70" />{" "}
+              {t("auditLogs.updLabel", { pct: updPct })}
             </div>
             <div className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-danger" /> {t("auditLogs.delLabel", { pct: delPct })}
+              <div className="w-2 h-2 rounded-full bg-danger" />{" "}
+              {t("auditLogs.delLabel", { pct: delPct })}
             </div>
           </div>
         </Card>
