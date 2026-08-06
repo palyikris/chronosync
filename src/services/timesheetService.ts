@@ -319,6 +319,7 @@ export async function updateTimesheetEntry(
       ...(validatedPayload.project_id !== undefined && {
         project_id: validatedPayload.project_id,
       }),
+      status: "draft",
     })
     .eq("id", id)
     .select()

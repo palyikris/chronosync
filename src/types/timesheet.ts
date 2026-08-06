@@ -32,6 +32,13 @@ export const newTimesheetPayloadSchema = z
       .max(24 * 60)
       .optional(),
     target_user_id: timesheetIdSchema.optional(),
+    status: z
+      .enum(["draft", "submitted", "approved", "rejected", "invoiced"])
+      .optional(),
+    submitted_at: z.string().optional(),
+    approved_by: timesheetIdSchema.optional(),
+    approved_at: z.string().optional(),
+    rejection_reason: z.string().optional(),
   })
   .strict();
 
@@ -101,6 +108,8 @@ export type TimesheetFormData = Pick<
   | "company_id"
   | "client_id"
   | "project_id"
+  | "status"
+  | "rejection_reason"
 >;
 
 export interface TimesheetCalendarProps {

@@ -8,6 +8,25 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     ref,
   ) => {
     const hasValue = value !== undefined && value !== null && value !== "";
+    const isDateInput = props.type === "date";
+
+    if (isDateInput && label) {
+      return (
+        <div className={cn("flex flex-col gap-1", className)}>
+          <label htmlFor={id} className="text-xs font-semibold text-muted">
+            {label}
+          </label>
+          <input
+            ref={ref}
+            id={id}
+            value={value}
+            placeholder={placeholder}
+            className="auth-input"
+            {...props}
+          />
+        </div>
+      );
+    }
 
     return (
       <div className={cn("auth-field", hasValue && "has-value", className)}>

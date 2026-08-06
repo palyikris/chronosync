@@ -7,6 +7,7 @@ import {
   Building2,
   LogOut,
   Settings,
+  ScanEye,
 } from "lucide-react";
 import { useAuth } from "../../context/useAuth";
 import { getRoleLabel } from "../../utils/getRoleLabel";
@@ -31,6 +32,12 @@ export const Sidebar: React.FC = () => {
       to: "/admin/dashboard",
       label: t("navigation.dashboard"),
       icon: LayoutDashboard,
+      roleRequired: "company_admin",
+    },
+    {
+      to: "/admin/review",
+      label: t("navigation.timesheetReview"),
+      icon: ScanEye,
       roleRequired: "company_admin",
     },
     {

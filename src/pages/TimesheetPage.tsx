@@ -90,13 +90,12 @@ export const TimesheetPage: React.FC = () => {
     new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1),
   );
   const isSuperAdmin = profile?.role === "super_admin";
-  const isCompanyAdmin = profile?.role === "company_admin";
 
   const { data: selectableUsers = [] } = useQuery<SelectableTimesheetUser[]>({
     queryKey: ["timesheet-users", profile?.company_id, profile?.role],
     queryFn: () =>
       fetchSelectableCompanyUsers(profile?.company_id, Boolean(isSuperAdmin)),
-    enabled: Boolean(profile && (isSuperAdmin || isCompanyAdmin)),
+    enabled: Boolean(profile && isSuperAdmin),
   });
 
   const currentUserOption: SelectableTimesheetUser | null = profile
@@ -108,16 +107,15 @@ export const TimesheetPage: React.FC = () => {
       }
     : null;
 
-  const availableUsers =
-    isSuperAdmin || isCompanyAdmin
-      ? selectableUsers.length > 0
-        ? selectableUsers
-        : currentUserOption
-          ? [currentUserOption]
-          : []
+  const availableUsers = isSuperAdmin
+    ? selectableUsers.length > 0
+      ? selectableUsers
       : currentUserOption
         ? [currentUserOption]
-        : [];
+        : []
+    : currentUserOption
+      ? [currentUserOption]
+      : [];
 
   const activeTargetUser =
     availableUsers.find((candidate) => candidate.id === selectedUserId) ??
@@ -258,6 +256,8 @@ export const TimesheetPage: React.FC = () => {
       company_id: entry.company_id,
       client_id: entry.client_id,
       project_id: entry.project_id,
+      status: entry.status,
+      rejection_reason: entry.rejection_reason,
     });
     setEditEntryId(entry.id);
     setIsModalOpen(true);
@@ -396,6 +396,18 @@ export const TimesheetPage: React.FC = () => {
     applySelectedDate(selected);
   };
 
+  const handlePreviousDay = () => {
+    const selected = new Date(`${selectedDate}T12:00:00`);
+    selected.setDate(selected.getDate() - 1);
+    applySelectedDate(selected);
+  };
+
+  const handleNextDay = () => {
+    const selected = new Date(`${selectedDate}T12:00:00`);
+    selected.setDate(selected.getDate() + 1);
+    applySelectedDate(selected);
+  };
+
   const handleNextWeek = () => {
     const selected = new Date(`${selectedDate}T12:00:00`);
     selected.setDate(selected.getDate() + 7);
@@ -440,7 +452,7 @@ export const TimesheetPage: React.FC = () => {
 
   return (
     <div className="mx-auto w-full space-y-5">
-      {isSuperAdmin || isCompanyAdmin ? (
+      {isSuperAdmin ? (
         <>
           <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-muted">
             {t("timesheet.viewingFor")}
@@ -497,10 +509,24 @@ export const TimesheetPage: React.FC = () => {
                 variant="outline"
                 size="sm"
                 className="rounded-full"
+                onClick={handlePreviousDay}
+                icon={<ChevronLeft className="h-4 w-4" />}
+              ></Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full"
                 onClick={handleGoToToday}
               >
                 Today
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full"
+                onClick={handleNextDay}
+                icon={<ChevronRight className="h-4 w-4" />}
+              ></Button>
               <Button
                 variant="outline"
                 size="sm"

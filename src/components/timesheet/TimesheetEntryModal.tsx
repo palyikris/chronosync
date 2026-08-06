@@ -155,6 +155,13 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
           </div>
         </div>
 
+        {formData.status === "rejected" && formData.rejection_reason && (
+          <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-900">
+            <label className="">{t("timesheet.rejectionReasonLabel")}</label>
+            <p className="font-semibold">{formData.rejection_reason}</p>
+          </div>
+        )}
+
         <div className="flex gap-3 pt-2">
           <Button
             type="button"

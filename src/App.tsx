@@ -12,6 +12,7 @@ import { AdminDashboardPage } from "./pages/DashboardPage";
 import { CompanyManagementPage } from "./pages/CompanyManagementPage";
 import { UserSettingsPage } from "./pages/UserSettingsPage";
 import { AuthProvider } from "./context/AuthContext";
+import TimesheetReviewPage from "./pages/TimesheetReviewPage";
 
 // Dynamic Index Redirect Component
 const RootRedirect: React.FC = () => {
@@ -58,6 +59,10 @@ export default function App() {
                 path="/super-admin/companies"
                 element={<CompanyManagementPage />}
               />
+              <Route
+                path="/admin/review"
+                element={<TimesheetReviewPage />}
+              ></Route>
               <Route path="/settings" element={<UserSettingsPage />} />
             </Route>
           </Route>
