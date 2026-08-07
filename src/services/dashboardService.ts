@@ -53,6 +53,7 @@ export async function fetchAdminDashboardData(
       `,
       )
       .gte("work_date", startDate)
+      .eq("status", "SUBMITTED")
       .lte("work_date", endDate),
   ]);
 
