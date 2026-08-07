@@ -34,7 +34,8 @@
     "select": "Választás",
     "approve": "Elfogadás",
     "reject": "Elutasítás",
-    "revert": "Visszaállítás"
+    "revert": "Visszaállítás",
+    "all": "Összes"
   },
   "validation": {
     "validEmail": "Adj meg egy érvényes e-mail címet",

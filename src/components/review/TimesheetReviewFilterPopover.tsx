@@ -24,9 +24,12 @@ interface TimesheetReviewFilterPopoverProps {
   isOpen: boolean;
   onToggle: () => void;
   onReset: () => void;
+  employees: string[];
 }
 
-export const TimesheetReviewFilterPopover: React.FC<TimesheetReviewFilterPopoverProps> = ({
+export const TimesheetReviewFilterPopover: React.FC<
+  TimesheetReviewFilterPopoverProps
+> = ({
   filters,
   onChange,
   clients,
@@ -34,6 +37,7 @@ export const TimesheetReviewFilterPopover: React.FC<TimesheetReviewFilterPopover
   isOpen,
   onToggle,
   onReset,
+  employees,
 }) => {
   const { t } = useTranslation();
 
@@ -54,7 +58,7 @@ export const TimesheetReviewFilterPopover: React.FC<TimesheetReviewFilterPopover
   }, [isOpen, onToggle]);
 
   const selectedClient = filters.client
-    ? clients.find((client) => client.name === filters.client) ?? null
+    ? (clients.find((client) => client.name === filters.client) ?? null)
     : null;
   const availableProjects = selectedClient
     ? projects
@@ -117,9 +121,15 @@ export const TimesheetReviewFilterPopover: React.FC<TimesheetReviewFilterPopover
                 className="w-full"
               >
                 <option value="all">{t("timesheetReview.statusAll")}</option>
-                <option value="submitted">{t("timesheetReview.statusSubmitted")}</option>
-                <option value="approved">{t("timesheetReview.statusApproved")}</option>
-                <option value="rejected">{t("timesheetReview.statusRejected")}</option>
+                <option value="submitted">
+                  {t("timesheetReview.statusSubmitted")}
+                </option>
+                <option value="approved">
+                  {t("timesheetReview.statusApproved")}
+                </option>
+                <option value="rejected">
+                  {t("timesheetReview.statusRejected")}
+                </option>
               </Select>
             </div>
 
@@ -161,7 +171,9 @@ export const TimesheetReviewFilterPopover: React.FC<TimesheetReviewFilterPopover
                 {!selectedClient ? (
                   <option value="">{t("common.selectClientFirst")}</option>
                 ) : availableProjects.length === 0 ? (
-                  <option value="">{t("timesheetReview.noProjectsForClient")}</option>
+                  <option value="">
+                    {t("timesheetReview.noProjectsForClient")}
+                  </option>
                 ) : (
                   <>
                     <option value="">{t("timesheetReview.allProjects")}</option>
@@ -175,7 +187,7 @@ export const TimesheetReviewFilterPopover: React.FC<TimesheetReviewFilterPopover
               </Select>
             </div>
 
-            <Input
+            {/* <Input
               value={filters.user ?? ""}
               onChange={(event) =>
                 onChange({
@@ -185,33 +197,52 @@ export const TimesheetReviewFilterPopover: React.FC<TimesheetReviewFilterPopover
               }
               label={t("timesheetReview.userLabel")}
               className="w-full"
-            />
+            /> */}
+
+            <Select
+              value={filters.user ?? ""}
+              onChange={(event) =>
+                onChange({
+                  ...filters,
+                  user: event.target.value || null,
+                })
+              }
+              label={t("timesheetReview.userLabel")}
+              className="w-full"
+            >
+              <option value="">{t("common.all")}</option>
+              {employees.map((employee) => (
+                <option key={employee} value={employee}>
+                  {employee}
+                </option>
+              ))}
+            </Select>
 
             {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-3"> */}
-              <Input
-                type="date"
-                value={filters.startDate ?? ""}
-                onChange={(event) =>
-                  onChange({
-                    ...filters,
-                    startDate: event.target.value || null,
-                  })
-                }
-                label={t("timesheetReview.startDateLabel")}
-                className="w-full"
-              />
-              <Input
-                type="date"
-                value={filters.endDate ?? ""}
-                onChange={(event) =>
-                  onChange({
-                    ...filters,
-                    endDate: event.target.value || null,
-                  })
-                }
-                label={t("timesheetReview.endDateLabel")}
-                className="w-full"
-              />
+            <Input
+              type="date"
+              value={filters.startDate ?? ""}
+              onChange={(event) =>
+                onChange({
+                  ...filters,
+                  startDate: event.target.value || null,
+                })
+              }
+              label={t("timesheetReview.startDateLabel")}
+              className="w-full"
+            />
+            <Input
+              type="date"
+              value={filters.endDate ?? ""}
+              onChange={(event) =>
+                onChange({
+                  ...filters,
+                  endDate: event.target.value || null,
+                })
+              }
+              label={t("timesheetReview.endDateLabel")}
+              className="w-full"
+            />
             {/* </div> */}
           </div>
         </div>

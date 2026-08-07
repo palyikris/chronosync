@@ -34,7 +34,8 @@
     "select": "Select",
     "approve": "Approve",
     "reject": "Reject",
-    "revert": "Revert"
+    "revert": "Revert",
+    "all": "All"
   },
   "validation": {
     "validEmail": "Enter a valid email address",

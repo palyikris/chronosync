@@ -77,6 +77,15 @@ export default function TimesheetReviewPage() {
     });
   }, [timesheetsForReview, userFilter]);
 
+  const employees = useMemo(() => {
+    const uniqueEmployees = new Set<string>();
+    (timesheetsForReview || []).forEach((entry) => {
+      const fullName = entry.profiles?.full_name;
+      uniqueEmployees.add(fullName);
+    });
+    return Array.from(uniqueEmployees).sort((a, b) => a.localeCompare(b));
+  }, [timesheetsForReview]);
+
   const reviewFilters: TimesheetReviewFilterState = {
     status: statusFilter,
     user: userFilter,
@@ -89,7 +98,11 @@ export default function TimesheetReviewPage() {
   const handleResetFilters = () => {
     const thisMonthFirstDay = new Date();
     thisMonthFirstDay.setDate(1);
-    const thisMonthLastDay = new Date(thisMonthFirstDay.getFullYear(), thisMonthFirstDay.getMonth() + 1, 0);
+    const thisMonthLastDay = new Date(
+      thisMonthFirstDay.getFullYear(),
+      thisMonthFirstDay.getMonth() + 1,
+      0,
+    );
 
     setStatusFilter("all");
     setUserFilter(null);
@@ -161,17 +174,16 @@ export default function TimesheetReviewPage() {
           isOpen={isFilterPopoverOpen}
           onToggle={() => setIsFilterPopoverOpen((open) => !open)}
           onReset={handleResetFilters}
+          employees={employees}
         />
       </div>
 
-      <KpiSummaryCards
-        items={kpiItems}
-      ></KpiSummaryCards>
+      <KpiSummaryCards items={kpiItems}></KpiSummaryCards>
 
       <TimesheetReviewTable
         entries={filteredTimesheetsForReview}
         isLoading={isLoading}
       ></TimesheetReviewTable>
     </div>
-  )
+  );
 }
