@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Modal } from "../shared/Modal";
-import { Mail, Shield } from "lucide-react";
+import { Button } from "../shared/Button";
+import { Input } from "../shared/Input";
+import { Select } from "../shared/Select";
 import { useTranslation } from "react-i18next";
 import type { User as SBUser } from "@supabase/supabase-js";
 
@@ -11,7 +13,7 @@ interface InviteUserModalProps {
     email: string;
     full_name: string;
     role: "company_admin" | "regular";
-  }) => Promise<SBUser| null>;
+  }) => Promise<SBUser | null>;
   isLoading: boolean;
 }
 
@@ -48,6 +50,7 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
       open={isOpen}
       onClose={onClose}
       title={t("users.inviteNewTeamMember")}
+      className="max-w-lg w-full"
     >
       <form onSubmit={handleSubmit} className="space-y-4 pt-2 p-4">
         {errorMsg && (
@@ -56,74 +59,55 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
           </div>
         )}
 
-        <div>
-          <label className="block text-xs font-semibold text-[#5e5e62] mb-1">
-            {t("users.fullName")}
-          </label>
-          <div className="relative">
-            <input
-              type="text"
-              required
-              placeholder={t("users.placeholderFullName")}
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="w-full px-3 py-2.5 bg-transparent border border-[#C4C7C5] rounded-xl focus:ring-2 focus:ring-[#4e6700] outline-none text-sm"
-            />
-          </div>
-        </div>
+        <Input
+          id="invite-user-full-name"
+          type="text"
+          label={t("users.fullName")}
+          placeholder={t("users.placeholderFullName")}
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          required
+        />
 
-        <div>
-          <label className="block text-xs font-semibold text-[#5e5e62] mb-1">
-            {t("users.emailAddress")}
-          </label>
-          <div className="relative">
-            <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#5e5e62]" />
-            <input
-              type="email"
-              required
-              placeholder={t("users.placeholderEmail")}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full pl-9 pr-3 py-2.5 bg-transparent border border-[#C4C7C5] rounded-xl focus:ring-2 focus:ring-[#4e6700] outline-none text-sm"
-            />
-          </div>
-        </div>
+        <Input
+          id="invite-user-email"
+          type="email"
+          label={t("users.emailAddress")}
+          placeholder={t("users.placeholderEmail")}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
 
-        <div>
-          <label className="block text-xs font-semibold text-[#5e5e62] mb-1">
-            {t("users.accessRole")}
-          </label>
-          <div className="relative">
-            <Shield className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#5e5e62]" />
-            <select
-              value={role}
-              onChange={(e) =>
-                setRole(e.target.value as "company_admin" | "regular")
-              }
-              className="w-full pl-9 pr-3 py-2.5 bg-transparent border border-[#C4C7C5] rounded-xl focus:ring-2 focus:ring-[#4e6700] outline-none text-sm"
-            >
-              <option value="regular">{t("users.regularUser")}</option>
-              <option value="company_admin">{t("users.companyAdmin")}</option>
-            </select>
-          </div>
-        </div>
+        <Select
+          id="invite-user-role"
+          label={t("users.accessRole")}
+          value={role}
+          onChange={(e) =>
+            setRole(e.target.value as "company_admin" | "regular")
+          }
+        >
+          <option value="regular">{t("users.regularUser")}</option>
+          <option value="company_admin">{t("users.companyAdmin")}</option>
+        </Select>
 
-        <div className="flex gap-3 pt-4 border-t border-[#C4C7C5]">
-          <button
+        <div className="flex gap-3 border-t border-border-strong pt-4">
+          <Button
             type="button"
+            variant="outline"
             onClick={onClose}
-            className="flex-1 py-2.5 border border-[#C4C7C5] text-[#191c1d] rounded-full font-semibold hover:bg-[#f3f4f5] transition text-sm"
+            className="flex-1"
           >
             {t("common.cancel")}
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
+            variant="primary"
             disabled={isLoading}
-            style={{ backgroundColor: "#ABDB11" }}
-            className="flex-1 py-2.5 text-[#151f00] rounded-full font-bold shadow-md hover:opacity-90 active:scale-[0.98] transition text-sm disabled:opacity-50"
+            className="flex-1"
           >
             {isLoading ? t("users.creating") : t("users.inviteUser")}
-          </button>
+          </Button>
         </div>
       </form>
     </Modal>

@@ -3,6 +3,8 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Check,
+  ChevronDown,
+  ChevronUp,
   PencilLine,
   Plus,
   Star,
@@ -87,6 +89,7 @@ export const ClientManagementCard: React.FC<Props> = ({
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [deletingClientId, setDeletingClientId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showNewClientForm, setShowNewClientForm] = useState(false);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -249,113 +252,142 @@ export const ClientManagementCard: React.FC<Props> = ({
       </CardHeader>
 
       <CardContent className="space-y-6 px-0 pb-0">
-        <form onSubmit={handleCreate} className="space-y-3">
-          <div className="flex flex-col gap-3 md:flex-row">
-            <Input
-              id="new-client-name"
-              type="text"
-              label={t("companySettings.clientNameLabel")}
-              leftIcon="person"
-              value={newClientName}
-              onChange={(e) => setNewClientName(e.target.value)}
-              required
-              className="md:flex-1"
-            />
-            <Input
-              id="new-client-code"
-              type="text"
-              label={t("companySettings.clientCodeLabel")}
-              leftIcon="badge"
-              value={newClientCode}
-              onChange={(e) => setNewClientCode(e.target.value)}
-              maxLength={CLIENT_CODE_MAX_LENGTH}
-              required
-              className="md:flex-1"
-            />
-            <Select
-              id="new-client-language"
-              label={t("companySettings.invoiceAttachmentLanguageLabel")}
-              leftIcon="translate"
-              value={newClientLanguage}
-              onChange={(event) =>
-                setNewClientLanguage(
-                  event.target.value as InvoiceAttachmentLanguage,
-                )
-              }
-              className="md:w-100"
-            >
-              <option value="en">
-                {t("companySettings.invoiceAttachmentLanguageEn")}
-              </option>
-              <option value="hu">
-                {t("companySettings.invoiceAttachmentLanguageHu")}
-              </option>
-            </Select>
+        <div className="flex items-center justify-between rounded-xl border border-border-strong bg-bg-accent px-4 py-3">
+          <div>
+            <p className="text-sm font-medium text-text">
+              {t("companySettings.clientsTitle")}
+            </p>
+            <p className="text-xs text-muted-strong">
+              {t("companySettings.clientsSubtitle")}
+            </p>
           </div>
-          <div className="grid gap-3 md:grid-cols-2">
-            <Input
-              id="new-client-available-hours"
-              type="number"
-              min="0"
-              step="1"
-              label={t("companySettings.availableHoursPerMonthLabel")}
-              leftIcon="schedule"
-              value={newClientAvailableHours}
-              onChange={(event) =>
-                setNewClientAvailableHours(
-                  normalizeNumericInputValue(event.target.value),
-                )
-              }
-            />
-            <Input
-              id="new-client-prev-hours"
-              type="number"
-              min="0"
-              step="1"
-              label={t("companySettings.hoursFromPreviousMonthLabel")}
-              leftIcon="history"
-              value={newClientHoursFromPreviousMonth}
-              onChange={(event) =>
-                setNewClientHoursFromPreviousMonth(
-                  normalizeNumericInputValue(event.target.value),
-                )
-              }
-            />
-          </div>
-          <div className="flex items-center justify-between rounded-xl border border-border-strong bg-bg-accent px-4 py-3">
-            <div>
-              <p className="text-sm font-medium text-text">
-                {t("companySettings.defaultLabel")}
-              </p>
-              <p className="text-xs text-muted-strong">
-                {newClientIsDefault
-                  ? t("companySettings.defaultClientSelected")
-                  : t("companySettings.defaultClientNotSelected")}
-              </p>
-            </div>
-            <Button
-              type="button"
-              variant={newClientIsDefault ? "primary" : "secondary"}
-              onClick={() => setNewClientIsDefault((value) => !value)}
-              className="rounded-xl px-4"
-              icon={<Star className="h-4 w-4" />}
-            >
-              {t("companySettings.defaultLabel")}
-            </Button>
-          </div>
-          <div className="flex justify-end">
-            <Button
-              type="submit"
-              disabled={loading || !newClientName.trim()}
-              className="gap-1 rounded-xl px-4"
-              icon={<Plus className="h-4 w-4" />}
-            >
-              {t("common.add")}
-            </Button>
-          </div>
-        </form>
+          <Button
+            type="button"
+            variant="primary"
+            onClick={() => setShowNewClientForm((value) => !value)}
+            className="rounded-xl px-3"
+            aria-label={
+              showNewClientForm ? "Hide client form" : "Show client form"
+            }
+            icon={
+              showNewClientForm ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )
+            }
+          />
+        </div>
 
-        <div className="max-h-72 space-y-2 overflow-y-auto px-2">
+        {showNewClientForm && (
+          <form onSubmit={handleCreate} className="space-y-3">
+            <div className="flex flex-col gap-3 md:flex-row">
+              <Input
+                id="new-client-name"
+                type="text"
+                label={t("companySettings.clientNameLabel")}
+                leftIcon="person"
+                value={newClientName}
+                onChange={(e) => setNewClientName(e.target.value)}
+                required
+                className="md:flex-1"
+              />
+              <Input
+                id="new-client-code"
+                type="text"
+                label={t("companySettings.clientCodeLabel")}
+                leftIcon="badge"
+                value={newClientCode}
+                onChange={(e) => setNewClientCode(e.target.value)}
+                maxLength={CLIENT_CODE_MAX_LENGTH}
+                required
+                className="md:flex-1"
+              />
+              <Select
+                id="new-client-language"
+                label={t("companySettings.invoiceAttachmentLanguageLabel")}
+                leftIcon="translate"
+                value={newClientLanguage}
+                onChange={(event) =>
+                  setNewClientLanguage(
+                    event.target.value as InvoiceAttachmentLanguage,
+                  )
+                }
+                className="md:w-100"
+              >
+                <option value="en">
+                  {t("companySettings.invoiceAttachmentLanguageEn")}
+                </option>
+                <option value="hu">
+                  {t("companySettings.invoiceAttachmentLanguageHu")}
+                </option>
+              </Select>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <Input
+                id="new-client-available-hours"
+                type="number"
+                min="0"
+                step="1"
+                label={t("companySettings.availableHoursPerMonthLabel")}
+                leftIcon="schedule"
+                value={newClientAvailableHours}
+                onChange={(event) =>
+                  setNewClientAvailableHours(
+                    normalizeNumericInputValue(event.target.value),
+                  )
+                }
+              />
+              <Input
+                id="new-client-prev-hours"
+                type="number"
+                min="0"
+                step="1"
+                label={t("companySettings.hoursFromPreviousMonthLabel")}
+                leftIcon="history"
+                value={newClientHoursFromPreviousMonth}
+                onChange={(event) =>
+                  setNewClientHoursFromPreviousMonth(
+                    normalizeNumericInputValue(event.target.value),
+                  )
+                }
+              />
+            </div>
+            <div className="flex items-center justify-between rounded-xl border border-border-strong bg-bg-accent px-4 py-3">
+              <div>
+                <p className="text-sm font-medium text-text">
+                  {t("companySettings.defaultLabel")}
+                </p>
+                <p className="text-xs text-muted-strong">
+                  {newClientIsDefault
+                    ? t("companySettings.defaultClientSelected")
+                    : t("companySettings.defaultClientNotSelected")}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant={newClientIsDefault ? "primary" : "secondary"}
+                onClick={() => setNewClientIsDefault((value) => !value)}
+                className="rounded-xl px-4"
+                icon={<Star className="h-4 w-4" />}
+              >
+                {t("companySettings.defaultLabel")}
+              </Button>
+            </div>
+            <div className="flex justify-end">
+              <Button
+                type="submit"
+                disabled={loading || !newClientName.trim()}
+                className="gap-1 rounded-xl px-4"
+                icon={<Plus className="h-4 w-4" />}
+              >
+                {t("common.add")}
+              </Button>
+            </div>
+          </form>
+        )}
+
+        <div className="max-h-120 space-y-2 overflow-y-auto px-2">
           {clients.length === 0 ? (
             <p className="rounded-xl border border-dashed border-border-strong bg-bg-accent px-4 py-3 text-sm text-muted-strong">
               {t("companySettings.noClients")}

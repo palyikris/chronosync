@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Check,
+  ChevronDown,
+  ChevronUp,
   FolderPlus,
   PencilLine,
   Plus,
@@ -46,6 +48,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
     null,
   );
   const [loading, setLoading] = useState(false);
+  const [showNewProjectForm, setShowNewProjectForm] = useState(false);
 
   const selectedClient = clients.find(
     (client) => client.id === newProjectClientId,
@@ -160,73 +163,104 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
       </CardHeader>
 
       <CardContent className="space-y-6 px-0 pb-0">
-        <form onSubmit={handleCreate} className="space-y-3">
-          <div className="grid gap-3 md:grid-cols-[1fr_1.1fr_0.8fr_auto] md:items-end">
-            <Select
-              id="new-project-client"
-              label={t("companySettings.projectClientLabel")}
-              leftIcon="person"
-              required
-              value={newProjectClientId}
-              onChange={(event) => setNewProjectClientId(event.target.value)}
-            >
-              <option value="">{t("companySettings.selectClientFirst")}</option>
-              {clients.map((client) => (
-                <option key={client.id} value={client.id}>
-                  {client.name}
-                </option>
-              ))}
-            </Select>
-
-            <Input
-              id="new-project-name"
-              type="text"
-              label={t("companySettings.projectNameLabel")}
-              leftIcon="folder_open"
-              required
-              disabled={!newProjectClientId}
-              value={newProjectName}
-              onChange={(event) => setNewProjectName(event.target.value)}
-              className="disabled:cursor-not-allowed disabled:bg-[#f3f4f5]"
-            />
-
-            <Input
-              id="new-project-estimated-hours"
-              type="number"
-              min="0"
-              step="1"
-              label={t("companySettings.estimatedHoursPerMonthLabel")}
-              leftIcon="schedule"
-              required
-              value={newProjectEstimatedHours}
-              onChange={(event) =>
-                setNewProjectEstimatedHours(
-                  normalizeEstimatedHours(event.target.value),
-                )
-              }
-            />
-
-            <Button
-              type="submit"
-              disabled={
-                !newProjectClientId || !newProjectName.trim() || loading
-              }
-              className="gap-1 rounded-xl px-4"
-              icon={<Plus className="h-4 w-4" />}
-            >
-              {t("common.add")}
-            </Button>
+        <div className="flex items-center justify-between rounded-xl border border-border-strong bg-bg-accent px-4 py-3">
+          <div>
+            <p className="text-sm font-medium text-text">
+              {t("companySettings.projectsTitle")}
+            </p>
+            <p className="text-xs text-muted-strong">
+              {t("companySettings.projectsSubtitle")}
+            </p>
           </div>
-          <p className="text-xs text-muted-strong">
-            {selectedClient
-              ? t("companySettings.creatingUnder", {
-                  clientName: selectedClient.name,
-                })
-              : t("companySettings.pickClientToCreate")}
-          </p>
-        </form>
+          <Button
+            type="button"
+            variant="primary"
+            onClick={() => setShowNewProjectForm((value) => !value)}
+            className="rounded-xl px-3"
+            aria-label={
+              showNewProjectForm ? "Hide project form" : "Show project form"
+            }
+            icon={
+              showNewProjectForm ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )
+            }
+          />
+        </div>
 
-        <div className="max-h-72 space-y-2 overflow-y-auto px-2">
+        {showNewProjectForm && (
+          <form onSubmit={handleCreate} className="space-y-3">
+            <div className="grid gap-3 md:grid-cols-[1fr_1.1fr_0.8fr_auto] md:items-end">
+              <Select
+                id="new-project-client"
+                label={t("companySettings.projectClientLabel")}
+                leftIcon="person"
+                required
+                value={newProjectClientId}
+                onChange={(event) => setNewProjectClientId(event.target.value)}
+              >
+                <option value="">
+                  {t("companySettings.selectClientFirst")}
+                </option>
+                {clients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.name}
+                  </option>
+                ))}
+              </Select>
+
+              <Input
+                id="new-project-name"
+                type="text"
+                label={t("companySettings.projectNameLabel")}
+                leftIcon="folder_open"
+                required
+                disabled={!newProjectClientId}
+                value={newProjectName}
+                onChange={(event) => setNewProjectName(event.target.value)}
+                className="disabled:cursor-not-allowed disabled:bg-[#f3f4f5]"
+              />
+
+              <Input
+                id="new-project-estimated-hours"
+                type="number"
+                min="0"
+                step="1"
+                label={t("companySettings.estimatedHoursPerMonthLabel")}
+                leftIcon="schedule"
+                required
+                value={newProjectEstimatedHours}
+                onChange={(event) =>
+                  setNewProjectEstimatedHours(
+                    normalizeEstimatedHours(event.target.value),
+                  )
+                }
+              />
+
+              <Button
+                type="submit"
+                disabled={
+                  !newProjectClientId || !newProjectName.trim() || loading
+                }
+                className="gap-1 rounded-xl px-4"
+                icon={<Plus className="h-4 w-4" />}
+              >
+                {t("common.add")}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-strong">
+              {selectedClient
+                ? t("companySettings.creatingUnder", {
+                    clientName: selectedClient.name,
+                  })
+                : t("companySettings.pickClientToCreate")}
+            </p>
+          </form>
+        )}
+
+        <div className="max-h-100 space-y-2 overflow-y-auto px-2">
           {visibleProjects.length === 0 ? (
             <p className="rounded-xl border border-dashed border-border-strong bg-bg-accent px-4 py-3 text-sm text-muted-strong">
               {selectedClient

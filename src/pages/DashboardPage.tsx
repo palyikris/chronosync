@@ -44,14 +44,13 @@ export const AdminDashboardPage: React.FC = () => {
 
   const kpis = data?.kpis;
   const dailyTrends = data?.dailyTrends || [];
-  const totalLoggedHours = kpis?.totalLoggedHours?.toFixed(1) ?? "0.0";
   const activeLoggerText = `${kpis?.activeLoggersCount ?? 0} / ${kpis?.totalActiveMembers ?? 0}`;
   const capacityUtilization = `${kpis?.capacityUtilizationPct ?? 0}%`;
 
   const summaryCardItems: KpiSummaryCardItem[] = [
     {
       title: t("dashboard.kpiTotalHours"),
-      value: totalLoggedHours,
+      value: kpis?.totalLoggedHours ?? 0,
       subtitle: t("dashboard.kpiTotalHoursSubtitle"),
       icon: Clock,
       valueSuffix: " hrs",

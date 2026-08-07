@@ -9,6 +9,7 @@ import {
   Settings,
   ScanEye,
   ScrollText,
+  Columns3Cog,
 } from "lucide-react";
 import { useAuth } from "../../context/useAuth";
 import { getRoleLabel } from "../../utils/getRoleLabel";
@@ -50,7 +51,7 @@ export const Sidebar: React.FC = () => {
     {
       to: "/admin/settings",
       label: t("navigation.companySettings"),
-      icon: Settings,
+      icon: Columns3Cog,
       roleRequired: "company_admin",
     },
     {

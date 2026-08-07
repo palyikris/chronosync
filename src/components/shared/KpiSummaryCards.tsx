@@ -1,5 +1,6 @@
 import React, { type ReactNode } from "react";
 import { Clock, type LucideIcon } from "lucide-react";
+import { AnimatedNumber } from "./AnimatedNumbers";
 
 export interface KpiSummaryCardItem {
   title: ReactNode;
@@ -7,8 +8,8 @@ export interface KpiSummaryCardItem {
   subtitle?: ReactNode;
   icon?: LucideIcon;
   iconClassName?: string;
-  valueSuffix?: ReactNode;
-  valuePrefix?: ReactNode;
+  valueSuffix?: string;
+  valuePrefix?: string;
   className?: string;
   footer?: ReactNode;
 }
@@ -21,6 +22,19 @@ interface KpiCardProps extends KpiSummaryCardItem {
   icon: LucideIcon;
 }
 
+const getNumericValue = (value: ReactNode): number | null => {
+  if (typeof value === "number") {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const numericValue = Number(value);
+    return Number.isFinite(numericValue) ? numericValue : null;
+  }
+
+  return null;
+};
+
 const KpiCard: React.FC<KpiCardProps> = ({
   title,
   value,
@@ -32,6 +46,8 @@ const KpiCard: React.FC<KpiCardProps> = ({
   className = "",
   footer,
 }) => {
+  const numericValue = getNumericValue(value);
+
   return (
     <div
       className={`bg-white p-6 rounded-2xl border border-border-strong shadow-sm flex flex-col justify-between ${className}`.trim()}
@@ -45,11 +61,21 @@ const KpiCard: React.FC<KpiCardProps> = ({
         </div>
       </div>
       <div className="mt-4">
-        <div className="text-3xl font-extrabold text-text">
-          {valuePrefix}
-          {value}
-          {valueSuffix}
-        </div>
+        {numericValue !== null ? (
+          <AnimatedNumber
+            className="text-3xl font-extrabold text-text"
+            value={numericValue}
+            prefix={valuePrefix}
+            suffix={valueSuffix}
+            decimals={Number.isInteger(numericValue) ? 0 : 2}
+          ></AnimatedNumber>
+        ) : (
+          <span className="text-3xl font-extrabold text-text tabular-nums">
+            {valuePrefix}
+            {value}
+            {valueSuffix}
+          </span>
+        )}
         {subtitle ? (
           <p className="text-xs text-muted mt-2 font-medium">{subtitle}</p>
         ) : null}

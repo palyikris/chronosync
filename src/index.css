@@ -148,6 +148,17 @@ body {
   will-change: transform, color, background-color, padding;
 }
 
+.auth-input-floating-placeholder::placeholder {
+  color: transparent;
+  opacity: 0;
+  transition: opacity var(--transition-fast), color var(--transition-fast);
+}
+
+.auth-field:focus-within .auth-input-floating-placeholder::placeholder {
+  color: var(--color-muted);
+  opacity: 1;
+}
+
 .auth-field select ~ label {
   opacity: 0;
   transition: transform var(--transition-fast), color var(--transition-fast), background-color var(--transition-fast), padding var(--transition-fast), opacity var(--transition-fast);
@@ -156,6 +167,7 @@ body {
 .auth-field:focus-within label,
 .auth-field.has-value label {
   transform: translateY(-1.45rem) scale(0.85);
+  left: 0.75rem;
   background-color: var(--color-surface-strong);
   padding: 0 0.25rem;
   color: var(--color-primary-strong);

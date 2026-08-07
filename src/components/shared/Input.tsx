@@ -9,6 +9,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ) => {
     const hasValue = value !== undefined && value !== null && value !== "";
     const isDateInput = props.type === "date";
+    const hasFloatingPlaceholder = Boolean(label && placeholder);
 
     if (isDateInput && label) {
       return (
@@ -43,7 +44,10 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           id={id}
           value={value}
           placeholder={placeholder ?? " "}
-          className="auth-input"
+          className={cn(
+            "auth-input",
+            hasFloatingPlaceholder && "auth-input-floating-placeholder",
+          )}
           {...props}
         />
         {label ? <label htmlFor={id}>{label}</label> : null}

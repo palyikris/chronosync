@@ -110,14 +110,14 @@ export default function TimesheetReviewPage() {
   const kpiItems: KpiSummaryCardItem[] = [
     {
       title: t("timesheetReview.kpiTotalSubmitted"),
-      value: kpis?.totalSubmittedHours.toFixed(2) ?? 0,
+      value: kpis?.totalSubmittedHours ?? 0,
       subtitle: t("timesheetReview.kpiTotalSubmittedSubtitle"),
       icon: ClockArrowUp,
       valueSuffix: " " + t("review.kpiHours"),
     },
     {
       title: t("timesheetReview.kpiTotalApproved"),
-      value: kpis?.totalApprovedHours.toFixed(2) ?? 0,
+      value: kpis?.totalApprovedHours ?? 0,
       subtitle: t("timesheetReview.kpiTotalApprovedSubtitle"),
       icon: ClockCheck,
       valueSuffix: " " + t("review.kpiHours"),
