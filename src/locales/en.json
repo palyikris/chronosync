@@ -35,7 +35,9 @@
     "approve": "Approve",
     "reject": "Reject",
     "revert": "Revert",
-    "all": "All"
+    "itemsSelected": "items selected",
+    "entry": "entry",
+    "entries": "entries"
   },
   "validation": {
     "validEmail": "Enter a valid email address",
@@ -186,7 +188,18 @@
     "rejectModalDescription": "Provide a rejection reason before rejecting this entry.",
     "rejectionReasonPlaceholder": "Enter a rejection reason...",
     "rejectionReasonLabel": "Rejection reason",
-    "confirmRejection": "Confirm Rejection"
+    "confirmRejection": "Confirm Rejection",
+    "defaultClientName": "Internal / Direct",
+    "defaultProjectName": "General Work",
+    "hoursTotal": "{{hours}} hrs total",
+    "hoursShort": "{{hours}}h",
+    "approveProject": "Approve Project ({{count}})",
+    "showingClients": "Showing {{start}} to {{end}} of {{total}} clients ({{entries}} total entries)",
+    "selectAllVisible": "Select all entries on this page",
+    "selectAllClient": "Select all entries for client {{clientName}}",
+    "selectAllProject": "Select all entries in project {{projectName}}",
+    "selectEntry": "Select entry for {{user}}",
+    "noEntriesFound": "No timesheet entries found for review."
   },
   "dashboard": {
     "pageTitle": "Company Dashboard",

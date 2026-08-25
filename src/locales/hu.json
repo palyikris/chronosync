@@ -35,6 +35,9 @@
     "approve": "Elfogadás",
     "reject": "Elutasítás",
     "revert": "Visszaállítás",
+    "itemsSelected": "kijelölt elem",
+    "entry": "bejegyzés",
+    "entries": "bejegyzés",
     "all": "Összes"
   },
   "validation": {
@@ -186,7 +189,18 @@
     "rejectModalDescription": "Adj meg egy elutasítási okot, mielőtt elutasítod ezt a bejegyzést.",
     "rejectionReasonPlaceholder": "Adj meg egy elutasítási okot...",
     "rejectionReasonLabel": "Elutasítás oka",
-    "confirmRejection": "Elutasítás megerősítése"
+    "confirmRejection": "Elutasítás megerősítése",
+    "defaultClientName": "Belső / Direkt",
+    "defaultProjectName": "Általános munka",
+    "hoursTotal": "{{hours}} óra összesen",
+    "hoursShort": "{{hours}} óra",
+    "approveProject": "Projekt jóváhagyása ({{count}})",
+    "showingClients": "{{start}}–{{end}} / {{total}} ügyfél megjelenítése ({{entries}} bejegyzés összesen)",
+    "selectAllVisible": "Az oldalon szereplő összes bejegyzés kijelölése",
+    "selectAllClient": "Az összes bejegyzés kijelölése az ügyfélhez: {{clientName}}",
+    "selectAllProject": "Az összes bejegyzés kijelölése a projektben: {{projectName}}",
+    "selectEntry": "Bejegyzés kijelölése: {{user}}",
+    "noEntriesFound": "Nincs ellenőrzésre váró munkaidő-bejegyzés."
   },
   "dashboard": {
     "pageTitle": "Cég vezérlőpult",
