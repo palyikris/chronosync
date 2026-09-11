@@ -61,8 +61,8 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
             </label>
             <Input
               type="number"
-              step="0.25"
-              min="0.25"
+              step="0.1"
+              min="0.1"
               max="24"
               required
               value={formData.hours_logged}

@@ -543,11 +543,11 @@ export const TimesheetPage: React.FC = () => {
 
       <Card className="p-3 sm:p-4">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-          <div className="inline-flex w-full flex-wrap items-center gap-2 rounded-full border border-border-strong bg-bg-accent p-1 xl:w-auto">
+          <div className="inline-flex w-full items-center gap-2 rounded-full border border-border-strong bg-bg-accent p-1 xl:w-auto">
             <Button
               variant={viewMode === "calendar" ? "primary" : "ghost"}
               size="sm"
-              className="min-w-0 flex-1 rounded-full text-xs sm:flex-none sm:text-sm"
+              className="min-w-0 flex-1 basis-1/2 sm:flex-none sm:basis-auto rounded-full text-xs sm:text-sm"
               onClick={() => setViewMode("calendar")}
               icon={<Calendar className="h-4 w-4" />}
             >
@@ -556,7 +556,7 @@ export const TimesheetPage: React.FC = () => {
             <Button
               variant={viewMode === "list" ? "primary" : "ghost"}
               size="sm"
-              className="min-w-0 flex-1 rounded-full text-xs sm:flex-none sm:text-sm"
+              className="min-w-0 flex-1 basis-1/2 sm:flex-none sm:basis-auto rounded-full text-xs sm:text-sm"
               onClick={() => setViewMode("list")}
               icon={<List className="h-4 w-4" />}
             >
