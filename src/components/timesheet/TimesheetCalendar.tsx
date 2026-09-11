@@ -100,74 +100,78 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
         </div>
       </CardHeader>
 
-      <div className="grid grid-cols-7 border-b border-border-strong bg-surface-strong py-2 text-center text-xs font-semibold text-muted">
-        {weekDays.map((day) => (
-          <div key={day}>{day}</div>
-        ))}
-      </div>
+      <div className="overflow-x-auto">
+        <div className="min-w-140">
+          <div className="grid grid-cols-7 border-b border-border-strong bg-surface-strong py-2 text-center text-xs font-semibold text-muted">
+            {weekDays.map((day) => (
+              <div key={day}>{day}</div>
+            ))}
+          </div>
 
-      <CardContent className="p-0">
-        <div className="grid min-h-105 grid-cols-7 auto-rows-fr text-sm">
-          {Array.from({ length: startDayOfWeek }).map((_, index) => (
-            <div
-              key={`empty-${index}`}
-              className="border-b border-r border-border-strong bg-bg-accent p-2 opacity-40"
-            />
-          ))}
+          <CardContent className="p-0">
+            <div className="grid min-h-96 grid-cols-7 auto-rows-fr text-sm sm:min-h-105">
+              {Array.from({ length: startDayOfWeek }).map((_, index) => (
+                <div
+                  key={`empty-${index}`}
+                  className="border-b border-r border-border-strong bg-bg-accent p-2 opacity-40"
+                />
+              ))}
 
-          {Array.from({ length: daysInMonth }).map((_, index) => {
-            const dayNumber = index + 1;
-            const formattedDay =
-              dayNumber < 10 ? `0${dayNumber}` : `${dayNumber}`;
-            const dateStr = `${yearMonth}-${formattedDay}`;
-            const dayLogs = timesheets.filter(
-              (entry) => entry.work_date === dateStr,
-            );
-            const hasLogs = dayLogs.length > 0;
-            const isSelected = selectedDate === dateStr;
-            const isToday = dateStr === todayDateStr;
+              {Array.from({ length: daysInMonth }).map((_, index) => {
+                const dayNumber = index + 1;
+                const formattedDay =
+                  dayNumber < 10 ? `0${dayNumber}` : `${dayNumber}`;
+                const dateStr = `${yearMonth}-${formattedDay}`;
+                const dayLogs = timesheets.filter(
+                  (entry) => entry.work_date === dateStr,
+                );
+                const hasLogs = dayLogs.length > 0;
+                const isSelected = selectedDate === dateStr;
+                const isToday = dateStr === todayDateStr;
 
-            const entryStatuses = dayLogs.map((entry) => entry.status);
-            const colorClass = getColorOfEntriesForEntries(entryStatuses);
+                const entryStatuses = dayLogs.map((entry) => entry.status);
+                const colorClass = getColorOfEntriesForEntries(entryStatuses);
 
-            return (
-              <button
-                key={dateStr}
-                type="button"
-                onClick={() => onSelectDate(dateStr)}
-                className={`flex min-h-17.5 cursor-pointer flex-col justify-between border-b border-r border-border-strong p-2 text-left transition-all hover:bg-bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-strong focus-visible:ring-inset ${
-                  isToday
-                    ? "relative bg-bg-accent/60 border border-primary"
-                    : ""
-                } ${
-                  isSelected
-                    ? "bg-primary/20 font-bold ring-2 ring-primary-strong ring-inset"
-                    : ""
-                }`}
-              >
-                {isToday ? (
-                  <span
-                    aria-hidden="true"
-                    className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary-strong shadow-sm"
-                  />
-                ) : null}
-                <span className="text-xs text-text">{dayNumber}</span>
-                {hasLogs ? (
-                  <div
-                    className={`w-full truncate rounded px-1 py-0.5 text-center text-[10px] font-bold ${colorClass}`}
+                return (
+                  <button
+                    key={dateStr}
+                    type="button"
+                    onClick={() => onSelectDate(dateStr)}
+                    className={`flex min-h-14 cursor-pointer flex-col justify-between border-b border-r border-border-strong p-1.5 text-left transition-all hover:bg-bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-strong focus-visible:ring-inset sm:min-h-17.5 sm:p-2 ${
+                      isToday
+                        ? "relative bg-bg-accent/60 border border-primary"
+                        : ""
+                    } ${
+                      isSelected
+                        ? "bg-primary/20 font-bold ring-2 ring-primary-strong ring-inset"
+                        : ""
+                    }`}
                   >
-                    {dayLogs.reduce(
-                      (sum, entry) => sum + Number(entry.hours_logged),
-                      0,
-                    )}
-                    h
-                  </div>
-                ) : null}
-              </button>
-            );
-          })}
+                    {isToday ? (
+                      <span
+                        aria-hidden="true"
+                        className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary-strong shadow-sm"
+                      />
+                    ) : null}
+                    <span className="text-xs text-text">{dayNumber}</span>
+                    {hasLogs ? (
+                      <div
+                        className={`w-full truncate rounded px-1 py-0.5 text-center text-[10px] font-bold ${colorClass}`}
+                      >
+                        {dayLogs.reduce(
+                          (sum, entry) => sum + Number(entry.hours_logged),
+                          0,
+                        )}
+                        h
+                      </div>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          </CardContent>
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 };

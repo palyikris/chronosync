@@ -451,7 +451,7 @@ export const TimesheetPage: React.FC = () => {
   };
 
   return (
-    <div className="mx-auto w-full space-y-5">
+    <div className="mx-auto w-full space-y-4 md:space-y-5">
       {isSuperAdmin ? (
         <>
           <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-muted">
@@ -471,13 +471,13 @@ export const TimesheetPage: React.FC = () => {
         </>
       ) : null}
 
-      <Card className="p-4">
+      <Card className="p-3 sm:p-4">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div className="inline-flex w-full flex-wrap items-center gap-2 rounded-full border border-border-strong bg-bg-accent p-1 xl:w-auto">
             <Button
               variant={viewMode === "calendar" ? "primary" : "ghost"}
               size="sm"
-              className="rounded-full"
+              className="min-w-0 flex-1 rounded-full text-xs sm:flex-none sm:text-sm"
               onClick={() => setViewMode("calendar")}
               icon={<Calendar className="h-4 w-4" />}
             >
@@ -486,7 +486,7 @@ export const TimesheetPage: React.FC = () => {
             <Button
               variant={viewMode === "list" ? "primary" : "ghost"}
               size="sm"
-              className="rounded-full"
+              className="min-w-0 flex-1 rounded-full text-xs sm:flex-none sm:text-sm"
               onClick={() => setViewMode("list")}
               icon={<List className="h-4 w-4" />}
             >
@@ -495,11 +495,11 @@ export const TimesheetPage: React.FC = () => {
           </div>
 
           {viewMode === "list" ? (
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end">
               <Button
                 variant="outline"
                 size="sm"
-                className="rounded-full"
+                className="rounded-full text-xs sm:text-sm"
                 onClick={handlePreviousWeek}
                 icon={<ChevronLeft className="h-4 w-4" />}
               >
@@ -530,7 +530,7 @@ export const TimesheetPage: React.FC = () => {
               <Button
                 variant="outline"
                 size="sm"
-                className="rounded-full"
+                className="col-span-2 rounded-full text-xs sm:col-span-1 sm:text-sm"
                 onClick={handleNextWeek}
                 icon={<ChevronRight className="h-4 w-4" />}
               >
@@ -542,7 +542,7 @@ export const TimesheetPage: React.FC = () => {
       </Card>
 
       {viewMode === "calendar" ? (
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.75fr)] lg:items-stretch">
+        <div className="grid gap-4 lg:gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.75fr)] xl:items-stretch">
           <TimesheetCalendar
             currentDate={currentDate}
             selectedDate={selectedDate}
@@ -556,7 +556,7 @@ export const TimesheetPage: React.FC = () => {
             onNextMonth={handleNextMonth}
           />
 
-          <div className="flex h-full flex-col lg:sticky lg:top-6">
+          <div className="flex h-full flex-col xl:sticky xl:top-6">
             <div className="flex min-h-0 flex-1 flex-col">
               <TimesheetEntryList
                 selectedDate={selectedDate}

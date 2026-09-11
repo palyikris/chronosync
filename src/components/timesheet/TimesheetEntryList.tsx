@@ -170,7 +170,7 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
                 key={entry.id}
                 className="group relative rounded-xl border border-border-strong bg-surface-strong p-3 transition-all hover:shadow-md"
               >
-                <div className="mb-1 flex items-start justify-between">
+                <div className="mb-1 flex items-start justify-between gap-2">
                   <span className="rounded bg-[#e3e2e6] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-strong">
                     {(() => {
                       const clientName =
@@ -179,7 +179,7 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
                       return clientName || t("timesheet.unknownClient");
                     })()}
                   </span>
-                  <span className="text-sm font-bold text-primary-strong">
+                  <span className="shrink-0 text-sm font-bold text-primary-strong">
                     {entry.hours_logged} hrs
                   </span>
                 </div>
@@ -197,7 +197,7 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
                   </span>
 
                   {canManageTarget ? (
-                    <div className="flex items-center gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100">
+                    <div className="flex flex-wrap items-center justify-end gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100">
                       {entry.status === "draft" ||
                       entry.status === "rejected" ? (
                         <Button
@@ -277,13 +277,17 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
         <CardFooter
           className={
             viewMode === "calendar"
-              ? "flex items-center justify-between gap-3"
-              : "flex items-center justify-center gap-3 relative"
+              ? "flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between"
+              : "flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between"
           }
         >
+          <p className="order-1 text-sm text-muted sm:order-3 sm:text-right">
+            {totalDailyHours} {t("timesheet.hoursLogged")}
+          </p>
+
           <Button
             variant="primary"
-            className="w-1/4 rounded-xl"
+            className="order-2 w-full rounded-xl sm:order-1 sm:w-auto"
             onClick={onAddEntry}
             icon={<Plus className="h-4 w-4" />}
           >
@@ -291,7 +295,7 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
           </Button>
 
           {viewMode === "calendar" ? (
-            <div className="flex items-center justify-end gap-3 w-full">
+            <div className="order-3 grid w-full grid-cols-3 gap-2 sm:order-2 sm:flex sm:items-center sm:justify-end sm:gap-3">
               <Button
                 variant="outline"
                 className="rounded-xl"
@@ -318,18 +322,6 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
               </Button>
             </div>
           ) : null}
-
-          <div
-            className={
-              viewMode === "calendar"
-                ? "absolute right-4 top-4 flex flex-col items-end gap-1"
-                : "absolute right-4 top-auto bottom-auto flex flex-col items-end gap-1"
-            }
-          >
-            <p className="text-sm text-muted">
-              {totalDailyHours} {t("timesheet.hoursLogged")}
-            </p>
-          </div>
         </CardFooter>
       ) : null}
     </Card>

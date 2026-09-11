@@ -1,4 +1,4 @@
-excel import for entries feature
-logs page for super admin (db already setup)angol desc felhivas piros legyen
-szamlamelleklet tablazatban ugyanaz legyen az osszes szoveg
-kep felulre
+tizedesjegyek az orak beirasanal nem jo. nincs 0.25, hanem minden legyen
+telefonos reszponzivitas legyen
+ugyfelre es projektre szuro a timesheetben
+hozzaferjenek e a tobbiek masok timesheetjehez?

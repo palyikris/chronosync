@@ -13,9 +13,13 @@ export const AppLayout: React.FC = () => {
       <Sidebar />
 
       {/* Main Content Area - offset by collapsed sidebar width (80px / ml-20) */}
-      <main className="ml-20 min-h-screen flex-1 p-6 transition-all duration-300 lg:p-8">
+      <main className="ml-20 min-h-screen flex-1 p-3 transition-all duration-300 sm:p-4 md:p-5 lg:p-8">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-          {showLiveTimerWidget ? <LiveTimerWidget /> : null}
+          {showLiveTimerWidget ? (
+            <div className="hidden lg:block">
+              <LiveTimerWidget />
+            </div>
+          ) : null}
           <Outlet />
         </div>
       </main>
