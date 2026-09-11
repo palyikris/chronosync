@@ -230,7 +230,7 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
                 </span>
               </div>
             </div>
-            <div className="overflow-x-auto">
+            <div className="max-h-96 overflow-auto">
               <table className="w-full border-collapse text-left">
                 <thead className="bg-surface text-xs font-semibold uppercase tracking-wide text-muted-strong">
                   <tr>

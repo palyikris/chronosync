@@ -21,8 +21,14 @@ export async function downloadSzamlamellekletReport(
     throw new Error("Nincs aktív munkamenet / hiányzó autentikáció.");
   }
 
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+  if (!apiBaseUrl) {
+    throw new Error("API base URL is not configured.");
+  }
+
   const response = await fetch(
-    "http://localhost:8000/api/v1/reports/generate-szamlamelleklet",
+    `${apiBaseUrl}/reports/generate-szamlamelleklet`,
     {
       method: "POST",
       headers: {

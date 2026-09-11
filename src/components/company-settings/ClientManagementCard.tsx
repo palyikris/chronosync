@@ -13,6 +13,7 @@ import {
   Trash2,
   X,
   Users,
+  FileSpreadsheet,
 } from "lucide-react";
 import { Button } from "../shared/Button";
 import { Input } from "../shared/Input";
@@ -29,6 +30,7 @@ import {
   type Client,
   type InvoiceAttachmentLanguage,
 } from "../../types/client-project";
+import { ClientImportModal } from "./ClientImportModal";
 
 const DEFAULT_INVOICE_ATTACHMENT_LANGUAGE: InvoiceAttachmentLanguage = "en";
 const CLIENT_CODE_MAX_LENGTH = 3;
@@ -90,6 +92,7 @@ export const ClientManagementCard: React.FC<Props> = ({
   const [deletingClientId, setDeletingClientId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showNewClientForm, setShowNewClientForm] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -235,7 +238,7 @@ export const ClientManagementCard: React.FC<Props> = ({
 
   return (
     <Card className="space-y-6 p-6 shadow-sm">
-      <CardHeader className="rounded-t-2xl border-b-0 bg-transparent px-0 py-0">
+      <CardHeader className="relative rounded-t-2xl border-b-0 bg-transparent px-0 py-0">
         <div className="flex items-center gap-3">
           <div className="rounded-xl bg-bg-accent p-2.5 text-primary-strong">
             <Users className="h-5 w-5" />
@@ -249,6 +252,14 @@ export const ClientManagementCard: React.FC<Props> = ({
             </p>
           </div>
         </div>
+        <Button
+          variant="primary"
+          onClick={() => setIsImportModalOpen(true)}
+          className="absolute right-0 top-0 flex items-center gap-2 rounded-xl px-4 py-3 text-sm"
+        >
+          <FileSpreadsheet className="h-4 w-4" />
+          {t("companySettings.clientImportButton")}
+        </Button>
       </CardHeader>
 
       <CardContent className="space-y-6 px-0 pb-0">
@@ -665,6 +676,13 @@ export const ClientManagementCard: React.FC<Props> = ({
           </div>
         </Modal>
       )}
+
+      <ClientImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        companyId={companyId}
+        onImportComplete={onRefresh}
+      />
     </Card>
   );
 };

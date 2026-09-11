@@ -1,6 +1,7 @@
 import { supabase } from "../lib/supabaseClient";
 import {
   type Client,
+  type CreateClientPayload,
   type CreateProjectPayload,
   type InvoiceAttachmentLanguage,
   type Project,
@@ -251,6 +252,47 @@ export const bulkInsertProjects = async (
   return inserted;
 };
 
+export type BulkClientInsertItem = Pick<
+  CreateClientPayload,
+  | "company_id"
+  | "name"
+  | "client_code"
+  | "invoice_attachment_language"
+  | "available_hours_per_month"
+  | "hours_from_previous_month"
+  | "is_default"
+>;
+
+export const bulkFetchCompanyClients = async (companyId: string) => {
+  const { data, error } = await supabase
+    .from("clients")
+    .select("id, client_code")
+    .eq("company_id", companyId);
+
+  if (error) throw error;
+  return data || [];
+};
+
+export const bulkInsertClients = async (
+  clients: BulkClientInsertItem[],
+  chunkSize = 300,
+) => {
+  const inserted: Client[] = [];
+
+  for (let i = 0; i < clients.length; i += chunkSize) {
+    const chunk = clients.slice(i, i + chunkSize);
+    const { data, error } = await supabase
+      .from("clients")
+      .insert(chunk)
+      .select();
+
+    if (error) throw error;
+    if (data) inserted.push(...data);
+  }
+
+  return inserted;
+};
+
 export const clientProjectService = {
   fetchClients,
   fetchActiveClients,
@@ -266,6 +308,8 @@ export const clientProjectService = {
   deleteProject,
   bulkFetchCompanyClientsAndProjects,
   bulkInsertProjects,
+  bulkFetchCompanyClients,
+  bulkInsertClients,
 };
 
 export default clientProjectService;
