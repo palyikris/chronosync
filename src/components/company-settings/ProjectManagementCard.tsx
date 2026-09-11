@@ -4,6 +4,7 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  FileSpreadsheet,
   FolderPlus,
   PencilLine,
   Plus,
@@ -25,6 +26,7 @@ import {
 import type { Project } from "../../types/client-project";
 import { Select } from "../shared/Select";
 import { Input } from "../shared/Input";
+import { ProjectImportModal } from "./ProjectImportModal";
 
 const normalizeEstimatedHours = (value: string) => {
   if (value === "") return 0;
@@ -49,6 +51,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   );
   const [loading, setLoading] = useState(false);
   const [showNewProjectForm, setShowNewProjectForm] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   const selectedClient = clients.find(
     (client) => client.id === newProjectClientId,
@@ -146,7 +149,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
 
   return (
     <Card className="space-y-6 p-6 shadow-sm">
-      <CardHeader className="rounded-t-2xl border-b-0 bg-transparent px-0 py-0">
+      <CardHeader className="rounded-t-2xl border-b-0 bg-transparent px-0 py-0 relative">
         <div className="flex items-center gap-3">
           <div className="rounded-xl bg-bg-accent p-2.5 text-primary-strong">
             <FolderPlus className="h-5 w-5" />
@@ -160,6 +163,14 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
             </p>
           </div>
         </div>
+        <Button
+          variant="primary"
+          onClick={() => setIsImportModalOpen(true)}
+          className="flex items-center gap-2 absolute right-0 top-0 rounded-xl px-4 py-3 text-sm"
+        >
+          <FileSpreadsheet className="w-4 h-4" />
+          {t("companySettings.projectImportButton")}
+        </Button>
       </CardHeader>
 
       <CardContent className="space-y-6 px-0 pb-0">
@@ -425,6 +436,13 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
           </div>
         </Modal>
       )}
+
+      <ProjectImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        companyId={companyId}
+        onImportComplete={onRefresh}
+      />
     </Card>
   );
 };

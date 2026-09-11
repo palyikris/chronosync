@@ -1,6 +1,7 @@
 import { supabase } from "../lib/supabaseClient";
 import {
   type Client,
+  type CreateProjectPayload,
   type InvoiceAttachmentLanguage,
   type Project,
 } from "../types/client-project";
@@ -142,7 +143,6 @@ export async function createProject(
   clientId: string,
   name: string,
   estimatedHoursPerMonth: number,
-  description?: string,
 ): Promise<Project> {
   const { data, error } = await supabase
     .from("projects")
@@ -151,7 +151,6 @@ export async function createProject(
       client_id: clientId,
       name,
       estimated_hours_per_month: estimatedHoursPerMonth,
-      description,
     })
     .select("*, clients(name)")
     .single();
@@ -163,14 +162,12 @@ export async function updateProject(
   projectId: string,
   name: string,
   estimatedHoursPerMonth: number,
-  description?: string,
 ): Promise<Project> {
   const { data, error } = await supabase
     .from("projects")
     .update({
       name,
       estimated_hours_per_month: estimatedHoursPerMonth,
-      description,
     })
     .eq("id", projectId)
     .select("*, clients(name)")
@@ -201,6 +198,59 @@ export async function deleteProject(projectId: string): Promise<void> {
   if (error) throw error;
 }
 
+export type BulkProjectInsertItem = Pick<
+  CreateProjectPayload,
+  "company_id" | "client_id" | "name" | "estimated_hours_per_month"
+>;
+
+export const bulkFetchCompanyClientsAndProjects = async (companyId: string) => {
+  const { data: clients, error: clientErr } = await supabase
+    .from("clients")
+    .select("id, client_code")
+    .eq("company_id", companyId);
+
+  if (clientErr) throw clientErr;
+
+  const clientIds = (clients || []).map((c) => c.id);
+
+  let existingProjects: Array<{ id: string; client_id: string; name: string }> =
+    [];
+  if (clientIds.length > 0) {
+    const { data: projects, error: projErr } = await supabase
+      .from("projects")
+      .select("id, client_id, name")
+      .in("client_id", clientIds);
+
+    if (projErr) throw projErr;
+    existingProjects = projects || [];
+  }
+
+  return {
+    clients: clients || [],
+    projects: existingProjects,
+  };
+};
+
+export const bulkInsertProjects = async (
+  projects: BulkProjectInsertItem[],
+  chunkSize = 300,
+) => {
+  const inserted: Project[] = [];
+
+  for (let i = 0; i < projects.length; i += chunkSize) {
+    const chunk = projects.slice(i, i + chunkSize);
+    const { data, error } = await supabase
+      .from("projects")
+      .insert(chunk)
+      .select();
+
+    if (error) throw error;
+    if (data) inserted.push(...data);
+  }
+
+  return inserted;
+};
+
 export const clientProjectService = {
   fetchClients,
   fetchActiveClients,
@@ -214,6 +264,8 @@ export const clientProjectService = {
   updateProject,
   updateProjectActivity,
   deleteProject,
+  bulkFetchCompanyClientsAndProjects,
+  bulkInsertProjects,
 };
 
 export default clientProjectService;
