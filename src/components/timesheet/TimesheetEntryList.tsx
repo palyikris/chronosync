@@ -20,7 +20,6 @@ import { useQueryClient } from "@tanstack/react-query";
 
 export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
   selectedDate,
-  totalDailyHours,
   entries,
   allEntries,
   loading,
@@ -281,9 +280,9 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
               : "flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between"
           }
         >
-          <p className="order-1 text-sm text-muted sm:order-3 sm:text-right">
+          {/* <p className="order-1 text-sm text-muted sm:order-3 sm:text-right">
             {totalDailyHours} {t("timesheet.hoursLogged")}
-          </p>
+          </p> */}
 
           <Button
             variant="primary"

@@ -13,10 +13,13 @@ import {
   updateTimesheetEntry,
 } from "../services/timesheetService";
 import {
+  fetchClients,
   fetchActiveClients,
+  fetchProjects,
   fetchActiveProjects,
 } from "../services/clientProjectService";
 import { TimesheetCalendar } from "../components/timesheet/TimesheetCalendar";
+import { TimesheetEntryFilter } from "../components/timesheet/TimesheetEntryFilter";
 import { TimesheetEntryList } from "../components/timesheet/TimesheetEntryList";
 import { TimesheetEntryModal } from "../components/timesheet/TimesheetEntryModal";
 import { Button } from "../components/shared/Button";
@@ -69,6 +72,8 @@ export const TimesheetPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editEntryId, setEditEntryId] = useState<string | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [selectedClientId, setSelectedClientId] = useState<string>("");
+  const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [viewMode, setViewMode] =
     useState<TimesheetViewMode>(getViewPreference);
 
@@ -135,13 +140,13 @@ export const TimesheetPage: React.FC = () => {
 
   const targetUserId = activeTargetUser?.id ?? user?.id;
 
-  const { data: clients = [] } = useQuery<Client[]>({
+  const { data: activeClients = [] } = useQuery<Client[]>({
     queryKey: ["clients", targetCompanyId || "all"],
     queryFn: () => fetchActiveClients(targetCompanyId || ""),
     enabled: Boolean(targetCompanyId || isSuperAdmin),
   });
 
-  const { data: projects = [] } = useQuery<Project[]>({
+  const { data: activeProjects = [] } = useQuery<Project[]>({
     queryKey: ["projects", targetCompanyId || "all", formData.client_id],
     queryFn: () =>
       fetchActiveProjects(
@@ -150,6 +155,18 @@ export const TimesheetPage: React.FC = () => {
       ),
     enabled: Boolean((targetCompanyId || isSuperAdmin) && formData.client_id),
   });
+
+    const { data: allClients = [] } = useQuery<Client[]>({
+      queryKey: ["all-clients", targetCompanyId || "all"],
+      queryFn: () => fetchClients(targetCompanyId || ""),
+      enabled: Boolean(targetCompanyId || isSuperAdmin),
+    });
+
+    const { data: allProjects = [] } = useQuery<Project[]>({
+      queryKey: ["all-projects", targetCompanyId || "all"],
+      queryFn: () => fetchProjects(targetCompanyId || ""),
+      enabled: Boolean(targetCompanyId || isSuperAdmin),
+    });
 
   // --------------------------------------------------------------------------
   // TanStack Query: Fetch Logs
@@ -191,6 +208,43 @@ export const TimesheetPage: React.FC = () => {
     return Array.from(mergedMap.values());
   }, [currentMonthTimesheets, previousMonthTimesheets, nextMonthTimesheets]);
 
+  const hasEntryFilter = Boolean(selectedClientId);
+
+  const filteredTimesheets = React.useMemo(() => {
+    if (!hasEntryFilter) {
+      return timesheets;
+    }
+
+    return timesheets.filter((entry) => {
+      const matchesClient = entry.client_id === selectedClientId;
+      const matchesProject = selectedProjectId
+        ? entry.project_id === selectedProjectId
+        : true;
+
+      return matchesClient && matchesProject;
+    });
+  }, [hasEntryFilter, selectedClientId, selectedProjectId, timesheets]);
+
+  const filteredCurrentMonthTimesheets = React.useMemo(() => {
+    if (!hasEntryFilter) {
+      return currentMonthTimesheets;
+    }
+
+    return currentMonthTimesheets.filter((entry) => {
+      const matchesClient = entry.client_id === selectedClientId;
+      const matchesProject = selectedProjectId
+        ? entry.project_id === selectedProjectId
+        : true;
+
+      return matchesClient && matchesProject;
+    });
+  }, [
+    hasEntryFilter,
+    selectedClientId,
+    selectedProjectId,
+    currentMonthTimesheets,
+  ]);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.localStorage.setItem(TIMESHEET_VIEW_STORAGE_KEY, viewMode);
@@ -210,7 +264,7 @@ export const TimesheetPage: React.FC = () => {
     };
   }, [queryClient]);
 
-  const selectedDayLogs = timesheets.filter(
+  const selectedDayLogs = filteredTimesheets.filter(
     (log) => log.work_date === selectedDate,
   );
   const totalDailyHours = selectedDayLogs.reduce(
@@ -218,7 +272,7 @@ export const TimesheetPage: React.FC = () => {
     0,
   );
 
-  const totalCurrentMonthHours = currentMonthTimesheets.reduce(
+  const totalCurrentMonthHours = filteredCurrentMonthTimesheets.reduce(
     (acc, log) => acc + Number(log.hours_logged),
     0,
   );
@@ -447,7 +501,23 @@ export const TimesheetPage: React.FC = () => {
     event: React.ChangeEvent<HTMLSelectElement>,
   ) => {
     setSelectedUserId(event.target.value);
+    setSelectedClientId("");
+    setSelectedProjectId("");
     closeModal();
+  };
+
+  const handleClientFilterChange = (clientId: string) => {
+    setSelectedClientId(clientId);
+    setSelectedProjectId("");
+  };
+
+  const handleProjectFilterChange = (projectId: string) => {
+    setSelectedProjectId(projectId);
+  };
+
+  const handleResetFilters = () => {
+    setSelectedClientId("");
+    setSelectedProjectId("");
   };
 
   return (
@@ -541,12 +611,23 @@ export const TimesheetPage: React.FC = () => {
         </div>
       </Card>
 
+      <TimesheetEntryFilter
+        entries={timesheets}
+        clients={allClients}
+        projects={allProjects}
+        selectedClientId={selectedClientId}
+        selectedProjectId={selectedProjectId}
+        onClientChange={handleClientFilterChange}
+        onProjectChange={handleProjectFilterChange}
+        onReset={handleResetFilters}
+      />
+
       {viewMode === "calendar" ? (
         <div className="grid gap-4 lg:gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.75fr)] xl:items-stretch">
           <TimesheetCalendar
             currentDate={currentDate}
             selectedDate={selectedDate}
-            timesheets={currentMonthTimesheets}
+            timesheets={filteredCurrentMonthTimesheets}
             totalMonthlyHours={totalCurrentMonthHours}
             onSelectDate={(date) => {
               setSelectedDate(date);
@@ -562,7 +643,7 @@ export const TimesheetPage: React.FC = () => {
                 selectedDate={selectedDate}
                 totalDailyHours={totalDailyHours}
                 entries={selectedDayLogs}
-                allEntries={timesheets}
+                allEntries={filteredTimesheets}
                 loading={isLoading}
                 onAddEntry={openCreateModal}
                 onEditEntry={openEditModal}
@@ -571,7 +652,7 @@ export const TimesheetPage: React.FC = () => {
                 isUpdating={updateMutation.isPending}
                 isDuplicating={duplicateMutation.isPending}
                 isDeleting={deleteMutation.isPending}
-                clients={clients}
+                clients={allClients}
                 canManageTarget={canManageTarget}
                 viewMode={viewMode}
               />
@@ -585,7 +666,7 @@ export const TimesheetPage: React.FC = () => {
           selectedDate={selectedDate}
           totalDailyHours={totalDailyHours}
           entries={selectedDayLogs}
-          allEntries={timesheets}
+          allEntries={filteredTimesheets}
           loading={isLoading}
           onAddEntry={openCreateModal}
           onEditEntry={openEditModal}
@@ -594,7 +675,7 @@ export const TimesheetPage: React.FC = () => {
           isUpdating={updateMutation.isPending}
           isDuplicating={duplicateMutation.isPending}
           isDeleting={deleteMutation.isPending}
-          clients={clients}
+          clients={allClients}
           canManageTarget={canManageTarget}
           viewMode={viewMode}
         />
@@ -604,8 +685,8 @@ export const TimesheetPage: React.FC = () => {
         open={isModalOpen}
         isEditing={Boolean(editEntryId)}
         formData={formData}
-        clients={clients}
-        projects={projects}
+        clients={activeClients}
+        projects={activeProjects}
         onClose={closeModal}
         onSubmit={handleFormSubmit}
         onChange={setFormData}
