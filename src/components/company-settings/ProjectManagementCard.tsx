@@ -349,6 +349,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
           open={!!editingProject}
           onClose={() => setEditingProject(null)}
           title={t("companySettings.editProject")}
+          className="w-xl max-w-full"
         >
           <div className="space-y-4 p-4">
             <Input
