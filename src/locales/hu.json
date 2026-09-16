@@ -233,7 +233,9 @@
       "pending": "Függőben",
       "approved": "Jóváhagyva",
       "rejected": "Elutasítva"
-    }
+    },
+    "startDate": "Kezdő dátum",
+    "endDate": "Záró dátum"
   },
   "dashboard": {
     "pageTitle": "Cég vezérlőpult",

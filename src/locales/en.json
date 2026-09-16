@@ -232,7 +232,9 @@
       "pending": "Pending",
       "approved": "Approved",
       "rejected": "Rejected"
-    }
+    },
+    "startDate": "Start Date",
+    "endDate": "End Date"
   },
   "dashboard": {
     "pageTitle": "Company Dashboard",
