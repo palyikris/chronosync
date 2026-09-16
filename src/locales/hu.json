@@ -235,7 +235,10 @@
       "rejected": "Elutasítva"
     },
     "startDate": "Kezdő dátum",
-    "endDate": "Záró dátum"
+    "endDate": "Záró dátum",
+    "weeklyWorkHours": "Heti munkaórák",
+    "estimatedLeaveHours": "Becsült szabadságórák",
+    "hoursShort": "{{hours}} óra"
   },
   "dashboard": {
     "pageTitle": "Cég vezérlőpult",
@@ -410,6 +413,14 @@
     "estimatedHoursPerMonthLabel": "Becsült órák / hónap",
     "availableHoursPerMonth": "Elérhető órák / hónap",
     "hoursFromPreviousMonth": "Előző hónapból maradt órák",
+    "leaveConfigTitle": "Szabadság-hozzárendelés",
+    "leaveConfigSubtitle": "Válaszd ki azt az ügyfél/projekt párost, amelyre az elfogadott szabadságórákat könyvelik.",
+    "leaveClientLabel": "Szabadság ügyfele",
+    "leaveProjectLabel": "Szabadság projekt",
+    "leaveConfigHint": "Az elfogadott szabadságórák erre az ügyfél/projekt párosra kerülnek könyvelésre.",
+    "leaveConfigRequiresSelection": "Válassz ügyfelet és projektet is a szabadság-hozzárendeléshez.",
+    "leaveConfigSaved": "A szabadság-hozzárendelés sikeresen mentve.",
+    "leaveConfigSaveFailed": "Nem sikerült menteni a szabadság-hozzárendelést.",
     "companyBrandingTitle": "Cég branding",
     "companyBrandingSubtitle": "Tölts fel egy logót a generált mellékletekhez (Számlamelléklet).",
     "companyLogoAlt": "Céglogó",
@@ -429,7 +440,8 @@
     "duplicateClientCode": "Az ügyfélkódnak egyedinek kell lennie.",
     "unknownClient": "Ismeretlen ügyfél",
     "selectClientFirst": "Előbb válassz ügyfelet...",
-    "selectClient": "Ügyfél kiválasztása"
+    "selectClient": "Ügyfél kiválasztása",
+    "selectProject": "Projekt kiválasztása"
   },
   "timesheet": {
     "title": "Saját naplóim",
@@ -572,7 +584,13 @@
     "updatePassword": "Jelszó frissítése",
     "updatingPassword": "Frissítés...",
     "passwordUpdated": "A jelszó sikeresen frissítve!",
-    "passwordUpdateFailed": "Váratlan hiba történt a jelszó frissítése közben."
+    "passwordUpdateFailed": "Váratlan hiba történt a jelszó frissítése közben.",
+    "workHoursCardTitle": "Munkarend",
+    "workHoursCardSubtitle": "Állítsd be, hogy hetente hány órát dolgozol. A szabadságkérések ezt használják a szabadságidő számításához.",
+    "workHoursLabel": "Heti munkaórák",
+    "saveWorkHours": "Munkarend mentése",
+    "workHoursSaved": "A heti munkaórák mentve.",
+    "workHoursSaveFailed": "Nem sikerült menteni a heti munkaórákat."
   },
   "errors": {
     "notAuthenticated": "Nincs bejelentkezve",

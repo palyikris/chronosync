@@ -8,6 +8,7 @@ import { ClientManagementCard } from "../components/company-settings/ClientManag
 import { ProjectManagementCard } from "../components/company-settings/ProjectManagementCard";
 import type { Client, Project } from "../types/client-project";
 import { CompanyLogoCard } from "../components/company-settings/CompanyLogoCard";
+import { LeaveConfigurationCard } from "../components/company-settings/LeaveConfigurationCard";
 import { getCompanyLogoUrl } from "../services/companyLogoService";
 
 export const CompanySettingsPage: React.FC = () => {
@@ -56,6 +57,12 @@ export const CompanySettingsPage: React.FC = () => {
           clients={clients}
           projects={projects}
           onRefresh={refreshCompanySettings}
+        />
+
+        <LeaveConfigurationCard
+          companyId={companyId}
+          clients={clients}
+          projects={projects}
         />
 
         <CompanyLogoCard

@@ -43,6 +43,7 @@ export interface UserProfile {
   full_name: string;
   role: UserRole;
   is_active: boolean;
+  weekly_work_hours: number | null;
   created_at: string;
   companies?: {
     name: string;

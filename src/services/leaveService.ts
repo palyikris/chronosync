@@ -305,6 +305,29 @@ export async function deleteLeaveRequest(id: string) {
     throw new Error(i18n.t("errors.unauthorized"));
   }
 
+  if (existingRequest.status === "APPROVED") {
+    const { data: companyConfig, error: companyConfigError } = await supabase
+      .from("companies")
+      .select("leave_client_id, leave_project_id")
+      .eq("id", existingRequest.company_id)
+      .maybeSingle();
+
+    if (companyConfigError) throw companyConfigError;
+
+    if (companyConfig?.leave_client_id && companyConfig?.leave_project_id) {
+      const { error: deleteTimesheetError } = await supabase
+        .from("timesheets")
+        .delete()
+        .eq("user_id", existingRequest.user_id)
+        .eq("project_id", companyConfig.leave_project_id)
+        .gte("work_date", existingRequest.start_date)
+        .lte("work_date", existingRequest.end_date)
+        .eq("description", "Approved leave");
+
+      if (deleteTimesheetError) throw deleteTimesheetError;
+    }
+  }
+
   const { error } = await supabase.from("leave_requests").delete().eq("id", id);
 
   if (error) throw error;
@@ -336,6 +359,8 @@ export async function updateLeaveRequestStatus(
     throw new Error(i18n.t("leave.requestNotFound"));
   }
 
+  let leaveHoursTotal = 0;
+
   if (validatedPayload.status === "APPROVED") {
     const { data: conflictingEntries, error: conflictError } = await supabase
       .from("timesheets")
@@ -359,11 +384,79 @@ export async function updateLeaveRequestStatus(
     if (conflictingDates.length > 0) {
       throw new LeaveRequestConflictError(conflictingDates);
     }
+
+    const { data: companyConfig, error: companyConfigError } = await supabase
+      .from("companies")
+      .select("leave_client_id, leave_project_id")
+      .eq("id", existingRequest.company_id)
+      .maybeSingle();
+
+    if (companyConfigError) throw companyConfigError;
+
+    if (!companyConfig?.leave_client_id || !companyConfig?.leave_project_id) {
+      throw new Error(i18n.t("companySettings.leaveConfigRequiresSelection"));
+    }
+
+    const availableDates = getLeaveDateRange(
+      existingRequest.start_date,
+      existingRequest.end_date,
+    ).filter((date) => !isWeekend(date));
+
+    const weeklyHours = existingRequest.weekly_work_hours ?? 40;
+    const hoursPerWorkday = Number((weeklyHours / 5).toFixed(2));
+    leaveHoursTotal = Number(
+      (availableDates.length * hoursPerWorkday).toFixed(2),
+    );
+
+    const { data: existingLeaveEntries, error: existingLeaveError } =
+      await supabase
+        .from("timesheets")
+        .select("work_date")
+        .eq("user_id", existingRequest.user_id)
+        .eq("project_id", companyConfig.leave_project_id)
+        .gte("work_date", existingRequest.start_date)
+        .lte("work_date", existingRequest.end_date)
+        .order("work_date", { ascending: true });
+
+    if (existingLeaveError) throw existingLeaveError;
+
+    const existingLeaveDates = new Set(
+      (existingLeaveEntries ?? []).map((entry) =>
+        normalizeDate(entry.work_date),
+      ),
+    );
+
+    const rowsToInsert = availableDates
+      .filter((date) => !existingLeaveDates.has(date))
+      .map((date) => ({
+        user_id: existingRequest.user_id,
+        company_id: existingRequest.company_id,
+        client_id: companyConfig.leave_client_id,
+        project_id: companyConfig.leave_project_id,
+        work_date: date,
+        hours_logged: hoursPerWorkday,
+        description: "Approved leave",
+        status: "approved",
+        approved_by: profile.id,
+        approved_at: new Date().toISOString(),
+      }));
+
+    if (rowsToInsert.length > 0) {
+      const { error: insertError } = await supabase
+        .from("timesheets")
+        .insert(rowsToInsert);
+
+      if (insertError) throw insertError;
+    }
   }
 
   const { data, error } = await supabase
     .from("leave_requests")
-    .update({ status: validatedPayload.status })
+    .update({
+      status: validatedPayload.status,
+      hours_taken:
+        validatedPayload.status === "APPROVED" ? leaveHoursTotal : null,
+    })
     .eq("id", id)
     .select("*, profiles(id, full_name, role)")
     .single();

@@ -4,6 +4,7 @@ import type { LeaveRequest } from "../../types/leave";
 export type LeaveFormState = {
   start_date: string;
   end_date: string;
+  weekly_work_hours: number;
 };
 
 export interface LeaveErrorBannerProps {

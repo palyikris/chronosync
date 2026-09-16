@@ -39,6 +39,7 @@ export const LeaveRequestsPage: React.FC = () => {
   const [formState, setFormState] = useState<LeaveFormState>({
     start_date: getLocalDateValue(today),
     end_date: getLocalDateValue(today),
+    weekly_work_hours: profile?.weekly_work_hours ?? 40,
   });
   const [pageError, setPageError] = useState<string | null>(null);
   const [conflictingDates, setConflictingDates] = useState<string[]>([]);
@@ -124,6 +125,7 @@ export const LeaveRequestsPage: React.FC = () => {
     setFormState({
       start_date: getLocalDateValue(today),
       end_date: getLocalDateValue(today),
+      weekly_work_hours: profile?.weekly_work_hours ?? 40,
     });
     setIsModalOpen(true);
   };
@@ -133,6 +135,8 @@ export const LeaveRequestsPage: React.FC = () => {
     setFormState({
       start_date: request.start_date,
       end_date: request.end_date,
+      weekly_work_hours:
+        request.weekly_work_hours ?? profile?.weekly_work_hours ?? 40,
     });
     setIsModalOpen(true);
   };

@@ -95,6 +95,31 @@ export async function updateUserRole(userId: string, role: CompanyUserRole) {
   return data as UserProfile;
 }
 
+export async function updateWeeklyWorkHours(
+  userId: string,
+  weeklyHours: number,
+) {
+  const normalizedHours = Number(weeklyHours);
+
+  if (
+    !Number.isFinite(normalizedHours) ||
+    normalizedHours <= 0 ||
+    normalizedHours > 80
+  ) {
+    throw new Error("Weekly working hours must be between 1 and 80.");
+  }
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({ weekly_work_hours: normalizedHours })
+    .eq("id", userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as UserProfile;
+}
+
 /**
  * Soft Delete / Toggle Active Status (US-03)
  */

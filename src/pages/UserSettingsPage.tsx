@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { LanguagePreferencesCard } from "../components/user-settings/LanguagePreferencesCard";
 import { PasswordSecurityCard } from "../components/user-settings/PasswordSecurityCard";
 import { UserSettingsHeader } from "../components/user-settings/UserSettingsHeader";
+import { WorkHoursCard } from "../components/user-settings/WorkHoursCard";
 
 const normalizeLanguageCode = (language: string | undefined) => {
   if (!language) {
@@ -50,6 +51,8 @@ export const UserSettingsPage: React.FC = () => {
         onLanguageChange={handleLanguageChange}
         showSuccess={langSuccess}
       />
+
+      <WorkHoursCard />
 
       <PasswordSecurityCard />
     </div>

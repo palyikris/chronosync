@@ -234,7 +234,10 @@
       "rejected": "Rejected"
     },
     "startDate": "Start Date",
-    "endDate": "End Date"
+    "endDate": "End Date",
+    "weeklyWorkHours": "Weekly work hours",
+    "estimatedLeaveHours": "Estimated leave hours",
+    "hoursShort": "{{hours}} h"
   },
   "dashboard": {
     "pageTitle": "Company Dashboard",
@@ -409,6 +412,14 @@
     "estimatedHoursPerMonthLabel": "Estimated hours / month",
     "availableHoursPerMonth": "Available hours / month",
     "hoursFromPreviousMonth": "Hours from previous month",
+    "leaveConfigTitle": "Leave allocation",
+    "leaveConfigSubtitle": "Choose the client/project pair that approved leave hours should be assigned to.",
+    "leaveClientLabel": "Leave client",
+    "leaveProjectLabel": "Leave project",
+    "leaveConfigHint": "Approved leave hours will be posted against this client/project pair.",
+    "leaveConfigRequiresSelection": "Select both a client and a project for the leave assignment.",
+    "leaveConfigSaved": "Leave assignment saved successfully.",
+    "leaveConfigSaveFailed": "Failed to save the leave assignment.",
     "companyBrandingTitle": "Company Branding",
     "companyBrandingSubtitle": "Upload a logo to display on generated attachments (Számlamelléklet).",
     "companyLogoAlt": "Company Logo",
@@ -428,7 +439,8 @@
     "duplicateClientCode": "Client code must be unique.",
     "unknownClient": "Unknown client",
     "selectClientFirst": "Select a client first...",
-    "selectClient": "Select client"
+    "selectClient": "Select client",
+    "selectProject": "Select project"
   },
   "timesheet": {
     "title": "My Logs",
@@ -569,7 +581,13 @@
     "updatePassword": "Update Password",
     "updatingPassword": "Updating...",
     "passwordUpdated": "Password updated successfully!",
-    "passwordUpdateFailed": "An unexpected error occurred while updating password."
+    "passwordUpdateFailed": "An unexpected error occurred while updating password.",
+    "workHoursCardTitle": "Work schedule",
+    "workHoursCardSubtitle": "Set the number of hours you work each week. Leave requests use this to calculate leave time.",
+    "workHoursLabel": "Weekly work hours",
+    "saveWorkHours": "Save schedule",
+    "workHoursSaved": "Weekly work hours saved.",
+    "workHoursSaveFailed": "Unable to save weekly work hours."
   },
   "errors": {
     "notAuthenticated": "Not authenticated",

@@ -15,6 +15,7 @@ export const leaveRequestCreateSchema = z
   .object({
     start_date: leaveDateSchema,
     end_date: leaveDateSchema,
+    weekly_work_hours: z.number().finite().positive().max(80).optional(),
   })
   .strict();
 
@@ -22,6 +23,7 @@ export const leaveRequestUpdateSchema = z
   .object({
     start_date: leaveDateSchema,
     end_date: leaveDateSchema,
+    weekly_work_hours: z.number().finite().positive().max(80).optional(),
   })
   .strict();
 
@@ -44,6 +46,8 @@ export interface LeaveRequest {
   company_id: string;
   start_date: string;
   end_date: string;
+  weekly_work_hours: number | null;
+  hours_taken: number | null;
   status: LeaveRequestStatus;
   created_at: string;
   updated_at: string;
