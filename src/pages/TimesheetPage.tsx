@@ -12,6 +12,7 @@ import {
   deleteTimesheetEntry,
   updateTimesheetEntry,
 } from "../services/timesheetService";
+import { fetchApprovedLeaveDatesForUser } from "../services/leaveService";
 import {
   fetchClients,
   fetchActiveClients,
@@ -192,6 +193,12 @@ export const TimesheetPage: React.FC = () => {
     queryFn: () => fetchUserTimesheets(nextMonthKey, targetUserId),
   });
 
+  const { data: approvedLeaveDates = [] } = useQuery({
+    queryKey: ["approved-leave-dates", targetUserId],
+    enabled: Boolean(targetUserId),
+    queryFn: () => fetchApprovedLeaveDatesForUser(targetUserId!),
+  });
+
   const isLoading = isLoadingCurrentMonth;
 
   const timesheets = React.useMemo(() => {
@@ -276,6 +283,7 @@ export const TimesheetPage: React.FC = () => {
     (acc, log) => acc + Number(log.hours_logged),
     0,
   );
+  const isSelectedDateLocked = approvedLeaveDates.includes(selectedDate);
 
 
   const resetForm = (date = selectedDate) => {
@@ -629,6 +637,7 @@ export const TimesheetPage: React.FC = () => {
             selectedDate={selectedDate}
             timesheets={filteredCurrentMonthTimesheets}
             totalMonthlyHours={totalCurrentMonthHours}
+            lockedDates={approvedLeaveDates}
             onSelectDate={(date) => {
               setSelectedDate(date);
               setCurrentDate(new Date(`${date}T12:00:00`));
@@ -654,6 +663,7 @@ export const TimesheetPage: React.FC = () => {
                 isDeleting={deleteMutation.isPending}
                 clients={allClients}
                 canManageTarget={canManageTarget}
+                isSelectedDateLocked={isSelectedDateLocked}
                 viewMode={viewMode}
               />
             </div>
@@ -677,6 +687,7 @@ export const TimesheetPage: React.FC = () => {
           isDeleting={deleteMutation.isPending}
           clients={allClients}
           canManageTarget={canManageTarget}
+          isSelectedDateLocked={isSelectedDateLocked}
           viewMode={viewMode}
         />
       ) : null}

@@ -32,6 +32,7 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
   isDeleting,
   clients,
   canManageTarget,
+  isSelectedDateLocked = false,
   viewMode,
 }) => {
   const { t, i18n } = useTranslation();
@@ -127,6 +128,11 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
               {t("timesheet.selectedDay")}
             </p>
             <h3 className="mt-1 font-bold text-text">{selectedDayLabel}</h3>
+            {isSelectedDateLocked ? (
+              <p className="mt-1 text-xs font-semibold text-amber-700">
+                {t("leave.dateLockedForLeave")}
+              </p>
+            ) : null}
           </div>
         </div>
       </CardHeader>
@@ -288,9 +294,12 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
             variant="primary"
             className="order-2 w-full rounded-xl sm:order-1 sm:w-auto"
             onClick={onAddEntry}
+            disabled={isSelectedDateLocked}
             icon={<Plus className="h-4 w-4" />}
           >
-            {t("timesheet.addEntry")}
+            {isSelectedDateLocked
+              ? t("leave.lockedDay")
+              : t("timesheet.addEntry")}
           </Button>
 
           {viewMode === "calendar" ? (

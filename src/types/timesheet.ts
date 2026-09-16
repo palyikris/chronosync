@@ -117,6 +117,7 @@ export interface TimesheetCalendarProps {
   selectedDate: string;
   timesheets: TimesheetEntry[];
   totalMonthlyHours: number;
+  lockedDates?: string[];
   onSelectDate: (date: string) => void;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
@@ -137,6 +138,7 @@ export interface TimesheetEntryListProps {
   isDeleting: boolean;
   clients: Client[];
   canManageTarget: boolean;
+  isSelectedDateLocked?: boolean;
   viewMode: "grid" | "calendar" | "list";
 }
 

@@ -13,6 +13,7 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
   selectedDate,
   timesheets,
   totalMonthlyHours,
+  lockedDates = [],
   onSelectDate,
   onPreviousMonth,
   onNextMonth,
@@ -45,6 +46,7 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
   const yearMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}`;
   const today = new Date();
   const todayDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  const lockedDateSet = new Set(lockedDates);
 
   const formatHours = (hours: number) =>
     Number.isInteger(hours)
@@ -128,6 +130,7 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
                 const hasLogs = dayLogs.length > 0;
                 const isSelected = selectedDate === dateStr;
                 const isToday = dateStr === todayDateStr;
+                const isLocked = lockedDateSet.has(dateStr);
 
                 const entryStatuses = dayLogs.map((entry) => entry.status);
                 const colorClass = getColorOfEntriesForEntries(entryStatuses);
@@ -136,8 +139,13 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
                   <button
                     key={dateStr}
                     type="button"
+                    disabled={isLocked}
                     onClick={() => onSelectDate(dateStr)}
-                    className={`flex min-h-14 cursor-pointer flex-col justify-between border-b border-r border-border-strong p-1.5 text-left transition-all hover:bg-bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-strong focus-visible:ring-inset sm:min-h-17.5 sm:p-2 ${
+                    className={`flex min-h-14 flex-col justify-between border-b border-r border-border-strong p-1.5 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-strong focus-visible:ring-inset sm:min-h-17.5 sm:p-2 ${
+                      isLocked
+                        ? "cursor-not-allowed bg-slate-100/80 opacity-70"
+                        : "cursor-pointer hover:bg-bg-accent"
+                    } ${
                       isToday
                         ? "relative bg-bg-accent/60 border border-primary"
                         : ""
@@ -152,6 +160,11 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
                         aria-hidden="true"
                         className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary-strong shadow-sm"
                       />
+                    ) : null}
+                    {isLocked ? (
+                      <span className="absolute left-2 top-2 rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-bold text-white">
+                        {t("leave.lockedDay")}
+                      </span>
                     ) : null}
                     <span className="text-xs text-text">{dayNumber}</span>
                     {hasLogs ? (

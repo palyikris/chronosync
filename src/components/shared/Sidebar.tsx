@@ -10,6 +10,7 @@ import {
   ScanEye,
   ScrollText,
   Columns3Cog,
+  CalendarRange,
 } from "lucide-react";
 import { useAuth } from "../../context/useAuth";
 import { getRoleLabel } from "../../utils/getRoleLabel";
@@ -30,6 +31,11 @@ export const Sidebar: React.FC = () => {
   // Define navigation items mapped to Lucide Icons
   const mainNavItems: NavItem[] = [
     { to: "/timesheet", label: t("navigation.timesheets"), icon: Clock },
+    {
+      to: "/leaves",
+      label: t("navigation.leaveRequests"),
+      icon: CalendarRange,
+    },
     {
       to: "/admin/dashboard",
       label: t("navigation.dashboard"),
@@ -83,6 +89,7 @@ export const Sidebar: React.FC = () => {
       return false;
     if (item.to === "/admin/dashboard" && profile?.role === "super_admin")
       return false;
+    if (item.to === "/leaves" && profile?.role === "super_admin") return false;
     if (item.roleRequired === "super_admin")
       return profile?.role === "super_admin";
     if (item.roleRequired === "company_admin")

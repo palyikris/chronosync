@@ -14,6 +14,7 @@ import { UserSettingsPage } from "./pages/UserSettingsPage";
 import { AuthProvider } from "./context/AuthContext";
 import TimesheetReviewPage from "./pages/TimesheetReviewPage";
 import AuditLogPage from "./pages/LogsPage";
+import LeaveRequestsPage from "./pages/LeaveRequestsPage";
 
 // Dynamic Index Redirect Component
 const RootRedirect: React.FC = () => {
@@ -49,6 +50,7 @@ export default function App() {
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>
               <Route path="/timesheet" element={<TimesheetPage />} />
+              <Route path="/leaves" element={<LeaveRequestsPage />} />
 
               <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
               <Route path="/admin/users" element={<UserManagementPage />} />

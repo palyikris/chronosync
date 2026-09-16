@@ -1,5 +1,6 @@
 import { supabase } from "../lib/supabaseClient";
 import i18n from "../lib/i18n";
+import { assertTimesheetDateIsUnlocked } from "./leaveService";
 import {
   newTimesheetPayloadSchema,
   timesheetEntryUpdatePayloadSchema,
@@ -156,6 +157,10 @@ export async function createTimesheetEntry(
   const validatedPayload = newTimesheetPayloadSchema.parse(payload);
 
   const user = await getCurrentUser();
+  await assertTimesheetDateIsUnlocked(
+    validatedPayload.target_user_id ?? user.id,
+    validatedPayload.work_date,
+  );
 
   const { data, error } = await supabase
     .from("timesheets")
@@ -301,6 +306,23 @@ export async function updateTimesheetEntry(
 ): Promise<TimesheetEntry> {
   const validatedPayload = timesheetEntryUpdatePayloadSchema.parse(payload);
 
+  const { data: existingEntry, error: fetchError } = await supabase
+    .from("timesheets")
+    .select("user_id, work_date")
+    .eq("id", id)
+    .single<{ user_id: string; work_date: string }>();
+
+  if (fetchError) throw fetchError;
+
+  if (!existingEntry) {
+    throw new Error(i18n.t("errors.timesheetEntryNotFound"));
+  }
+
+  await assertTimesheetDateIsUnlocked(
+    existingEntry.user_id,
+    validatedPayload.work_date ?? existingEntry.work_date,
+  );
+
   const { data, error } = await supabase
     .from("timesheets")
     .update({
@@ -341,6 +363,8 @@ export async function upsertDailyEntry(
   const normalizedHours = Number.isFinite(parsedHours)
     ? Number(parsedHours.toFixed(2))
     : 0;
+
+  await assertTimesheetDateIsUnlocked(resolvedUserId, params.work_date);
 
   const { data: existingEntries, error: findError } = await supabase
     .from("timesheets")
