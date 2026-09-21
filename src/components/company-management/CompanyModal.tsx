@@ -5,7 +5,8 @@ import type { Company } from "../../types/company";
 export interface CompanyFormData {
   name: string;
   billing_email: string;
-  szamlazz_token: string;
+  szamla_agent_key: string;
+  szamlazz_test_mode: boolean;
   is_active: boolean;
 }
 
@@ -66,14 +67,31 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-600 mb-1">
-              {t("companyManagement.szamlazzToken")}
+              {t("companyManagement.szamlaAgentKey")}
             </label>
             <input
               type="password"
-              value={formData.szamlazz_token}
-              onChange={(e) => onChange({ szamlazz_token: e.target.value })}
+              value={formData.szamla_agent_key}
+              onChange={(e) => onChange({ szamla_agent_key: e.target.value })}
               className="w-full border border-outline rounded p-2 text-sm focus:ring-1 focus:ring-primary"
             />
+          </div>
+          <div className="flex items-center gap-2 pt-2">
+            <input
+              type="checkbox"
+              id="szamlazz_test_mode_check"
+              checked={formData.szamlazz_test_mode}
+              onChange={(e) =>
+                onChange({ szamlazz_test_mode: e.target.checked })
+              }
+              className="rounded text-primary focus:ring-primary"
+            />
+            <label
+              htmlFor="szamlazz_test_mode_check"
+              className="text-sm font-medium text-slate-700"
+            >
+              {t("companyManagement.szamlazzTestMode")}
+            </label>
           </div>
           <div className="flex items-center gap-2 pt-2">
             <input

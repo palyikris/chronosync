@@ -22,13 +22,24 @@ export const companyService = {
     }));
   },
 
+  async fetchCompany(companyId: string): Promise<Company> {
+    const { data, error } = await supabase
+      .from("companies")
+      .select("*")
+      .eq("id", companyId)
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
   async createCompany(input: CreateCompanyInput): Promise<Company> {
     const { data, error } = await supabase
       .from("companies")
       .insert({
         name: input.name,
         billing_email: input.billing_email || null,
-        szamlazz_token: input.szamlazz_token || null,
+        szamla_agent_key: input.szamla_agent_key || null,
+        szamlazz_test_mode: input.szamlazz_test_mode ?? true,
         is_active: input.is_active ?? true,
         is_deleted: false,
         leave_client_id: input.leave_client_id ?? null,
