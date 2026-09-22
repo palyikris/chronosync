@@ -5,7 +5,6 @@ import type { Company } from "../../types/company";
 export interface CompanyFormData {
   name: string;
   billing_email: string;
-  szamla_agent_key: string;
   szamlazz_test_mode: boolean;
   is_active: boolean;
 }
@@ -62,17 +61,6 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
               type="email"
               value={formData.billing_email}
               onChange={(e) => onChange({ billing_email: e.target.value })}
-              className="w-full border border-outline rounded p-2 text-sm focus:ring-1 focus:ring-primary"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">
-              {t("companyManagement.szamlaAgentKey")}
-            </label>
-            <input
-              type="password"
-              value={formData.szamla_agent_key}
-              onChange={(e) => onChange({ szamla_agent_key: e.target.value })}
               className="w-full border border-outline rounded p-2 text-sm focus:ring-1 focus:ring-primary"
             />
           </div>

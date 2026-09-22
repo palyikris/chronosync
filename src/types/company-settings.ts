@@ -1,6 +1,13 @@
 import type React from "react";
 import type { Client, Project } from "./client-project";
 
+export type InvoiceProvider = "szamlazz_hu" | "billingo";
+
+export interface InvoiceSettings {
+  invoice_provider: InvoiceProvider;
+  api_key_configured: boolean;
+}
+
 export interface CompanySettingsHeaderProps {
   title: string;
   subtitle: string;

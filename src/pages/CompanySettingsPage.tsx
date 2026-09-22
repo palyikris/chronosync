@@ -10,7 +10,7 @@ import type { Client, Project } from "../types/client-project";
 import { CompanyLogoCard } from "../components/company-settings/CompanyLogoCard";
 import { LeaveConfigurationCard } from "../components/company-settings/LeaveConfigurationCard";
 import { getCompanyLogoUrl } from "../services/companyLogoService";
-import { SzamlazzSettingsCard } from "../components/company-settings/SzamlazzSettingsCard";
+import { InvoiceSettingsCard } from "../components/company-settings/InvoiceSettingsCard";
 import { companyService } from "../services/companyService";
 
 export const CompanySettingsPage: React.FC = () => {
@@ -29,6 +29,12 @@ export const CompanySettingsPage: React.FC = () => {
     queryKey: ["company", profile?.company_id],
     queryFn: () => companyService.fetchCompany(profile?.company_id || ""),
     enabled: Boolean(profile?.company_id),
+  });
+
+  const { data: invoiceSettings } = useQuery({
+    queryKey: ["invoice-settings", profile?.company_id],
+    queryFn: () => companyService.getInvoiceSettings(companyId),
+    enabled: Boolean(companyId),
   });
 
   const { data: projects = [] } = useQuery<Project[]>({
@@ -73,9 +79,10 @@ export const CompanySettingsPage: React.FC = () => {
           projects={projects}
         />
 
-        <SzamlazzSettingsCard
+        <InvoiceSettingsCard
+          key={`${companyId}-${invoiceSettings?.invoice_provider ?? "szamlazz_hu"}-${invoiceSettings?.api_key_configured ?? false}-${company?.szamlazz_test_mode ?? true}`}
           companyId={companyId}
-          initialKey={company?.szamla_agent_key ?? ""}
+          settings={invoiceSettings}
           initialTestMode={company?.szamlazz_test_mode ?? true}
           onUpdate={refetchCompanyData}
         />

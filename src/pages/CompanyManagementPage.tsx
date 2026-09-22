@@ -23,7 +23,6 @@ export const CompanyManagementPage: React.FC = () => {
   const [formData, setFormData] = useState<CompanyFormData>({
     name: "",
     billing_email: "",
-    szamla_agent_key: "",
     szamlazz_test_mode: true,
     is_active: true,
   });
@@ -56,7 +55,6 @@ export const CompanyManagementPage: React.FC = () => {
       companyService.updateCompany(id, {
         name: input.name.trim(),
         billing_email: input.billing_email.trim() || null,
-        szamla_agent_key: input.szamla_agent_key.trim() || null,
         szamlazz_test_mode: input.szamlazz_test_mode,
         is_active: input.is_active,
       }),
@@ -110,7 +108,6 @@ export const CompanyManagementPage: React.FC = () => {
     setFormData({
       name: "",
       billing_email: "",
-      szamla_agent_key: "",
       szamlazz_test_mode: true,
       is_active: true,
     });
@@ -126,7 +123,6 @@ export const CompanyManagementPage: React.FC = () => {
     setFormData({
       name: company.name,
       billing_email: company.billing_email || "",
-      szamla_agent_key: company.szamla_agent_key || "",
       szamlazz_test_mode: company.szamlazz_test_mode,
       is_active: company.is_active,
     });
@@ -147,7 +143,6 @@ export const CompanyManagementPage: React.FC = () => {
         await createCompanyMutation.mutateAsync({
           name: formData.name.trim(),
           billing_email: formData.billing_email.trim() || undefined,
-          szamla_agent_key: formData.szamla_agent_key.trim() || undefined,
           szamlazz_test_mode: formData.szamlazz_test_mode,
           is_active: formData.is_active,
         });

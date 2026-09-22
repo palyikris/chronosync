@@ -5,18 +5,88 @@ import {
   type CreateCompanyInput,
   type UpdateCompanyInput,
 } from "../types/company";
+import type {
+  InvoiceProvider,
+  InvoiceSettings,
+} from "../types/company-settings";
+
+const getInvoiceApiUrl = () => {
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+  if (!apiBaseUrl) throw new Error("Invoice settings API is not configured.");
+  return `${apiBaseUrl.replace(/\/$/, "")}/api/v1/company/invoice-settings`;
+};
+
+const getAccessToken = async () => {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.access_token) throw new Error("Not authenticated.");
+  return session.access_token;
+};
 
 export const companyService = {
+  async getInvoiceSettings(companyId: string): Promise<InvoiceSettings> {
+    const response = await fetch(
+      `${getInvoiceApiUrl()}?company_id=${encodeURIComponent(companyId)}`,
+      { headers: { Authorization: `Bearer ${await getAccessToken()}` } },
+    );
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || "Failed to load invoice settings.");
+    }
+    return response.json() as Promise<InvoiceSettings>;
+  },
+
+  async updateInvoiceSettings(
+    companyId: string,
+    provider: InvoiceProvider,
+    apiKey?: string,
+    testMode?: boolean,
+  ): Promise<InvoiceSettings> {
+    const response = await fetch(getInvoiceApiUrl(), {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${await getAccessToken()}`,
+      },
+      body: JSON.stringify({
+        company_id: companyId,
+        invoice_provider: provider,
+        ...(apiKey ? { api_key: apiKey } : {}),
+      }),
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || "Failed to save invoice settings.");
+    }
+
+    if (provider === "szamlazz_hu" && testMode !== undefined) {
+      const { error } = await supabase
+        .from("companies")
+        .update({ szamlazz_test_mode: testMode })
+        .eq("id", companyId);
+      if (error) throw error;
+    }
+
+    return response.json() as Promise<InvoiceSettings>;
+  },
+
   // Get all companies including active user count
   async getCompanies(): Promise<Company[]> {
     const { data, error } = await supabase
       .from("companies")
-      .select("*, profiles(count)")
+      .select(
+        "id, name, billing_email, szamlazz_test_mode, is_active, is_deleted, deleted_at, leave_client_id, leave_project_id, created_at, profiles(count)",
+      )
       .order("created_at", { ascending: false });
 
     if (error) throw error;
 
-    return (data || []).map((row: any) => ({
+    type CompanyRow = Company & {
+      profiles?: Array<{ count?: number }>;
+    };
+
+    return ((data || []) as CompanyRow[]).map((row) => ({
       ...row,
       user_count: row.profiles ? row.profiles[0]?.count || 0 : 0,
     }));
@@ -25,7 +95,9 @@ export const companyService = {
   async fetchCompany(companyId: string): Promise<Company> {
     const { data, error } = await supabase
       .from("companies")
-      .select("*")
+      .select(
+        "id, name, billing_email, szamlazz_test_mode, is_active, is_deleted, deleted_at, leave_client_id, leave_project_id, created_at",
+      )
       .eq("id", companyId)
       .single();
     if (error) throw error;
@@ -38,7 +110,6 @@ export const companyService = {
       .insert({
         name: input.name,
         billing_email: input.billing_email || null,
-        szamla_agent_key: input.szamla_agent_key || null,
         szamlazz_test_mode: input.szamlazz_test_mode ?? true,
         is_active: input.is_active ?? true,
         is_deleted: false,

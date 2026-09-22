@@ -13,6 +13,20 @@ export const passwordSchema = z
 
 export const uuidSchema = z.string().uuid(i18n.t("validation.validUuid"));
 
+export const szamlazzAgentKeySchema = z
+  .string()
+  .trim()
+  .min(1, i18n.t("companySettings.szamlazzKeyRequired"))
+  .max(512, i18n.t("companySettings.szamlazzKeyTooLong"));
+
+export const invoiceProviderSchema = z.enum(["szamlazz_hu", "billingo"]);
+
+export const invoiceApiKeySchema = z
+  .string()
+  .trim()
+  .min(1, i18n.t("companySettings.invoiceApiKeyRequired"))
+  .max(512, i18n.t("companySettings.invoiceApiKeyTooLong"));
+
 export const trimmedNonEmptyStringSchema = (message: string, maxLength = 255) =>
   z.string().trim().min(1, message).max(maxLength);
 

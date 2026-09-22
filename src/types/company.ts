@@ -3,7 +3,6 @@ export interface Company {
   id: string;
   name: string;
   billing_email: string | null;
-  szamla_agent_key: string | null;
   szamlazz_test_mode: boolean;
   is_active: boolean;
   is_deleted: boolean;
@@ -17,7 +16,6 @@ export interface Company {
 export interface CreateCompanyInput {
   name: string;
   billing_email?: string;
-  szamla_agent_key?: string;
   szamlazz_test_mode?: boolean;
   is_active?: boolean;
   leave_client_id?: string | null;
@@ -27,7 +25,6 @@ export interface CreateCompanyInput {
 export interface UpdateCompanyInput {
   name?: string;
   billing_email?: string | null;
-  szamla_agent_key?: string | null;
   szamlazz_test_mode?: boolean;
   is_active?: boolean;
   leave_client_id?: string | null;
