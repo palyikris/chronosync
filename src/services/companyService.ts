@@ -13,7 +13,7 @@ import type {
 const getInvoiceApiUrl = () => {
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
   if (!apiBaseUrl) throw new Error("Invoice settings API is not configured.");
-  return `${apiBaseUrl.replace(/\/$/, "")}/api/v1/company/invoice-settings`;
+  return `${apiBaseUrl.replace(/\/$/, "")}/company/invoice-settings`;
 };
 
 const getAccessToken = async () => {
