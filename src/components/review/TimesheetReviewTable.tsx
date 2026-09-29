@@ -78,7 +78,8 @@ export const TimesheetReviewTable: React.FC<TimesheetReviewTableProps> = ({
     },
   });
 
-  // 1. Group ALL entries globally by Client -> Project
+  // 1. Group ALL entries globally by Client -> Project and apply the default
+  // reviewer sort: clients A-Z, projects A-Z within each client, submissions newest-first.
   const allGroupedClients = useMemo(() => {
     const clientMap: Record<
       string,
@@ -129,25 +130,47 @@ export const TimesheetReviewTable: React.FC<TimesheetReviewTableProps> = ({
       clientMap[clientId].projects[projectId].totalHours += hours;
     });
 
-    return Object.values(clientMap).map((client) => {
-      const projectList = Object.values(client.projects);
-      const clientTotalHours = projectList.reduce(
-        (sum, p) => sum + p.totalHours,
-        0,
-      );
-      const totalEntriesCount = projectList.reduce(
-        (sum, p) => sum + p.entries.length,
-        0,
-      );
+    const compareNames = (left?: string | null, right?: string | null) =>
+      (left ?? "").localeCompare(right ?? "", undefined, {
+        sensitivity: "base",
+      });
 
-      return {
-        clientId: client.clientId,
-        clientName: client.clientName,
-        projects: projectList,
-        totalHours: clientTotalHours,
-        totalEntriesCount,
-      } as ClientGroup;
-    });
+    const getEntryTimestamp = (entry: TimesheetReviewRecord) => {
+      const rawTime = entry.submitted_at || entry.created_at || entry.work_date;
+      const candidate = rawTime.includes("T") ? rawTime : `${rawTime}T00:00:00`;
+      const parsed = new Date(candidate).getTime();
+      return Number.isNaN(parsed) ? 0 : parsed;
+    };
+
+    return Object.values(clientMap)
+      .map((client) => {
+        const projectList = Object.values(client.projects)
+          .sort((a, b) => compareNames(a.projectName, b.projectName))
+          .map((project) => ({
+            ...project,
+            entries: [...project.entries].sort(
+              (a, b) => getEntryTimestamp(b) - getEntryTimestamp(a),
+            ),
+          }));
+
+        const clientTotalHours = projectList.reduce(
+          (sum, project) => sum + project.totalHours,
+          0,
+        );
+        const totalEntriesCount = projectList.reduce(
+          (sum, project) => sum + project.entries.length,
+          0,
+        );
+
+        return {
+          clientId: client.clientId,
+          clientName: client.clientName,
+          projects: projectList,
+          totalHours: clientTotalHours,
+          totalEntriesCount,
+        } as ClientGroup;
+      })
+      .sort((a, b) => compareNames(a.clientName, b.clientName));
   }, [entries, t]);
 
   // 2. Paginate over unique CLIENTS
