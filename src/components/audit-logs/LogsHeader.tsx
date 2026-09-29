@@ -1,6 +1,7 @@
 import React from "react";
 import { Card } from "../shared/Card";
 import { Button } from "../shared/Button";
+import { Tooltip } from "../shared/Tooltip";
 import type { AuditLogEntry } from "../../types/logs";
 import { useTranslation } from "react-i18next";
 import { RefreshCw } from "lucide-react";
@@ -94,21 +95,24 @@ export const AuditLogHeader: React.FC<AuditLogHeaderProps> = ({
             {t("auditLogs.operationBreakdown")}
           </span>
           <div className="flex h-3 w-full overflow-hidden rounded-full border border-border-strong bg-bg-accent">
-            <div
-              className="h-full bg-primary transition-all"
-              style={{ width: `${insPct}%` }}
-              title={t("auditLogs.insertTooltip", { pct: insPct })}
-            />
-            <div
-              className="h-full bg-primary/70 transition-all"
-              style={{ width: `${updPct}%` }}
-              title={t("auditLogs.updateTooltip", { pct: updPct })}
-            />
-            <div
-              className="h-full bg-danger transition-all"
-              style={{ width: `${delPct}%` }}
-              title={t("auditLogs.deleteTooltip", { pct: delPct })}
-            />
+            <Tooltip content={t("auditLogs.insertTooltip", { pct: insPct })}>
+              <div
+                className="h-full bg-primary transition-all"
+                style={{ width: `${insPct}%` }}
+              />
+            </Tooltip>
+            <Tooltip content={t("auditLogs.updateTooltip", { pct: updPct })}>
+              <div
+                className="h-full bg-primary/70 transition-all"
+                style={{ width: `${updPct}%` }}
+              />
+            </Tooltip>
+            <Tooltip content={t("auditLogs.deleteTooltip", { pct: delPct })}>
+              <div
+                className="h-full bg-danger transition-all"
+                style={{ width: `${delPct}%` }}
+              />
+            </Tooltip>
           </div>
           <div className="flex justify-between text-xs text-muted px-1">
             <div className="flex items-center gap-1">

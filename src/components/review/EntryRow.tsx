@@ -1,5 +1,6 @@
 import React from "react";
 import { Check, Undo2, X } from "lucide-react";
+import { Tooltip } from "../shared/Tooltip";
 import { StatusBadge } from "./StatusBadge";
 import type { TimesheetReviewRecord } from "./types";
 
@@ -51,9 +52,9 @@ export const EntryRow: React.FC<EntryRowProps> = React.memo(
         </td>
 
         <td className="p-3.5 font-medium text-slate-900 w-[200px]">
-          <span className="truncate block max-w-[190px]" title={userDisplay}>
-            {userDisplay}
-          </span>
+          <Tooltip content={userDisplay}>
+            <span className="truncate block max-w-[190px]">{userDisplay}</span>
+          </Tooltip>
         </td>
 
         <td className="p-3.5 text-slate-500 font-mono text-xs whitespace-nowrap w-[110px]">
@@ -61,12 +62,11 @@ export const EntryRow: React.FC<EntryRowProps> = React.memo(
         </td>
 
         <td className="p-3.5 text-slate-600">
-          <span
-            className="truncate block max-w-[340px]"
-            title={entry.description || ""}
-          >
-            {entry.description || "—"}
-          </span>
+          <Tooltip content={entry.description || "—"}>
+            <span className="truncate block max-w-[340px]">
+              {entry.description || "—"}
+            </span>
+          </Tooltip>
         </td>
 
         <td className="p-3.5 text-right font-mono font-bold text-slate-900 w-[100px]">
@@ -81,33 +81,36 @@ export const EntryRow: React.FC<EntryRowProps> = React.memo(
           <div className="flex items-center justify-end gap-1">
             {entry.status === "submitted" && (
               <>
-                <button
-                  type="button"
-                  onClick={() => onOpenReject(entry.id)}
-                  className="w-7 h-7 rounded flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
-                  title={rejectLabel}
-                >
-                  <X className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onApprove(entry.id)}
-                  className="w-7 h-7 rounded flex items-center justify-center text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
-                  title={approveLabel}
-                >
-                  <Check className="w-4 h-4" />
-                </button>
+                <Tooltip content={rejectLabel}>
+                  <button
+                    type="button"
+                    onClick={() => onOpenReject(entry.id)}
+                    className="w-7 h-7 rounded flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </Tooltip>
+                <Tooltip content={approveLabel}>
+                  <button
+                    type="button"
+                    onClick={() => onApprove(entry.id)}
+                    className="w-7 h-7 rounded flex items-center justify-center text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
+                  >
+                    <Check className="w-4 h-4" />
+                  </button>
+                </Tooltip>
               </>
             )}
             {entry.status === "approved" && (
-              <button
-                type="button"
-                onClick={() => onRevert(entry.id)}
-                className="w-7 h-7 rounded flex items-center justify-center text-slate-400 hover:bg-amber-50 hover:text-amber-600 transition-colors"
-                title={revertLabel}
-              >
-                <Undo2 className="w-4 h-4" />
-              </button>
+              <Tooltip content={revertLabel}>
+                <button
+                  type="button"
+                  onClick={() => onRevert(entry.id)}
+                  className="w-7 h-7 rounded flex items-center justify-center text-slate-400 hover:bg-amber-50 hover:text-amber-600 transition-colors"
+                >
+                  <Undo2 className="w-4 h-4" />
+                </button>
+              </Tooltip>
             )}
           </div>
         </td>

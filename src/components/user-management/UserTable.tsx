@@ -9,6 +9,7 @@ import {
   UserX,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Tooltip } from "../shared/Tooltip";
 import type { UserProfile } from "../../types/auth";
 
 interface UserTableProps {
@@ -153,58 +154,65 @@ export const UserTable: React.FC<UserTableProps> = ({
                   <td className="px-6 py-4 relative text-center">
                     <div className="flex justify-center items-center gap-2 text-muted">
                       {member.email && (
-                        <button
-                          type="button"
-                          title={
+                        <Tooltip
+                          content={
                             sendingResetEmail === member.email
                               ? t("users.sending")
                               : t("users.sendPasswordReset")
                           }
-                          onClick={() => onSendPasswordReset(member.email)}
-                          disabled={sendingResetEmail === member.email}
-                          className={`p-1.5 rounded-full transition ${
-                            sendingResetEmail === member.email
-                              ? "bg-gray-100"
-                              : "hover:bg-gray-100"
-                          }`}
                         >
-                          <Mail
-                            className={`w-4 h-4 text-muted ${
+                          <button
+                            type="button"
+                            onClick={() => onSendPasswordReset(member.email)}
+                            disabled={sendingResetEmail === member.email}
+                            className={`p-1.5 rounded-full transition ${
                               sendingResetEmail === member.email
-                                ? "opacity-60"
-                                : ""
+                                ? "bg-gray-100"
+                                : "hover:bg-gray-100"
                             }`}
-                          />
-                        </button>
+                          >
+                            <Mail
+                              className={`w-4 h-4 text-muted ${
+                                sendingResetEmail === member.email
+                                  ? "opacity-60"
+                                  : ""
+                              }`}
+                            />
+                          </button>
+                        </Tooltip>
                       )}
-                      <button
-                        type="button"
-                        title={
+                      <Tooltip
+                        content={
                           member.is_active
                             ? t("users.deactivateUser")
                             : t("users.reactivateUser")
                         }
-                        onClick={() => onToggleStatus(member)}
-                        className={`p-1.5 rounded-full transition ${
-                          member.is_active
-                            ? "hover:bg-red-50 text-red-600"
-                            : "hover:bg-green-50 text-green-600"
-                        }`}
                       >
-                        {member.is_active ? (
-                          <UserX className="w-4 h-4" />
-                        ) : (
-                          <UserCheck className="w-4 h-4" />
-                        )}
-                      </button>
-                      <button
-                        type="button"
-                        title={t("users.permanentlyDeleteUser")}
-                        onClick={() => onDeleteUser(member)}
-                        className="p-1.5 hover:bg-red-50 rounded-full transition text-red-600"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => onToggleStatus(member)}
+                          className={`p-1.5 rounded-full transition ${
+                            member.is_active
+                              ? "hover:bg-red-50 text-red-600"
+                              : "hover:bg-green-50 text-green-600"
+                          }`}
+                        >
+                          {member.is_active ? (
+                            <UserX className="w-4 h-4" />
+                          ) : (
+                            <UserCheck className="w-4 h-4" />
+                          )}
+                        </button>
+                      </Tooltip>
+                      <Tooltip content={t("users.permanentlyDeleteUser")}>
+                        <button
+                          type="button"
+                          onClick={() => onDeleteUser(member)}
+                          className="p-1.5 hover:bg-red-50 rounded-full transition text-red-600"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </Tooltip>
                     </div>
                   </td>
                 </tr>

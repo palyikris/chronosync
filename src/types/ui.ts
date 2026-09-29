@@ -16,6 +16,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   variant?: ButtonVariant;
   size?: ButtonSize;
   icon?: React.ReactNode;
+  tooltip?: React.ReactNode;
 }
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {

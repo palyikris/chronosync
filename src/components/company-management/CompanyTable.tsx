@@ -1,6 +1,15 @@
 import React from "react";
-import { Check, ChevronLeft, ChevronRight, Edit3, Trash2, UserCheck, UserX } from "lucide-react";
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Edit3,
+  Trash2,
+  UserCheck,
+  UserX,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Tooltip } from "../shared/Tooltip";
 import type { Company } from "../../types/company";
 
 interface CompanyTableProps {
@@ -142,63 +151,78 @@ export const CompanyTable: React.FC<CompanyTableProps> = ({
                       <div className="flex justify-center items-center gap-2 text-muted">
                         {!isDeleted ? (
                           <>
-                            <button
-                              type="button"
-                              title={
+                            <Tooltip
+                              content={
                                 company.is_active
                                   ? t("companyManagement.disableTenant")
                                   : t("companyManagement.enableTenant")
                               }
-                              onClick={() => onToggleActive(company)}
-                              className={`p-1.5 rounded-full transition ${
-                                company.is_active
-                                  ? "hover:bg-red-50 text-red-600"
-                                  : "hover:bg-green-50 text-green-600"
-                              }`}
                             >
-                              {company.is_active ? (
-                                <UserX className="w-4 h-4" />
-                              ) : (
-                                <UserCheck className="w-4 h-4" />
-                              )}
-                            </button>
-                            <button
-                              type="button"
-                              title={t("companyManagement.editCompany")}
-                              onClick={() => onEdit(company)}
-                              className="p-1.5 rounded-full transition hover:bg-gray-100"
+                              <button
+                                type="button"
+                                onClick={() => onToggleActive(company)}
+                                className={`p-1.5 rounded-full transition ${
+                                  company.is_active
+                                    ? "hover:bg-red-50 text-red-600"
+                                    : "hover:bg-green-50 text-green-600"
+                                }`}
+                              >
+                                {company.is_active ? (
+                                  <UserX className="w-4 h-4" />
+                                ) : (
+                                  <UserCheck className="w-4 h-4" />
+                                )}
+                              </button>
+                            </Tooltip>
+                            <Tooltip
+                              content={t("companyManagement.editCompany")}
                             >
-                              <Edit3 className="w-4 h-4" />
-                            </button>
-                            <button
-                              type="button"
-                              title={t("companyManagement.softDelete")}
-                              onClick={() => onSoftDelete(company.id)}
-                              className="p-1.5 hover:bg-red-50 rounded-full transition text-red-600"
+                              <button
+                                type="button"
+                                onClick={() => onEdit(company)}
+                                className="p-1.5 rounded-full transition hover:bg-gray-100"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </button>
+                            </Tooltip>
+                            <Tooltip
+                              content={t("companyManagement.softDelete")}
                             >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                              <button
+                                type="button"
+                                onClick={() => onSoftDelete(company.id)}
+                                className="p-1.5 hover:bg-red-50 rounded-full transition text-red-600"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </Tooltip>
                           </>
                         ) : (
                           <>
-                            <button
-                              type="button"
-                              title={t("companyManagement.restoreCompany")}
-                              onClick={() => onRestore(company.id)}
-                              className="p-1.5 rounded-full transition hover:bg-green-50 text-green-600"
+                            <Tooltip
+                              content={t("companyManagement.restoreCompany")}
                             >
-                              <Check className="w-4 h-4" />
-                            </button>
-                            <button
-                              type="button"
-                              title={t(
+                              <button
+                                type="button"
+                                onClick={() => onRestore(company.id)}
+                                className="p-1.5 rounded-full transition hover:bg-green-50 text-green-600"
+                              >
+                                <Check className="w-4 h-4" />
+                              </button>
+                            </Tooltip>
+                            <Tooltip
+                              content={t(
                                 "companyManagement.hardDeletePermanently",
                               )}
-                              onClick={() => onHardDelete(company.id)}
-                              className="p-1.5 hover:bg-red-50 rounded-full transition text-red-600"
                             >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                              <button
+                                type="button"
+                                onClick={() => onHardDelete(company.id)}
+                                className="p-1.5 hover:bg-red-50 rounded-full transition text-red-600"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </Tooltip>
                           </>
                         )}
                       </div>

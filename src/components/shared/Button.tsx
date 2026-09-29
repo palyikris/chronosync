@@ -1,6 +1,7 @@
 import React from "react";
 import { cn } from "../../utils/cn";
 import type { ButtonProps, ButtonSize, ButtonVariant } from "../../types/ui";
+import { Tooltip } from "./Tooltip";
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
@@ -29,6 +30,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       type = "button",
       icon,
       children,
+      tooltip,
+      title: _title,
       ...props
     },
     ref,
@@ -47,7 +50,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       className,
     );
 
-    return (
+    const button = (
       <button ref={ref} type={type} className={buttonClasses} {...props}>
         {showIconSwap ? (
           <>
@@ -77,6 +80,12 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         )}
       </button>
     );
+
+    if (!tooltip) {
+      return button;
+    }
+
+    return <Tooltip content={tooltip}>{button}</Tooltip>;
   },
 );
 

@@ -188,8 +188,15 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
             variant="primary"
             onClick={() => setShowNewProjectForm((value) => !value)}
             className="rounded-xl px-3"
+            tooltip={
+              showNewProjectForm
+                ? t("companySettings.hideProjectForm")
+                : t("companySettings.showProjectForm")
+            }
             aria-label={
-              showNewProjectForm ? "Hide project form" : "Show project form"
+              showNewProjectForm
+                ? t("companySettings.hideProjectForm")
+                : t("companySettings.showProjectForm")
             }
             icon={
               showNewProjectForm ? (
@@ -313,6 +320,16 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                     onClick={() => handleToggleActivity(project)}
                     disabled={loading}
                     className="rounded-xl px-3"
+                    tooltip={
+                      project.is_active
+                        ? t("companySettings.deactivateProject")
+                        : t("companySettings.activateProject")
+                    }
+                    aria-label={
+                      project.is_active
+                        ? t("companySettings.deactivateProject")
+                        : t("companySettings.activateProject")
+                    }
                     icon={
                       project.is_active ? (
                         <ToggleRight className="h-4 w-4" />
@@ -327,6 +344,8 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                     onClick={() => setEditingProject(project)}
                     disabled={loading}
                     className="rounded-xl px-3"
+                    tooltip={t("companySettings.editProject")}
+                    aria-label={t("companySettings.editProject")}
                     icon={<PencilLine className="h-4 w-4" />}
                   ></Button>
                   <Button
@@ -335,6 +354,8 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                     onClick={() => setDeletingProjectId(project.id)}
                     disabled={loading}
                     className="rounded-xl px-3"
+                    tooltip={t("companySettings.deleteProject")}
+                    aria-label={t("companySettings.deleteProject")}
                     icon={<Trash2 className="h-4 w-4" />}
                   ></Button>
                 </div>

@@ -211,6 +211,7 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
                           onClick={() => onEditEntry(entry)}
                           disabled={isUpdating}
                           className="h-8 w-8 rounded-full text-primary-strong hover:bg-[#e6f0d6]"
+                          tooltip={t("timesheet.editEntry")}
                           aria-label={t("timesheet.editEntry")}
                           icon={<Edit className="h-4 w-4" />}
                         ></Button>
@@ -222,6 +223,7 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
                         onClick={() => onDuplicateEntry(entry)}
                         disabled={isDuplicating}
                         className="h-8 w-8 rounded-full text-indigo-600 hover:bg-indigo-50"
+                        tooltip={t("timesheet.duplicateToToday")}
                         aria-label={t("timesheet.duplicateToToday")}
                         icon={<Copy className="h-4 w-4" />}
                       ></Button>
@@ -233,6 +235,7 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
                           onClick={() => handleRevertToDraft([entry.id])}
                           disabled={isDuplicating}
                           className="h-8 w-8 rounded-full text-indigo-600 hover:bg-indigo-50"
+                          tooltip={t("timesheet.revertToDraft")}
                           aria-label={t("timesheet.revertToDraft")}
                           icon={<Undo2 className="w-4 h-4" />}
                         ></Button>
@@ -246,6 +249,7 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
                           onClick={() => onDeleteEntry(entry.id)}
                           disabled={isDeleting}
                           className="h-8 w-8 rounded-full text-danger hover:bg-red-50"
+                          tooltip={t("timesheet.deleteEntry")}
                           aria-label={t("timesheet.deleteEntry")}
                           icon={<Trash2 className="h-4 w-4" />}
                         ></Button>
@@ -258,6 +262,7 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
                           onClick={() => handleSubmitSingleEntry(entry.id)}
                           disabled={isUpdating}
                           className="h-8 w-8 rounded-full text-green-600 hover:bg-green-50"
+                          tooltip={t("timesheet.submitEntry")}
                           aria-label={t("timesheet.submitEntry")}
                           icon={<CalendarCheck2 className="h-4 w-4" />}
                         ></Button>

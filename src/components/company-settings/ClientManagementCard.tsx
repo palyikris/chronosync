@@ -277,8 +277,15 @@ export const ClientManagementCard: React.FC<Props> = ({
             variant="primary"
             onClick={() => setShowNewClientForm((value) => !value)}
             className="rounded-xl px-3"
+            tooltip={
+              showNewClientForm
+                ? t("companySettings.hideClientForm")
+                : t("companySettings.showClientForm")
+            }
             aria-label={
-              showNewClientForm ? "Hide client form" : "Show client form"
+              showNewClientForm
+                ? t("companySettings.hideClientForm")
+                : t("companySettings.showClientForm")
             }
             icon={
               showNewClientForm ? (
@@ -450,6 +457,16 @@ export const ClientManagementCard: React.FC<Props> = ({
                     onClick={() => handleToggleActivity(client)}
                     disabled={loading}
                     className="rounded-xl px-3"
+                    tooltip={
+                      client.is_active
+                        ? t("companySettings.deactivateClient")
+                        : t("companySettings.activateClient")
+                    }
+                    aria-label={
+                      client.is_active
+                        ? t("companySettings.deactivateClient")
+                        : t("companySettings.activateClient")
+                    }
                     icon={
                       client.is_active ? (
                         <ToggleRight className="h-4 w-4" />
@@ -464,6 +481,16 @@ export const ClientManagementCard: React.FC<Props> = ({
                     onClick={() => handleToggleDefault(client)}
                     disabled={loading}
                     className="rounded-xl px-3"
+                    tooltip={
+                      client.is_default
+                        ? t("companySettings.removeClientDefault")
+                        : t("companySettings.setClientDefault")
+                    }
+                    aria-label={
+                      client.is_default
+                        ? t("companySettings.removeClientDefault")
+                        : t("companySettings.setClientDefault")
+                    }
                     icon={<Star className="h-4 w-4" />}
                   ></Button>
                   <Button
@@ -485,6 +512,8 @@ export const ClientManagementCard: React.FC<Props> = ({
                     }
                     disabled={loading}
                     className="rounded-xl px-3"
+                    tooltip={t("companySettings.editClient")}
+                    aria-label={t("companySettings.editClient")}
                     icon={<PencilLine className="h-4 w-4" />}
                   ></Button>
                   <Button
@@ -493,6 +522,8 @@ export const ClientManagementCard: React.FC<Props> = ({
                     onClick={() => setDeletingClientId(client.id)}
                     disabled={loading}
                     className="rounded-xl px-3"
+                    tooltip={t("companySettings.deleteClient")}
+                    aria-label={t("companySettings.deleteClient")}
                     icon={<Trash2 className="h-4 w-4" />}
                   ></Button>
                 </div>
