@@ -118,6 +118,7 @@ export interface TimesheetCalendarProps {
   timesheets: TimesheetEntry[];
   totalMonthlyHours: number;
   lockedDates?: string[];
+  copyModeActive?: boolean;
   onSelectDate: (date: string) => void;
   onPreviousMonth: () => void;
   onNextMonth: () => void;

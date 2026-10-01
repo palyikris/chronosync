@@ -264,7 +264,10 @@ export async function stopTimer(
   return createdEntry;
 }
 
-export async function cloneEntry(entryId: string): Promise<TimesheetEntry> {
+export async function cloneEntry(
+  entryId: string,
+  workDate: string,
+): Promise<TimesheetEntry> {
   const user = await getCurrentUser();
 
   const { data: existingEntry, error: fetchError } = await supabase
@@ -278,7 +281,6 @@ export async function cloneEntry(entryId: string): Promise<TimesheetEntry> {
     throw new Error(i18n.t("errors.timesheetEntryNotFound"));
   }
 
-  const today = new Date().toISOString().slice(0, 10);
   const { data, error } = await supabase
     .from("timesheets")
     .insert([
@@ -287,7 +289,7 @@ export async function cloneEntry(entryId: string): Promise<TimesheetEntry> {
         company_id: existingEntry.company_id,
         client_id: existingEntry.client_id,
         project_id: existingEntry.project_id,
-        work_date: today,
+        work_date: workDate,
         hours_logged: Number(existingEntry.hours_logged),
         description: existingEntry.description,
       },

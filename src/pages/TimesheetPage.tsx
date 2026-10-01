@@ -72,6 +72,8 @@ export const TimesheetPage: React.FC = () => {
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editEntryId, setEditEntryId] = useState<string | null>(null);
+  const [pendingCopyEntry, setPendingCopyEntry] =
+    useState<TimesheetEntry | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [selectedClientId, setSelectedClientId] = useState<string>("");
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
@@ -370,67 +372,23 @@ export const TimesheetPage: React.FC = () => {
   });
 
   const duplicateMutation = useMutation({
-    mutationFn: cloneEntry,
-    onMutate: async (entryId: string) => {
-      await queryClient.cancelQueries({
-        queryKey: ["timesheets", targetUserId],
-      });
-
-      const previousTimesheets =
-        queryClient.getQueryData<TimesheetEntry[]>([
-          "timesheets",
-          targetUserId,
-          yearMonth,
-        ]) ?? [];
-      const sourceEntry = previousTimesheets.find(
-        (entry) => entry.id === entryId,
-      );
-
-      if (!sourceEntry) {
-        return { previousTimesheets, optimisticEntryId: null };
-      }
-
-      const optimisticEntry: TimesheetEntry = {
-        ...sourceEntry,
-        id: `optimistic-${entryId}-${Date.now()}`,
-        work_date: getLocalDateValue(new Date()),
-        created_at: new Date().toISOString(),
-      };
-
-      queryClient.setQueryData<TimesheetEntry[]>(
-        ["timesheets", targetUserId, yearMonth],
-        (currentTimesheets = []) => [optimisticEntry, ...currentTimesheets],
-      );
-
-      return { previousTimesheets, optimisticEntryId: optimisticEntry.id };
-    },
-    onError: (error, _entryId, context) => {
-      if (context?.previousTimesheets) {
-        queryClient.setQueryData(
-          ["timesheets", targetUserId, yearMonth],
-          context.previousTimesheets,
-        );
-      }
-
+    mutationFn: ({
+      entry,
+      workDate,
+    }: {
+      entry: TimesheetEntry;
+      workDate: string;
+    }) => cloneEntry(entry.id, workDate),
+    onError: (error) => {
       const message =
         error instanceof Error ? error.message : t("timesheet.duplicateFailed");
       window.alert(message);
-    },
-    onSuccess: (createdEntry, _entryId, context) => {
-      if (!context?.optimisticEntryId) return;
-
-      queryClient.setQueryData<TimesheetEntry[]>(
-        ["timesheets", targetUserId, yearMonth],
-        (currentTimesheets = []) =>
-          currentTimesheets.map((entry) =>
-            entry.id === context.optimisticEntryId ? createdEntry : entry,
-          ),
-      );
     },
     onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: ["timesheets", targetUserId],
       });
+      setPendingCopyEntry(null);
     },
   });
 
@@ -478,6 +436,27 @@ export const TimesheetPage: React.FC = () => {
 
   const handleGoToToday = () => {
     applySelectedDate(new Date());
+  };
+
+  const handleCalendarSelect = (date: string) => {
+    if (pendingCopyEntry) {
+      setSelectedDate(date);
+      setCurrentDate(new Date(`${date}T12:00:00`));
+      duplicateMutation.mutate({ entry: pendingCopyEntry, workDate: date });
+      return;
+    }
+
+    setSelectedDate(date);
+    setCurrentDate(new Date(`${date}T12:00:00`));
+  };
+
+  const handleStartCopy = (entry: TimesheetEntry) => {
+    setPendingCopyEntry(entry);
+    setViewMode("calendar");
+  };
+
+  const handleCancelCopy = () => {
+    setPendingCopyEntry(null);
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
@@ -632,19 +611,41 @@ export const TimesheetPage: React.FC = () => {
 
       {viewMode === "calendar" ? (
         <div className="grid gap-4 lg:gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.75fr)] xl:items-stretch">
-          <TimesheetCalendar
-            currentDate={currentDate}
-            selectedDate={selectedDate}
-            timesheets={filteredCurrentMonthTimesheets}
-            totalMonthlyHours={totalCurrentMonthHours}
-            lockedDates={approvedLeaveDates}
-            onSelectDate={(date) => {
-              setSelectedDate(date);
-              setCurrentDate(new Date(`${date}T12:00:00`));
-            }}
-            onPreviousMonth={handlePrevMonth}
-            onNextMonth={handleNextMonth}
-          />
+          <div className="space-y-3">
+            {pendingCopyEntry ? (
+              <Card className="border-dashed border-primary/40 bg-primary/5 p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-strong">
+                      {t("timesheet.copyModeTitle")}
+                    </p>
+                    <p className="mt-1 text-sm text-text">
+                      {t("timesheet.copyModeDescription")}
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCancelCopy}
+                  >
+                    {t("timesheet.cancel")}
+                  </Button>
+                </div>
+              </Card>
+            ) : null}
+
+            <TimesheetCalendar
+              currentDate={currentDate}
+              selectedDate={selectedDate}
+              timesheets={filteredCurrentMonthTimesheets}
+              totalMonthlyHours={totalCurrentMonthHours}
+              lockedDates={approvedLeaveDates}
+              copyModeActive={Boolean(pendingCopyEntry)}
+              onSelectDate={handleCalendarSelect}
+              onPreviousMonth={handlePrevMonth}
+              onNextMonth={handleNextMonth}
+            />
+          </div>
 
           <div className="flex h-full flex-col xl:sticky xl:top-6">
             <div className="flex min-h-0 flex-1 flex-col">
@@ -656,7 +657,7 @@ export const TimesheetPage: React.FC = () => {
                 loading={isLoading}
                 onAddEntry={openCreateModal}
                 onEditEntry={openEditModal}
-                onDuplicateEntry={(entry) => duplicateMutation.mutate(entry.id)}
+                onDuplicateEntry={handleStartCopy}
                 onDeleteEntry={(entryId) => deleteMutation.mutate(entryId)}
                 isUpdating={updateMutation.isPending}
                 isDuplicating={duplicateMutation.isPending}
@@ -680,7 +681,7 @@ export const TimesheetPage: React.FC = () => {
           loading={isLoading}
           onAddEntry={openCreateModal}
           onEditEntry={openEditModal}
-          onDuplicateEntry={(entry) => duplicateMutation.mutate(entry.id)}
+          onDuplicateEntry={handleStartCopy}
           onDeleteEntry={(entryId) => deleteMutation.mutate(entryId)}
           isUpdating={updateMutation.isPending}
           isDuplicating={duplicateMutation.isPending}

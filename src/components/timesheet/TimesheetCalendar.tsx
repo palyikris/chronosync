@@ -15,6 +15,7 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
   timesheets,
   totalMonthlyHours,
   lockedDates = [],
+  copyModeActive = false,
   onSelectDate,
   onPreviousMonth,
   onNextMonth,
@@ -140,7 +141,9 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
                     className={`flex min-h-14 flex-col justify-between border-b border-r border-border-strong p-1.5 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-strong focus-visible:ring-inset sm:min-h-17.5 sm:p-2 ${
                       isLocked
                         ? "cursor-not-allowed bg-slate-100/80 opacity-70"
-                        : "cursor-pointer hover:bg-bg-accent"
+                        : copyModeActive
+                          ? "cursor-pointer bg-primary/5 ring-1 ring-inset ring-primary/20 hover:bg-primary/10 hover:ring-primary/40"
+                          : "cursor-pointer hover:bg-bg-accent"
                     } ${
                       isToday
                         ? "relative bg-bg-accent/60 border border-primary"

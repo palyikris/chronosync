@@ -223,8 +223,8 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
                         onClick={() => onDuplicateEntry(entry)}
                         disabled={isDuplicating}
                         className="h-8 w-8 rounded-full text-indigo-600 hover:bg-indigo-50"
-                        tooltip={t("timesheet.duplicateToToday")}
-                        aria-label={t("timesheet.duplicateToToday")}
+                        tooltip={t("timesheet.copyEntry")}
+                        aria-label={t("timesheet.copyEntry")}
                         icon={<Copy className="h-4 w-4" />}
                       ></Button>
 
