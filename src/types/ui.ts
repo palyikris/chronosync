@@ -38,6 +38,7 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {}
 export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   leftIcon?: React.ReactNode;
   label?: string;
+  placeholder?: string;
 }
 
 export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}

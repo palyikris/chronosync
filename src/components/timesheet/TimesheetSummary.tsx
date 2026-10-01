@@ -2,6 +2,7 @@ import React from "react";
 import { TrendingUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "../shared/Card";
+import { formatHours } from "../../utils/formatHours";
 import type { TimesheetSummaryProps } from "../../types/timesheet";
 
 export const TimesheetSummary: React.FC<TimesheetSummaryProps> = ({ totalMonthlyHours }) => {
@@ -17,7 +18,7 @@ export const TimesheetSummary: React.FC<TimesheetSummaryProps> = ({ totalMonthly
             {t("timesheet.monthTotal")}
           </div>
           <div className="text-xl font-extrabold text-primary-foreground">
-            {totalMonthlyHours} hrs{" "}
+            {formatHours(totalMonthlyHours)} hrs{" "}
             <span className="text-xs font-normal text-gray-600">
               {t("timesheet.hoursLogged")}
             </span>

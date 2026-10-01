@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../shared/Button";
 import { Card, CardContent, CardHeader } from "../shared/Card";
+import { formatHours } from "../../utils/formatHours";
 import type {
   TimesheetCalendarProps,
   TimesheetEntryStatus,
@@ -47,11 +48,6 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
   const today = new Date();
   const todayDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
   const lockedDateSet = new Set(lockedDates);
-
-  const formatHours = (hours: number) =>
-    Number.isInteger(hours)
-      ? `${hours}`
-      : hours.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
 
   const getColorOfEntriesForEntries = (
     entryStatuses: TimesheetEntryStatus[],
@@ -171,9 +167,11 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
                       <div
                         className={`w-full truncate rounded px-1 py-0.5 text-center text-[10px] font-bold ${colorClass}`}
                       >
-                        {dayLogs.reduce(
-                          (sum, entry) => sum + Number(entry.hours_logged),
-                          0,
+                        {formatHours(
+                          dayLogs.reduce(
+                            (sum, entry) => sum + Number(entry.hours_logged),
+                            0,
+                          ),
                         )}
                         h
                       </div>

@@ -203,9 +203,15 @@ export async function getActiveTimerState(): Promise<ActiveTimerState | null> {
   return safeReadActiveTimer(user.id);
 }
 
+export const MAX_TIMER_LOGGED_MINUTES = 24 * 60;
+
+export function shouldPersistTimerEntry(durationMinutes: number): boolean {
+  return Number.isFinite(durationMinutes) && durationMinutes > 0 && durationMinutes <= MAX_TIMER_LOGGED_MINUTES;
+}
+
 export async function stopTimer(
   entryData: ActiveTimerState,
-): Promise<TimesheetEntry> {
+): Promise<TimesheetEntry | null> {
   const user = await getCurrentUser();
   const startedAtMs = Date.parse(entryData.started_at);
 
@@ -217,6 +223,11 @@ export async function stopTimer(
     1,
     Math.round((Date.now() - startedAtMs) / 60000),
   );
+
+  if (!shouldPersistTimerEntry(durationMinutes)) {
+    safeClearActiveTimer(user.id);
+    return null;
+  }
 
   const { data: projectRow, error: projectError } = await supabase
     .from("projects")
