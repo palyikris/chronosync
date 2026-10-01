@@ -162,7 +162,7 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
       onClose={handleClose}
       className="max-w-4xl"
     >
-      <div className="p-6 space-y-5">
+      <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-hidden p-4 sm:p-6">
         <p className="text-sm text-muted">
           {t("dashboard.invoiceAttachmentModalSubtitle")}
         </p>
@@ -180,10 +180,10 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
             {t("dashboard.invoiceAttachmentNoActiveClients")}
           </div>
         ) : (
-          <div className="overflow-hidden rounded-3xl border border-border-strong bg-surface shadow-sm">
-            <div className="border-b border-border-strong bg-bg-accent/80 px-5 py-4">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-border-strong bg-surface shadow-sm">
+            <div className="border-b border-border-strong bg-bg-accent/80 px-4 py-4 sm:px-5">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-semibold text-text">
                     {t("dashboard.invoiceAttachmentSelectionTitle")}
                   </p>
@@ -230,8 +230,8 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
                 </span>
               </div>
             </div>
-            <div className="max-h-96 overflow-auto">
-              <table className="w-full border-collapse text-left">
+            <div className="min-h-0 flex-1 overflow-auto">
+              <table className="min-w-[720px] w-full border-collapse text-left">
                 <thead className="bg-surface text-xs font-semibold uppercase tracking-wide text-muted-strong">
                   <tr>
                     <th className="px-5 py-4">{t("dashboard.clientCode")}</th>
