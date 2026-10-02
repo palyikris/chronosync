@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Briefcase, Clock, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -14,32 +14,109 @@ import { UserBreakdownPanel } from "../components/dashboard/UserBreakdownPanel";
 import { ProjectBreakdownPanel } from "../components/dashboard/ProjectBreakdownPanel";
 import { ProjectUtilizationPanel } from "../components/dashboard/ProjectUtilizationPanel";
 
-export const AdminDashboardPage: React.FC = () => {
-  const { profile } = useAuth();
+const getStartOfMonth = () => {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split("T")[0];
+};
+
+const getEndOfMonth = () => {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth() + 1, 0)
+    .toISOString()
+    .split("T")[0];
+};
+
+const getEndOfMonthForDate = (dateValue: string) => {
+  const [year, month] = dateValue.split("-").map(Number);
+
+  if (!year || !month) {
+    return dateValue;
+  }
+
+  return new Date(year, month, 0).toISOString().split("T")[0];
+};
+
+const getDateRangeStorageKey = (companyId: string) =>
+  `chronosync:dashboard:date-range:${companyId}`;
+
+const isValidDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value);
+
+const readStoredDateRange = (companyId: string) => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const storedValue = window.localStorage.getItem(
+    getDateRangeStorageKey(companyId),
+  );
+
+  if (!storedValue) {
+    return null;
+  }
+
+  try {
+    const parsedValue = JSON.parse(storedValue) as {
+      startDate?: string;
+      endDate?: string;
+    };
+
+    if (
+      parsedValue.startDate &&
+      parsedValue.endDate &&
+      isValidDate(parsedValue.startDate) &&
+      isValidDate(parsedValue.endDate)
+    ) {
+      return {
+        startDate: parsedValue.startDate,
+        endDate: parsedValue.endDate,
+      };
+    }
+  } catch {
+    window.localStorage.removeItem(getDateRangeStorageKey(companyId));
+  }
+
+  return null;
+};
+
+interface DashboardContentProps {
+  companyId: string;
+}
+
+const DashboardContent: React.FC<DashboardContentProps> = ({ companyId }) => {
   const { t } = useTranslation();
+  const [startDate, setStartDate] = useState(() => {
+    return readStoredDateRange(companyId)?.startDate ?? getStartOfMonth();
+  });
+  const [endDate, setEndDate] = useState(() => {
+    return readStoredDateRange(companyId)?.endDate ?? getEndOfMonth();
+  });
 
-  const getStartOfMonth = () => {
-    const d = new Date();
-    return new Date(d.getFullYear(), d.getMonth(), 1)
-      .toISOString()
-      .split("T")[0];
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.localStorage.setItem(
+      getDateRangeStorageKey(companyId),
+      JSON.stringify({ startDate, endDate }),
+    );
+  }, [companyId, endDate, startDate]);
+
+  const handleStartDateChange = (value: string) => {
+    const previousStartMonth = startDate.slice(0, 7);
+    const nextStartMonth = value.slice(0, 7);
+
+    setStartDate(value);
+
+    if (previousStartMonth !== nextStartMonth) {
+      setEndDate(getEndOfMonthForDate(value));
+    }
   };
-
-  const getEndOfMonth = () => {
-    const d = new Date();
-    return new Date(d.getFullYear(), d.getMonth() + 1, 0)
-      .toISOString()
-      .split("T")[0];
-  };
-
-  const [startDate, setStartDate] = useState(getStartOfMonth());
-  const [endDate, setEndDate] = useState(getEndOfMonth());
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["adminDashboard", profile?.company_id, startDate, endDate],
-    queryFn: () =>
-      fetchAdminDashboardData(profile?.company_id || "", startDate, endDate),
-    enabled: !!profile?.company_id,
+    queryKey: ["adminDashboard", companyId, startDate, endDate],
+    queryFn: () => fetchAdminDashboardData(companyId, startDate, endDate),
+    enabled: Boolean(companyId),
   });
 
   const kpis = data?.kpis;
@@ -84,9 +161,9 @@ export const AdminDashboardPage: React.FC = () => {
       <DashboardHeader
         startDate={startDate}
         endDate={endDate}
-        onStartDateChange={setStartDate}
+        onStartDateChange={handleStartDateChange}
         onEndDateChange={setEndDate}
-        companyId={profile?.company_id || ""}
+        companyId={companyId}
       />
 
       {isLoading ? (
@@ -116,5 +193,20 @@ export const AdminDashboardPage: React.FC = () => {
         </>
       )}
     </div>
+  );
+};
+
+export const AdminDashboardPage: React.FC = () => {
+  const { profile } = useAuth();
+  if (!profile?.company_id) {
+    return (
+      <div className="flex justify-center items-center py-24 text-gray-400">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-strong"></div>
+      </div>
+    );
+  }
+
+  return (
+    <DashboardContent key={profile.company_id} companyId={profile.company_id} />
   );
 };

@@ -33,6 +33,7 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
   >([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [updateRemainingHours, setUpdateRemainingHours] = useState(false);
 
   const {
     data: clients = [],
@@ -89,6 +90,7 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
     setManualSelectedClientCodes([]);
     setSubmitError(null);
     setIsGenerating(false);
+    setUpdateRemainingHours(false);
     onClose();
   };
 
@@ -140,6 +142,7 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
         endDate,
         language,
         periodText,
+        updateRemainingHours,
       });
       handleClose();
     } catch (error) {
@@ -217,6 +220,24 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
                   </Button>
                 </div>
               </div>
+              <label className="mt-4 flex items-start gap-3 rounded-2xl border border-border-strong bg-surface px-4 py-3 text-sm text-text">
+                <input
+                  type="checkbox"
+                  checked={updateRemainingHours}
+                  onChange={(event) =>
+                    setUpdateRemainingHours(event.target.checked)
+                  }
+                  className="mt-0.5 h-4 w-4 rounded border-border-strong text-primary focus:ring-primary"
+                />
+                <span>
+                  <span className="block font-medium">
+                    {t("dashboard.invoiceAttachmentUpdateRemainingHoursLabel")}
+                  </span>
+                  <span className="mt-1 block text-sm text-muted">
+                    {t("dashboard.invoiceAttachmentUpdateRemainingHoursHint")}
+                  </span>
+                </span>
+              </label>
               <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-strong">
                 <span className="rounded-full border border-border-strong bg-bg px-3 py-1">
                   {t("dashboard.invoiceAttachmentSelectedCount", {

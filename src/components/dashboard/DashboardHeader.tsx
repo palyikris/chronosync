@@ -22,17 +22,6 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const { t, i18n } = useTranslation();
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = React.useState(false);
   const language = i18n.resolvedLanguage || i18n.language || "en";
-  const previousMonthStartDate = (() => {
-    const date = new Date();
-    date.setDate(1);
-    date.setMonth(date.getMonth() - 1);
-    return date.toISOString().split("T")[0];
-  })();
-  const previousMonthEndDate = (() => {
-    const date = new Date();
-    date.setDate(0);
-    return date.toISOString().split("T")[0];
-  })();
 
   return (
     <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -72,8 +61,8 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       <InvoiceAttachmentModal
         open={isInvoiceModalOpen}
         companyId={companyId}
-        startDate={previousMonthStartDate}
-        endDate={previousMonthEndDate}
+        startDate={startDate}
+        endDate={endDate}
         language={language}
         onClose={() => setIsInvoiceModalOpen(false)}
       />

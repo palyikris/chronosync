@@ -276,6 +276,8 @@
     "invoiceAttachmentNoActiveClients": "No active clients are available for invoice generation.",
     "invoiceAttachmentLoadFailed": "Failed to load active clients.",
     "invoiceAttachmentGenerationFailed": "Failed to generate invoice attachments.",
+    "invoiceAttachmentUpdateRemainingHoursLabel": "Update remaining hours after download",
+    "invoiceAttachmentUpdateRemainingHoursHint": "Leave this off to keep the export read-only. Turn it on only when you want the generated report to update remaining hours in the database.",
     "clientCode": "Client Code",
     "clientName": "Client Name",
     "actions": "Actions",

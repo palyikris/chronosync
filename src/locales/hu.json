@@ -277,6 +277,8 @@
     "invoiceAttachmentNoActiveClients": "Nincs elérhető aktív ügyfél a számlamellékletek generálásához.",
     "invoiceAttachmentLoadFailed": "Nem sikerült betölteni az aktív ügyfeleket.",
     "invoiceAttachmentGenerationFailed": "Nem sikerült generálni a számlamellékleteket.",
+    "invoiceAttachmentUpdateRemainingHoursLabel": "Hátralévő órák frissítése letöltés után",
+    "invoiceAttachmentUpdateRemainingHoursHint": "Hagyd kikapcsolva, ha csak a letöltést szeretnéd. Kapcsold be, ha azt szeretnéd, hogy a generált jelentés az adatbázisban is frissítse a hátralévő órákat.",
     "clientCode": "Ügyfélkód",
     "clientName": "Ügyfélnév",
     "actions": "Műveletek",
