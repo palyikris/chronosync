@@ -599,7 +599,6 @@ export const TimesheetPage: React.FC = () => {
       </Card>
 
       <TimesheetEntryFilter
-        entries={timesheets}
         clients={allClients}
         projects={allProjects}
         selectedClientId={selectedClientId}

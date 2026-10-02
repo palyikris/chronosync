@@ -4,10 +4,8 @@ import { Button } from "../shared/Button";
 import { Card } from "../shared/Card";
 import { Select } from "../shared/Select";
 import type { Client, Project } from "../../types/client-project";
-import type { TimesheetEntry } from "../../types/timesheet";
 import { X } from "lucide-react";
 interface TimesheetEntryFilterProps {
-  entries: TimesheetEntry[];
   clients: Client[];
   projects: Project[];
   selectedClientId: string;
@@ -18,7 +16,6 @@ interface TimesheetEntryFilterProps {
 }
 
 export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
-  entries,
   clients,
   projects,
   selectedClientId,
@@ -30,30 +27,21 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
   const { t } = useTranslation();
 
   const availableClients = React.useMemo(() => {
-    const clientIds = new Set(entries.map((entry) => entry.client_id));
-
     return clients
-      .filter((client) => clientIds.has(client.id))
       .slice()
       .sort((left, right) => left.name.localeCompare(right.name));
-  }, [clients, entries]);
+  }, [clients]);
 
   const availableProjects = React.useMemo(() => {
     if (!selectedClientId) {
       return [];
     }
 
-    const projectIds = new Set(
-      entries
-        .filter((entry) => entry.client_id === selectedClientId)
-        .map((entry) => entry.project_id),
-    );
-
     return projects
-      .filter((project) => projectIds.has(project.id))
+      .filter((project) => project.client_id === selectedClientId)
       .slice()
       .sort((left, right) => left.name.localeCompare(right.name));
-  }, [entries, projects, selectedClientId]);
+  }, [projects, selectedClientId]);
 
   const hasActiveFilter = Boolean(selectedClientId);
 
@@ -88,7 +76,7 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
   ]);
 
   return (
-    <Card className="p-4">
+    <Card className="overflow-visible p-4">
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between gap-3">
           <div>

@@ -186,7 +186,7 @@ export const LiveTimerWidget: React.FC = () => {
   };
 
   return (
-    <Card>
+    <Card className="overflow-visible">
       <div className="h-1 bg-linear-to-r from-primary-strong via-primary to-primary/60" />
 
       <CardContent className="flex flex-col gap-3 px-3 py-3 lg:px-4 lg:py-4">
