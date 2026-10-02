@@ -101,12 +101,13 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="col-span-2 sm:col-span-1">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="w-full">
             <label className="mb-1 block text-xs font-semibold text-muted">
               {t("timesheet.client")}
             </label>
             <Select
+              className="w-full"
               required
               value={formData.client_id}
               onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
@@ -126,11 +127,12 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
             </Select>
           </div>
 
-          <div className="col-span-2 sm:col-span-1">
+          <div className="w-full">
             <label className="mb-1 block text-xs font-semibold text-muted">
               {t("timesheet.project")}
             </label>
             <Select
+              className="w-full"
               required
               disabled={!formData.client_id}
               value={formData.project_id}
