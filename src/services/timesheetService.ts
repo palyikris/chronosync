@@ -250,9 +250,11 @@ export async function stopTimer(
     throw new Error(i18n.t("errors.invalidActiveTimerState"));
   }
 
+  const roundedHoursLogged = Math.round((durationMinutes / 60) * 10) / 10;
+
   const createdEntry = await createTimesheetEntry({
     work_date: new Date().toISOString().slice(0, 10),
-    hours_logged: Number((durationMinutes / 60).toFixed(2)),
+    hours_logged: roundedHoursLogged,
     description: entryData.description,
     company_id: entryData.company_id,
     client_id: resolvedClientId,
