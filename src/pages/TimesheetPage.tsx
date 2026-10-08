@@ -464,12 +464,21 @@ export const TimesheetPage: React.FC = () => {
     if (!targetCompanyId || !targetUserId || !canManageTarget) return;
     if (!formData.client_id || !formData.project_id) return;
 
+    const parsedHours =
+      typeof formData.hours_logged === "number"
+        ? formData.hours_logged
+        : Number.parseFloat(formData.hours_logged);
+
+    if (!Number.isFinite(parsedHours) || parsedHours <= 0 || parsedHours > 24) {
+      return;
+    }
+
     if (editEntryId) {
       updateMutation.mutate({
         id: editEntryId,
         payload: {
           work_date: formData.work_date,
-          hours_logged: formData.hours_logged,
+          hours_logged: parsedHours,
           description: formData.description,
           client_id: formData.client_id,
           project_id: formData.project_id,
@@ -478,6 +487,7 @@ export const TimesheetPage: React.FC = () => {
     } else {
       createMutation.mutate({
         ...formData,
+        hours_logged: parsedHours,
         company_id: targetCompanyId,
         target_user_id: targetUserId,
       });
@@ -507,6 +517,78 @@ export const TimesheetPage: React.FC = () => {
     setSelectedProjectId("");
   };
 
+  const viewModeSwitcher = (
+    <Card className="p-3 sm:p-4">
+      <div className="inline-flex w-full items-center gap-2 rounded-full border border-border-strong bg-bg-accent p-1 xl:w-auto">
+        <Button
+          variant={viewMode === "calendar" ? "primary" : "ghost"}
+          size="sm"
+          className="min-w-0 flex-1 basis-1/2 rounded-full text-xs sm:flex-none sm:basis-auto sm:text-sm"
+          onClick={() => setViewMode("calendar")}
+          icon={<Calendar className="h-4 w-4" />}
+        >
+          Calendar View
+        </Button>
+        <Button
+          variant={viewMode === "list" ? "primary" : "ghost"}
+          size="sm"
+          className="min-w-0 flex-1 basis-1/2 rounded-full text-xs sm:flex-none sm:basis-auto sm:text-sm"
+          onClick={() => setViewMode("list")}
+          icon={<List className="h-4 w-4" />}
+        >
+          List View
+        </Button>
+      </div>
+    </Card>
+  );
+
+  const listNavigationControls = (
+    <Card className="p-3 sm:p-4">
+      <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end">
+        <Button
+          variant="outline"
+          size="sm"
+          className="rounded-full text-xs sm:text-sm"
+          onClick={handlePreviousWeek}
+          icon={<ChevronLeft className="h-4 w-4" />}
+        >
+          Previous Week
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="rounded-full"
+          onClick={handlePreviousDay}
+          icon={<ChevronLeft className="h-4 w-4" />}
+        />
+        <Button
+          variant="outline"
+          size="sm"
+          className="rounded-full"
+          onClick={handleGoToToday}
+        >
+          Today
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="rounded-full"
+          onClick={handleNextDay}
+          icon={<ChevronRight className="h-4 w-4" />}
+        />
+        <Button
+          variant="outline"
+          size="sm"
+          className="col-span-2 rounded-full text-xs sm:col-span-1 sm:text-sm"
+          onClick={handleNextWeek}
+          icon={<ChevronRight className="h-4 w-4" />}
+        >
+          Next Week
+        </Button>
+      </div>
+    </Card>
+  );
+
   return (
     <div className="mx-auto w-full space-y-4 md:space-y-5">
       {isSuperAdmin ? (
@@ -528,76 +610,6 @@ export const TimesheetPage: React.FC = () => {
         </>
       ) : null}
 
-      <Card className="p-3 sm:p-4">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-          <div className="inline-flex w-full items-center gap-2 rounded-full border border-border-strong bg-bg-accent p-1 xl:w-auto">
-            <Button
-              variant={viewMode === "calendar" ? "primary" : "ghost"}
-              size="sm"
-              className="min-w-0 flex-1 basis-1/2 sm:flex-none sm:basis-auto rounded-full text-xs sm:text-sm"
-              onClick={() => setViewMode("calendar")}
-              icon={<Calendar className="h-4 w-4" />}
-            >
-              Calendar View
-            </Button>
-            <Button
-              variant={viewMode === "list" ? "primary" : "ghost"}
-              size="sm"
-              className="min-w-0 flex-1 basis-1/2 sm:flex-none sm:basis-auto rounded-full text-xs sm:text-sm"
-              onClick={() => setViewMode("list")}
-              icon={<List className="h-4 w-4" />}
-            >
-              List View
-            </Button>
-          </div>
-
-          {viewMode === "list" ? (
-            <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end">
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-full text-xs sm:text-sm"
-                onClick={handlePreviousWeek}
-                icon={<ChevronLeft className="h-4 w-4" />}
-              >
-                Previous Week
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-full"
-                onClick={handlePreviousDay}
-                icon={<ChevronLeft className="h-4 w-4" />}
-              ></Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-full"
-                onClick={handleGoToToday}
-              >
-                Today
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-full"
-                onClick={handleNextDay}
-                icon={<ChevronRight className="h-4 w-4" />}
-              ></Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="col-span-2 rounded-full text-xs sm:col-span-1 sm:text-sm"
-                onClick={handleNextWeek}
-                icon={<ChevronRight className="h-4 w-4" />}
-              >
-                Next Week
-              </Button>
-            </div>
-          ) : null}
-        </div>
-      </Card>
-
       <TimesheetEntryFilter
         clients={allClients}
         projects={allProjects}
@@ -609,87 +621,96 @@ export const TimesheetPage: React.FC = () => {
       />
 
       {viewMode === "calendar" ? (
-        <div className="grid gap-4 lg:gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.75fr)] xl:items-stretch">
-          <div className="space-y-3">
-            {pendingCopyEntry ? (
-              <Card className="border-dashed border-primary/40 bg-primary/5 p-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-strong">
-                      {t("timesheet.copyModeTitle")}
-                    </p>
-                    <p className="mt-1 text-sm text-text">
-                      {t("timesheet.copyModeDescription")}
-                    </p>
+        <>
+          {viewModeSwitcher}
+
+          <div className="grid gap-4 lg:gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.75fr)] xl:items-stretch">
+            <div className="space-y-3">
+              {pendingCopyEntry ? (
+                <Card className="border-dashed border-primary/40 bg-primary/5 p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-strong">
+                        {t("timesheet.copyModeTitle")}
+                      </p>
+                      <p className="mt-1 text-sm text-text">
+                        {t("timesheet.copyModeDescription")}
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCancelCopy}
+                    >
+                      {t("timesheet.cancel")}
+                    </Button>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleCancelCopy}
-                  >
-                    {t("timesheet.cancel")}
-                  </Button>
-                </div>
-              </Card>
-            ) : null}
+                </Card>
+              ) : null}
 
-            <TimesheetCalendar
-              currentDate={currentDate}
-              selectedDate={selectedDate}
-              timesheets={filteredCurrentMonthTimesheets}
-              totalMonthlyHours={totalCurrentMonthHours}
-              lockedDates={approvedLeaveDates}
-              copyModeActive={Boolean(pendingCopyEntry)}
-              onSelectDate={handleCalendarSelect}
-              onPreviousMonth={handlePrevMonth}
-              onNextMonth={handleNextMonth}
-            />
-          </div>
-
-          <div className="flex h-full flex-col xl:sticky xl:top-6">
-            <div className="flex min-h-0 flex-1 flex-col">
-              <TimesheetEntryList
+              <TimesheetCalendar
+                currentDate={currentDate}
                 selectedDate={selectedDate}
-                totalDailyHours={totalDailyHours}
-                entries={selectedDayLogs}
-                allEntries={filteredTimesheets}
-                loading={isLoading}
-                onAddEntry={openCreateModal}
-                onEditEntry={openEditModal}
-                onDuplicateEntry={handleStartCopy}
-                onDeleteEntry={(entryId) => deleteMutation.mutate(entryId)}
-                isUpdating={updateMutation.isPending}
-                isDuplicating={duplicateMutation.isPending}
-                isDeleting={deleteMutation.isPending}
-                clients={allClients}
-                canManageTarget={canManageTarget}
-                isSelectedDateLocked={isSelectedDateLocked}
-                viewMode={viewMode}
+                timesheets={filteredCurrentMonthTimesheets}
+                totalMonthlyHours={totalCurrentMonthHours}
+                lockedDates={approvedLeaveDates}
+                copyModeActive={Boolean(pendingCopyEntry)}
+                onSelectDate={handleCalendarSelect}
+                onPreviousMonth={handlePrevMonth}
+                onNextMonth={handleNextMonth}
               />
             </div>
+
+            <div className="flex h-full flex-col xl:sticky xl:top-6">
+              <div className="flex min-h-0 flex-1 flex-col">
+                <TimesheetEntryList
+                  selectedDate={selectedDate}
+                  totalDailyHours={totalDailyHours}
+                  entries={selectedDayLogs}
+                  allEntries={filteredTimesheets}
+                  loading={isLoading}
+                  onAddEntry={openCreateModal}
+                  onEditEntry={openEditModal}
+                  onDuplicateEntry={handleStartCopy}
+                  onDeleteEntry={(entryId) => deleteMutation.mutate(entryId)}
+                  isUpdating={updateMutation.isPending}
+                  isDuplicating={duplicateMutation.isPending}
+                  isDeleting={deleteMutation.isPending}
+                  clients={allClients}
+                  canManageTarget={canManageTarget}
+                  isSelectedDateLocked={isSelectedDateLocked}
+                  viewMode={viewMode}
+                />
+              </div>
+            </div>
           </div>
-        </div>
+        </>
       ) : null}
 
       {viewMode === "list" ? (
-        <TimesheetEntryList
-          selectedDate={selectedDate}
-          totalDailyHours={totalDailyHours}
-          entries={selectedDayLogs}
-          allEntries={filteredTimesheets}
-          loading={isLoading}
-          onAddEntry={openCreateModal}
-          onEditEntry={openEditModal}
-          onDuplicateEntry={handleStartCopy}
-          onDeleteEntry={(entryId) => deleteMutation.mutate(entryId)}
-          isUpdating={updateMutation.isPending}
-          isDuplicating={duplicateMutation.isPending}
-          isDeleting={deleteMutation.isPending}
-          clients={allClients}
-          canManageTarget={canManageTarget}
-          isSelectedDateLocked={isSelectedDateLocked}
-          viewMode={viewMode}
-        />
+        <>
+          {viewModeSwitcher}
+          {listNavigationControls}
+
+          <TimesheetEntryList
+            selectedDate={selectedDate}
+            totalDailyHours={totalDailyHours}
+            entries={selectedDayLogs}
+            allEntries={filteredTimesheets}
+            loading={isLoading}
+            onAddEntry={openCreateModal}
+            onEditEntry={openEditModal}
+            onDuplicateEntry={handleStartCopy}
+            onDeleteEntry={(entryId) => deleteMutation.mutate(entryId)}
+            isUpdating={updateMutation.isPending}
+            isDuplicating={duplicateMutation.isPending}
+            isDeleting={deleteMutation.isPending}
+            clients={allClients}
+            canManageTarget={canManageTarget}
+            isSelectedDateLocked={isSelectedDateLocked}
+            viewMode={viewMode}
+          />
+        </>
       ) : null}
 
       <TimesheetEntryModal

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LanguagePreferencesCard } from "../components/user-settings/LanguagePreferencesCard";
 import { PasswordSecurityCard } from "../components/user-settings/PasswordSecurityCard";
+import { TimesheetTimerVisibilityCard } from "../components/user-settings/TimesheetTimerVisibilityCard";
 import { UserSettingsHeader } from "../components/user-settings/UserSettingsHeader";
 import { WorkHoursCard } from "../components/user-settings/WorkHoursCard";
 
@@ -51,6 +52,8 @@ export const UserSettingsPage: React.FC = () => {
         onLanguageChange={handleLanguageChange}
         showSuccess={langSuccess}
       />
+
+      <TimesheetTimerVisibilityCard />
 
       <WorkHoursCard />
 

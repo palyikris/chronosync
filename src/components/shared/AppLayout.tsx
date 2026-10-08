@@ -1,11 +1,15 @@
 import React from "react";
 import { Outlet, useLocation } from "react-router-dom";
+import { useAuth } from "../../context/useAuth";
 import { Sidebar } from "./Sidebar";
 import { LiveTimerWidget } from "./LiveTimerWidget";
 
 export const AppLayout: React.FC = () => {
   const location = useLocation();
-  const showLiveTimerWidget = location.pathname === "/timesheet";
+  const { profile } = useAuth();
+  const showLiveTimerWidget =
+    location.pathname === "/timesheet" &&
+    profile?.show_timesheet_timer === true;
 
   return (
     <div className="flex min-h-screen bg-bg">

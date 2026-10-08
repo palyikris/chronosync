@@ -8,5 +8,6 @@ export const AuthContext = createContext<AuthContextType>({
   loading: true,
   isSuperAdmin: false,
   isCompanyAdmin: false,
+  refreshProfile: async () => {},
   signOut: async () => {},
 });

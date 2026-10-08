@@ -120,6 +120,21 @@ export async function updateWeeklyWorkHours(
   return data as UserProfile;
 }
 
+export async function updateTimesheetTimerVisibility(
+  userId: string,
+  showTimesheetTimer: boolean,
+) {
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({ show_timesheet_timer: showTimesheetTimer })
+    .eq("id", userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as UserProfile;
+}
+
 /**
  * Soft Delete / Toggle Active Status (US-03)
  */

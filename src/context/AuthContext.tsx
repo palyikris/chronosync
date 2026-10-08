@@ -47,6 +47,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setProfile(profileData);
   };
 
+  const refreshProfile = async () => {
+    if (!user) {
+      setProfile(null);
+      return;
+    }
+
+    await fetchProfile(user.id);
+  };
+
   useEffect(() => {
     // 1. Initial session load on app mount
     supabase.auth
@@ -128,6 +137,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         loading,
         isSuperAdmin,
         isCompanyAdmin,
+        refreshProfile,
         signOut: handleSignOut,
       }}
     >

@@ -100,17 +100,22 @@ export type SelectableTimesheetUser = Pick<
   role: UserRole;
 };
 
-export type TimesheetFormData = Pick<
-  NewTimesheetPayload,
-  | "work_date"
-  | "hours_logged"
-  | "description"
-  | "company_id"
-  | "client_id"
-  | "project_id"
-  | "status"
-  | "rejection_reason"
->;
+export type TimesheetFormData = Omit<
+  Pick<
+    NewTimesheetPayload,
+    | "work_date"
+    | "hours_logged"
+    | "description"
+    | "company_id"
+    | "client_id"
+    | "project_id"
+    | "status"
+    | "rejection_reason"
+  >,
+  "hours_logged"
+> & {
+  hours_logged: number | "";
+};
 
 export interface TimesheetCalendarProps {
   currentDate: Date;

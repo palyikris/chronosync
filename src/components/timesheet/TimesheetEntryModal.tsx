@@ -69,7 +69,9 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
               onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
                 onChange((current) => ({
                   ...current,
-                  hours_logged: parseFloat(event.target.value) || 0,
+                  hours_logged: Number.isNaN(event.target.valueAsNumber)
+                    ? ""
+                    : event.target.valueAsNumber,
                 }))
               }
               leftIcon={<Clock className="h-4 w-4" />}

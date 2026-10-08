@@ -44,6 +44,7 @@ export interface UserProfile {
   role: UserRole;
   is_active: boolean;
   weekly_work_hours: number | null;
+  show_timesheet_timer: boolean;
   created_at: string;
   companies?: {
     name: string;
@@ -57,5 +58,6 @@ export interface AuthContextType {
   loading: boolean;
   isSuperAdmin: boolean;
   isCompanyAdmin: boolean;
+  refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
 }
