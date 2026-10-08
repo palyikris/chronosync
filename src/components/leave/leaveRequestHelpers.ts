@@ -30,6 +30,22 @@ export const requestStatusClasses: Record<LeaveRequest["status"], string> = {
   REJECTED: "border-red-200 bg-red-200 text-red-800 line-through",
 };
 
+export const getLeaveRequestBadgeClasses = (
+  status: LeaveRequest["status"],
+  isOwnRequest: boolean,
+) => {
+  const baseClasses = [
+    "relative overflow-visible rounded-md border px-2 py-1 text-[10px] font-semibold",
+    requestStatusClasses[status],
+  ];
+
+  if (isOwnRequest) {
+    baseClasses.push("pr-5");
+  }
+
+  return baseClasses.join(" ");
+};
+
 export const isRequestInMonth = (
   request: LeaveRequest,
   monthKey: string,

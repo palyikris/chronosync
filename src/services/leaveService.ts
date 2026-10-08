@@ -1,6 +1,12 @@
 import { supabase } from "../lib/supabaseClient";
 import i18n from "../lib/i18n";
 import {
+  calculateLeaveHoursForDateRange,
+  getEffectiveWeeklyHours,
+  getLeaveDateRange,
+  getLeaveWorkingDayCount,
+} from "../utils/leaveHours";
+import {
   leaveRequestCreateSchema,
   leaveRequestStatusUpdateSchema,
   leaveRequestUpdateSchema,
@@ -15,6 +21,7 @@ type CurrentProfile = {
   company_id: string;
   role: string;
   full_name: string;
+  weekly_work_hours: number | null;
 };
 
 type LeaveRequestWithProfile = LeaveRequest & {
@@ -45,8 +52,6 @@ export class DateLockedForLeaveError extends Error {
   }
 }
 
-const pad = (value: number) => String(value).padStart(2, "0");
-
 const getCurrentUser = async () => {
   const {
     data: { user },
@@ -64,7 +69,7 @@ const getCurrentProfile = async (): Promise<CurrentProfile> => {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, company_id, role, full_name")
+    .select("id, company_id, role, full_name, weekly_work_hours")
     .eq("id", user.id)
     .single<CurrentProfile>();
 
@@ -83,34 +88,11 @@ const isWeekend = (dateString: string) => {
 
 const normalizeDate = (value: string) => value.slice(0, 10);
 
-export const getLeaveWorkingDayCount = (startDate: string, endDate: string) => {
-  let count = 0;
-  const cursor = new Date(`${startDate}T00:00:00`);
-  const lastDate = new Date(`${endDate}T00:00:00`);
-
-  while (cursor <= lastDate) {
-    const dateString = `${cursor.getFullYear()}-${pad(cursor.getMonth() + 1)}-${pad(cursor.getDate())}`;
-    if (!isWeekend(dateString)) {
-      count += 1;
-    }
-    cursor.setDate(cursor.getDate() + 1);
-  }
-
-  return count;
-};
-
-export const getLeaveDateRange = (startDate: string, endDate: string) => {
-  const dates: string[] = [];
-  const cursor = new Date(`${startDate}T00:00:00`);
-  const lastDate = new Date(`${endDate}T00:00:00`);
-
-  while (cursor <= lastDate) {
-    const dateString = `${cursor.getFullYear()}-${pad(cursor.getMonth() + 1)}-${pad(cursor.getDate())}`;
-    dates.push(dateString);
-    cursor.setDate(cursor.getDate() + 1);
-  }
-
-  return dates;
+export {
+  calculateLeaveHoursForDateRange,
+  getEffectiveWeeklyHours,
+  getLeaveDateRange,
+  getLeaveWorkingDayCount,
 };
 
 export async function fetchLeaveRequests(): Promise<LeaveRequestWithProfile[]> {
@@ -213,6 +195,8 @@ export async function createLeaveRequest(payload: LeaveRequestCreatePayload) {
         company_id: profile.company_id,
         start_date: validatedPayload.start_date,
         end_date: validatedPayload.end_date,
+        weekly_work_hours:
+          validatedPayload.weekly_work_hours ?? profile.weekly_work_hours ?? 40,
         status: "PENDING",
       },
     ])
@@ -274,6 +258,11 @@ export async function updateLeaveRequest(
     .update({
       start_date: validatedPayload.start_date,
       end_date: validatedPayload.end_date,
+      weekly_work_hours:
+        validatedPayload.weekly_work_hours ??
+        existingRequest.weekly_work_hours ??
+        profile.weekly_work_hours ??
+        40,
     })
     .eq("id", id)
     .select("*, profiles(id, full_name, role)")
@@ -402,7 +391,19 @@ export async function updateLeaveRequestStatus(
       existingRequest.end_date,
     ).filter((date) => !isWeekend(date));
 
-    const weeklyHours = existingRequest.weekly_work_hours ?? 40;
+    const { data: employeeProfile, error: employeeProfileError } =
+      await supabase
+        .from("profiles")
+        .select("weekly_work_hours")
+        .eq("id", existingRequest.user_id)
+        .maybeSingle<{ weekly_work_hours: number | null }>();
+
+    if (employeeProfileError) throw employeeProfileError;
+
+    const weeklyHours =
+      existingRequest.weekly_work_hours ??
+      employeeProfile?.weekly_work_hours ??
+      40;
     const hoursPerWorkday = Number((weeklyHours / 5).toFixed(2));
     leaveHoursTotal = Number(
       (availableDates.length * hoursPerWorkday).toFixed(2),

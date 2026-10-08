@@ -211,6 +211,8 @@
     "newRequest": "Új kérelem",
     "editRequest": "Kérelem szerkesztése",
     "requestList": "Kérelmek",
+    "employeeFilterLabel": "Dolgozó",
+    "allEmployees": "Minden dolgozó",
     "noRequests": "Nincs találat ebben az időszakban.",
     "totalRequests": "Összes kérelem",
     "pendingRequests": "Függőben",

@@ -1,16 +1,58 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../shared/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "../shared/Card";
-import { formatDateRange, getMonthKey, isRequestInMonth, requestStatusClasses } from "./leaveRequestHelpers";
+import { Select } from "../shared/Select";
+import {
+  formatDateRange,
+  getMonthKey,
+  isRequestInMonth,
+  requestStatusClasses,
+} from "./leaveRequestHelpers";
 import { getLeaveWorkingDayCount } from "../../services/leaveService";
-import type { LeaveRequestListProps } from "./types";
+import type {
+  LeaveRequest,
+  LeaveRequestEmployeeOption,
+  LeaveRequestListProps,
+} from "./types";
+
+const statusOrder: Record<LeaveRequest["status"], number> = {
+  PENDING: 0,
+  APPROVED: 1,
+  REJECTED: 2,
+};
+
+const compareRequests = (left: LeaveRequest, right: LeaveRequest) => {
+  const statusDelta = statusOrder[left.status] - statusOrder[right.status];
+
+  if (statusDelta !== 0) {
+    return statusDelta;
+  }
+
+  const startDateDelta = right.start_date.localeCompare(left.start_date);
+
+  if (startDateDelta !== 0) {
+    return startDateDelta;
+  }
+
+  const createdAtDelta = right.created_at.localeCompare(left.created_at);
+
+  if (createdAtDelta !== 0) {
+    return createdAtDelta;
+  }
+
+  return (left.profiles?.full_name ?? "").localeCompare(
+    right.profiles?.full_name ?? "",
+  );
+};
 
 export const LeaveRequestList: React.FC<LeaveRequestListProps> = ({
   currentDate,
   leaveRequests,
   currentUserId,
   isAdmin,
+  selectedEmployeeId,
+  onEmployeeChange,
   onEditRequest,
   onApproveRequest,
   onRejectRequest,
@@ -23,23 +65,84 @@ export const LeaveRequestList: React.FC<LeaveRequestListProps> = ({
 
   const monthRequests = useMemo(() => {
     const monthKey = getMonthKey(currentDate);
-    return leaveRequests.filter((request) => isRequestInMonth(request, monthKey));
+    return leaveRequests
+      .filter((request) => isRequestInMonth(request, monthKey))
+      .slice()
+      .sort(compareRequests);
   }, [currentDate, leaveRequests]);
+
+  const employeeOptions = useMemo<LeaveRequestEmployeeOption[]>(() => {
+    const uniqueEmployees = new Map<string, LeaveRequestEmployeeOption>();
+
+    for (const request of monthRequests) {
+      if (!uniqueEmployees.has(request.user_id)) {
+        uniqueEmployees.set(request.user_id, {
+          id: request.user_id,
+          fullName: request.profiles?.full_name ?? t("common.unknown"),
+        });
+      }
+    }
+
+    return Array.from(uniqueEmployees.values()).sort((left, right) =>
+      left.fullName.localeCompare(right.fullName),
+    );
+  }, [monthRequests, t]);
+
+  useEffect(() => {
+    if (!selectedEmployeeId) {
+      return;
+    }
+
+    const selectedEmployeeExists = employeeOptions.some(
+      (employee) => employee.id === selectedEmployeeId,
+    );
+
+    if (!selectedEmployeeExists) {
+      onEmployeeChange("");
+    }
+  }, [employeeOptions, onEmployeeChange, selectedEmployeeId]);
+
+  const visibleRequests = useMemo(() => {
+    const filteredRequests = selectedEmployeeId
+      ? monthRequests.filter(
+          (request) => request.user_id === selectedEmployeeId,
+        )
+      : monthRequests;
+
+    return filteredRequests.slice(0, 5);
+  }, [monthRequests, selectedEmployeeId]);
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <CardTitle>{t("leave.requestList")}</CardTitle>
+
+        <Select
+          value={selectedEmployeeId}
+          onChange={(event) => onEmployeeChange(event.target.value)}
+          label={t("leave.employeeFilterLabel")}
+          className="w-full sm:w-72"
+        >
+          <option value="">{t("leave.allEmployees")}</option>
+          {employeeOptions.map((employee) => (
+            <option key={employee.id} value={employee.id}>
+              {employee.fullName}
+            </option>
+          ))}
+        </Select>
       </CardHeader>
       <CardContent className="space-y-4">
-        {monthRequests.length === 0 ? (
+        {visibleRequests.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border-strong bg-bg-accent px-4 py-6 text-sm text-muted">
             {t("leave.noRequests")}
           </div>
         ) : (
-          monthRequests.map((request) => {
-            const canEdit = request.user_id === currentUserId && request.status === "PENDING";
-            const canDelete = Boolean(currentUserId && (request.user_id === currentUserId || isAdmin));
+          visibleRequests.map((request) => {
+            const canEdit =
+              request.user_id === currentUserId && request.status === "PENDING";
+            const canDelete = Boolean(
+              currentUserId && (request.user_id === currentUserId || isAdmin),
+            );
             const canReview = Boolean(isAdmin && request.status === "PENDING");
 
             return (
@@ -53,7 +156,11 @@ export const LeaveRequestList: React.FC<LeaveRequestListProps> = ({
                       {request.profiles?.full_name ?? t("common.unknown")}
                     </div>
                     <div className="mt-1 text-xs text-muted">
-                      {formatDateRange(request.start_date, request.end_date, i18n.language)}
+                      {formatDateRange(
+                        request.start_date,
+                        request.end_date,
+                        i18n.language,
+                      )}
                     </div>
                   </div>
 
@@ -66,13 +173,21 @@ export const LeaveRequestList: React.FC<LeaveRequestListProps> = ({
 
                 <div className="mt-3 flex items-center justify-between gap-3 text-xs text-muted">
                   <span>
-                    {t("leave.workingDays")}: {getLeaveWorkingDayCount(request.start_date, request.end_date)}
+                    {t("leave.workingDays")}:{" "}
+                    {getLeaveWorkingDayCount(
+                      request.start_date,
+                      request.end_date,
+                    )}
                   </span>
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-2">
                   {canEdit ? (
-                    <Button variant="outline" size="sm" onClick={() => onEditRequest(request)}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onEditRequest(request)}
+                    >
                       {t("common.edit")}
                     </Button>
                   ) : null}

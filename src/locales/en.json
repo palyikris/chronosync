@@ -210,6 +210,8 @@
     "newRequest": "New Request",
     "editRequest": "Edit Request",
     "requestList": "Requests",
+    "employeeFilterLabel": "Employee",
+    "allEmployees": "All employees",
     "noRequests": "No leave requests found for this period.",
     "totalRequests": "Total Requests",
     "pendingRequests": "Pending Requests",

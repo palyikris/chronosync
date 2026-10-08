@@ -1,6 +1,8 @@
 import type React from "react";
 import type { LeaveRequest } from "../../types/leave";
 
+export type { LeaveRequest };
+
 export type LeaveFormState = {
   start_date: string;
   end_date: string;
@@ -32,6 +34,8 @@ export interface LeaveRequestListProps {
   leaveRequests: LeaveRequest[];
   currentUserId?: string;
   isAdmin: boolean;
+  selectedEmployeeId: string;
+  onEmployeeChange: (employeeId: string) => void;
   onEditRequest: (request: LeaveRequest) => void;
   onApproveRequest: (requestId: string) => void;
   onRejectRequest: (requestId: string) => void;
@@ -39,6 +43,11 @@ export interface LeaveRequestListProps {
   isApproving: boolean;
   isRejecting: boolean;
   isDeleting: boolean;
+}
+
+export interface LeaveRequestEmployeeOption {
+  id: string;
+  fullName: string;
 }
 
 export interface LeaveRequestModalProps {

@@ -43,6 +43,7 @@ export const LeaveRequestsPage: React.FC = () => {
   });
   const [pageError, setPageError] = useState<string | null>(null);
   const [conflictingDates, setConflictingDates] = useState<string[]>([]);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
   const isAdmin = profile?.role === "company_admin";
 
   const { data: leaveRequests = [], isLoading } = useQuery({
@@ -230,6 +231,8 @@ export const LeaveRequestsPage: React.FC = () => {
           leaveRequests={leaveRequests}
           currentUserId={profile?.id}
           isAdmin={isAdmin}
+          selectedEmployeeId={selectedEmployeeId}
+          onEmployeeChange={setSelectedEmployeeId}
           onEditRequest={openEditModal}
           onApproveRequest={(requestId) => approveMutation.mutate(requestId)}
           onRejectRequest={(requestId) => rejectMutation.mutate(requestId)}

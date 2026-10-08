@@ -1,9 +1,13 @@
 import React, { useMemo } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, User } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader } from "../shared/Card";
 import { Button } from "../shared/Button";
-import { getLocalDateValue, getMonthKey, requestStatusClasses } from "./leaveRequestHelpers";
+import {
+  getLeaveRequestBadgeClasses,
+  getLocalDateValue,
+  getMonthKey,
+} from "./leaveRequestHelpers";
 import { getLeaveDateRange } from "../../services/leaveService";
 import type { LeaveCalendarPanelProps } from "./types";
 
@@ -138,6 +142,7 @@ export const LeaveCalendarPanel: React.FC<LeaveCalendarPanelProps> = ({
                           (request.status === "PENDING" &&
                             (isAdmin || request.user_id === currentUserId)) ||
                           (request.status === "REJECTED" && request.user_id === currentUserId);
+                        const isOwnRequest = request.user_id === currentUserId;
 
                         if (!isVisible) {
                           return null;
@@ -146,11 +151,25 @@ export const LeaveCalendarPanel: React.FC<LeaveCalendarPanelProps> = ({
                         return (
                           <div
                             key={request.id}
-                            className={`rounded-md border px-2 py-1 text-[10px] font-semibold ${requestStatusClasses[request.status]}`}
+                            className={getLeaveRequestBadgeClasses(
+                              request.status,
+                              isOwnRequest,
+                            )}
                           >
+                            {isOwnRequest ? (
+                              <span
+                                title="My request"
+                                className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border border-white bg-primary-strong text-white shadow-sm"
+                                aria-label="My request"
+                              >
+                                <User className="h-2.5 w-2.5" />
+                              </span>
+                            ) : null}
+
                             <div className="truncate">
                               {request.status === "APPROVED"
-                                ? request.profiles?.full_name ?? t("common.unknown")
+                                ? (request.profiles?.full_name ??
+                                  t("common.unknown"))
                                 : request.status === "PENDING"
                                   ? t("leave.pendingApproval")
                                   : t("leave.rejected")}
