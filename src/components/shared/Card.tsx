@@ -6,7 +6,7 @@ export const Card: React.FC<CardProps> = ({ className, ...props }) => {
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-2xl border border-border-strong bg-surface-strong shadow-card",
+        "overflow-hidden rounded-2xl border border-border bg-surface-strong/88 shadow-card backdrop-blur-xl transition-[box-shadow,border-color] duration-300",
         className,
       )}
       {...props}
@@ -15,17 +15,17 @@ export const Card: React.FC<CardProps> = ({ className, ...props }) => {
 };
 
 export const CardHeader: React.FC<CardProps> = ({ className, ...props }) => (
-  <div className={cn("border-b border-border-strong bg-bg-accent px-4 py-4", className)} {...props} />
+  <div className={cn("border-b border-border bg-bg-accent/45 px-5 py-3.5", className)} {...props} />
 );
 
 export const CardTitle: React.FC<CardProps> = ({ className, ...props }) => (
-  <div className={cn("text-sm font-bold text-text", className)} {...props} />
+  <div className={cn("text-[13px] font-semibold tracking-[-0.01em] text-text", className)} {...props} />
 );
 
 export const CardContent: React.FC<CardProps> = ({ className, ...props }) => (
-  <div className={cn("p-4", className)} {...props} />
+  <div className={cn("p-4.5", className)} {...props} />
 );
 
 export const CardFooter: React.FC<CardProps> = ({ className, ...props }) => (
-  <div className={cn("border-t border-border-strong px-4 py-4", className)} {...props} />
+  <div className={cn("border-t border-border px-4 py-2.5", className)} {...props} />
 );

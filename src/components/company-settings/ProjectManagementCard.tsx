@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Check,
-  ChevronDown,
-  ChevronUp,
   FileSpreadsheet,
   FolderPlus,
   PencilLine,
@@ -148,68 +146,55 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   };
 
   return (
-    <Card className="space-y-6 p-6 shadow-sm">
-      <CardHeader className="rounded-t-2xl border-b-0 bg-transparent px-0 py-0 relative">
-        <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-bg-accent p-2.5 text-primary-strong">
+    <Card className="border-border-strong">
+      <CardHeader className="flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/30 text-primary-strong ring-1 ring-primary-strong/10">
             <FolderPlus className="h-5 w-5" />
           </div>
-          <div>
-            <CardTitle className="text-lg font-bold text-text">
-              {t("companySettings.projectsTitle")}
-            </CardTitle>
-            <p className="mt-1 text-sm text-muted-strong">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-base font-semibold">
+                {t("companySettings.projectsTitle")}
+              </CardTitle>
+              <span className="rounded-full bg-bg px-2 py-0.5 text-[11px] font-semibold tabular-nums text-muted-strong ring-1 ring-border">
+                {projects.length}
+              </span>
+            </div>
+            <p className="mt-0.5 truncate text-xs text-muted-strong sm:text-sm">
               {t("companySettings.projectsSubtitle")}
             </p>
           </div>
         </div>
-        <Button
-          variant="primary"
-          onClick={() => setIsImportModalOpen(true)}
-          className="flex items-center gap-2 absolute right-0 top-0 rounded-xl px-4 py-3 text-sm"
-        >
-          <FileSpreadsheet className="w-4 h-4" />
-          {t("companySettings.projectImportButton")}
-        </Button>
-      </CardHeader>
-
-      <CardContent className="space-y-6 px-0 pb-0">
-        <div className="flex items-center justify-between rounded-xl border border-border-strong bg-bg-accent px-4 py-3">
-          <div>
-            <p className="text-sm font-medium text-text">
-              {t("companySettings.projectsTitle")}
-            </p>
-            <p className="text-xs text-muted-strong">
-              {t("companySettings.projectsSubtitle")}
-            </p>
-          </div>
+        <div className="flex items-center gap-2 sm:shrink-0">
+          <Button
+            variant="outline"
+            onClick={() => setIsImportModalOpen(true)}
+            className="flex-1 sm:flex-none"
+            icon={<FileSpreadsheet />}
+          >
+            {t("companySettings.projectImportButton")}
+          </Button>
           <Button
             type="button"
-            variant="primary"
+            variant={showNewProjectForm ? "secondary" : "primary"}
             onClick={() => setShowNewProjectForm((value) => !value)}
-            className="rounded-xl px-3"
-            tooltip={
-              showNewProjectForm
-                ? t("companySettings.hideProjectForm")
-                : t("companySettings.showProjectForm")
-            }
-            aria-label={
-              showNewProjectForm
-                ? t("companySettings.hideProjectForm")
-                : t("companySettings.showProjectForm")
-            }
-            icon={
-              showNewProjectForm ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )
-            }
-          />
+            className="flex-1 sm:flex-none"
+            icon={showNewProjectForm ? <X /> : <Plus />}
+          >
+            {showNewProjectForm
+              ? t("common.cancel")
+              : t("companySettings.newProjectButton")}
+          </Button>
         </div>
+      </CardHeader>
 
+      <CardContent className="space-y-4 p-4 sm:p-5">
         {showNewProjectForm && (
-          <form onSubmit={handleCreate} className="space-y-3">
+          <form
+            onSubmit={handleCreate}
+            className="space-y-3 rounded-2xl border border-primary-strong/15 bg-primary/[0.08] p-4"
+          >
             <div className="grid gap-3 md:grid-cols-[1fr_1.1fr_0.8fr_auto] md:items-end">
               <Select
                 id="new-project-client"
@@ -238,7 +223,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                 disabled={!newProjectClientId}
                 value={newProjectName}
                 onChange={(event) => setNewProjectName(event.target.value)}
-                className="disabled:cursor-not-allowed disabled:bg-[#f3f4f5]"
+                className="disabled:cursor-not-allowed disabled:bg-slate-100"
               />
 
               <Input
@@ -278,9 +263,9 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
           </form>
         )}
 
-        <div className="max-h-100 space-y-2 overflow-y-auto px-2">
+        <div className="max-h-100 space-y-3 overflow-x-hidden overflow-y-auto pr-1">
           {visibleProjects.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-border-strong bg-bg-accent px-4 py-3 text-sm text-muted-strong">
+            <p className="rounded-xl border border-dashed border-border-strong bg-bg-accent px-4 py-6 text-center text-sm text-muted-strong">
               {selectedClient
                 ? t("companySettings.noProjectsForClient", {
                     clientName: selectedClient.name,
@@ -289,77 +274,100 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
             </p>
           ) : (
             visibleProjects.map((project) => (
-              <div
+              <article
                 key={project.id}
-                className={`flex items-center justify-between gap-3 rounded-xl border border-border-strong bg-bg p-3 ${
-                  project.is_active ? "" : "opacity-60"
-                }`}
+                className="group rounded-2xl border border-border-strong bg-surface-strong/80 p-4 shadow-[0_1px_2px_rgba(76,65,92,0.035)] transition-[border-color,box-shadow,background-color] duration-200 hover:border-primary-strong/35 hover:bg-surface-strong hover:shadow-card"
               >
-                <div className="min-w-0">
-                  <p className="truncate font-medium text-text">
-                    {project.name}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-strong">
-                    {clients.find((client) => client.id === project.client_id)
-                      ?.name ?? t("companySettings.unknownClient")}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-strong">
-                    {t("companySettings.estimatedHoursPerMonthLabel")}:{" "}
-                    {project.estimated_hours_per_month}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-strong">
-                    {project.is_active
-                      ? t("common.active")
-                      : t("common.inactive")}
-                  </p>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-bg-accent text-primary-strong ring-1 ring-border">
+                      <FolderPlus className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 pt-0.5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="truncate text-[15px] font-semibold tracking-[-0.01em] text-text">
+                          {project.name}
+                        </h3>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] ${
+                            project.is_active
+                              ? "bg-green-100 text-green-700"
+                              : "bg-slate-100 text-slate-600"
+                          }`}
+                        >
+                          {project.is_active
+                            ? t("common.active")
+                            : t("common.inactive")}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-0.5 self-start rounded-xl border border-border bg-bg-accent/80 p-1">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => handleToggleActivity(project)}
+                      disabled={loading}
+                      className={project.is_active ? "text-primary-strong" : ""}
+                      tooltip={
+                        project.is_active
+                          ? t("companySettings.deactivateProject")
+                          : t("companySettings.activateProject")
+                      }
+                      aria-label={
+                        project.is_active
+                          ? t("companySettings.deactivateProject")
+                          : t("companySettings.activateProject")
+                      }
+                      icon={
+                        project.is_active ? (
+                          <ToggleRight className="h-4 w-4" />
+                        ) : (
+                          <ToggleLeft className="h-4 w-4" />
+                        )
+                      }
+                    />
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => setEditingProject(project)}
+                      disabled={loading}
+                      tooltip={t("companySettings.editProject")}
+                      aria-label={t("companySettings.editProject")}
+                      icon={<PencilLine className="h-4 w-4" />}
+                    />
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => setDeletingProjectId(project.id)}
+                      disabled={loading}
+                      className="text-danger hover:bg-danger-bg hover:text-danger"
+                      tooltip={t("companySettings.deleteProject")}
+                      aria-label={t("companySettings.deleteProject")}
+                      icon={<Trash2 className="h-4 w-4" />}
+                    />
+                  </div>
                 </div>
-                <div className="flex shrink-0 gap-2">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => handleToggleActivity(project)}
-                    disabled={loading}
-                    className="rounded-xl px-3"
-                    tooltip={
-                      project.is_active
-                        ? t("companySettings.deactivateProject")
-                        : t("companySettings.activateProject")
-                    }
-                    aria-label={
-                      project.is_active
-                        ? t("companySettings.deactivateProject")
-                        : t("companySettings.activateProject")
-                    }
-                    icon={
-                      project.is_active ? (
-                        <ToggleRight className="h-4 w-4" />
-                      ) : (
-                        <ToggleLeft className="h-4 w-4" />
-                      )
-                    }
-                  ></Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => setEditingProject(project)}
-                    disabled={loading}
-                    className="rounded-xl px-3"
-                    tooltip={t("companySettings.editProject")}
-                    aria-label={t("companySettings.editProject")}
-                    icon={<PencilLine className="h-4 w-4" />}
-                  ></Button>
-                  <Button
-                    size="sm"
-                    variant="danger"
-                    onClick={() => setDeletingProjectId(project.id)}
-                    disabled={loading}
-                    className="rounded-xl px-3"
-                    tooltip={t("companySettings.deleteProject")}
-                    aria-label={t("companySettings.deleteProject")}
-                    icon={<Trash2 className="h-4 w-4" />}
-                  ></Button>
-                </div>
-              </div>
+                <dl className="mt-4 grid grid-cols-1 gap-x-5 gap-y-3 border-t border-border pt-3 sm:ml-[3.25rem] sm:grid-cols-2">
+                  <div className="min-w-0">
+                    <dt className="text-[10px] font-semibold uppercase tracking-[0.07em] text-muted">
+                      {t("companySettings.projectClientLabel")}
+                    </dt>
+                    <dd className="mt-0.5 truncate text-sm font-medium text-text">
+                      {clients.find((client) => client.id === project.client_id)
+                        ?.name ?? t("companySettings.unknownClient")}
+                    </dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="text-[10px] font-semibold uppercase tracking-[0.07em] text-muted">
+                      {t("companySettings.estimatedHoursPerMonthLabel")}
+                    </dt>
+                    <dd className="mt-0.5 text-sm font-medium tabular-nums text-text">
+                      {project.estimated_hours_per_month}
+                    </dd>
+                  </div>
+                </dl>
+              </article>
             ))
           )}
         </div>

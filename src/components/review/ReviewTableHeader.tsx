@@ -1,14 +1,17 @@
 import React from "react";
+import type { TFunction } from "i18next";
 
 interface ReviewTableHeaderProps {
-  t: any;
+  t: TFunction;
   isAllActivePageSelected: boolean;
+  isSelectionDisabled: boolean;
   onSelectAll: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export const ReviewTableHeader: React.FC<ReviewTableHeaderProps> = ({
   t,
   isAllActivePageSelected,
+  isSelectionDisabled,
   onSelectAll,
 }) => (
   <thead>
@@ -17,12 +20,13 @@ export const ReviewTableHeader: React.FC<ReviewTableHeaderProps> = ({
         <input
           type="checkbox"
           checked={isAllActivePageSelected}
+          disabled={isSelectionDisabled}
           aria-label={t(
             "timesheetReview.selectAllVisible",
             "Select all entries on this page",
           )}
           onChange={onSelectAll}
-          className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer accent-primary"
+          className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer accent-primary disabled:cursor-not-allowed disabled:opacity-40"
         />
       </th>
       <th className="p-3.5 font-medium w-[200px]">

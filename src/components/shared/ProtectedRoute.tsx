@@ -5,6 +5,7 @@ import type { ProtectedRouteProps } from "../../types/ui";
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requireAdmin = false,
+  allowedRoles,
 }) => {
   const { user, profile, loading, isSuperAdmin, isCompanyAdmin } = useAuth();
 
@@ -24,6 +25,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // Requires admin privileges but user is regular? Redirect to personal timesheet
   if (requireAdmin && (!isSuperAdmin && !isCompanyAdmin)) {
     return <Navigate to="/timesheet" replace />;
+  }
+
+  if (allowedRoles && !allowedRoles.includes(profile.role)) {
+    return <Navigate to={profile.role === "super_admin" ? "/super-admin/companies" : "/timesheet"} replace />;
   }
 
   return <Outlet />;

@@ -34,21 +34,21 @@ export const UserFilterPopover: React.FC<UserFilterPopoverProps> = ({
         onClick={onToggle}
         className={`flex items-center gap-2 px-4 py-2.5 border rounded-xl transition text-sm font-medium ${
           hasActiveFilters
-            ? "border-[#4e6700] bg-[#abdb11]/20 text-[#151f00] font-semibold"
-            : "border-[#C4C7C5] bg-white hover:bg-[#e7e8e9] text-[#5e5e62]"
+            ? "border-primary-strong bg-primary/30 text-primary-foreground font-semibold"
+            : "border-border-strong bg-white hover:bg-slate-100 text-muted"
         }`}
       >
         <Filter className="w-4 h-4" />
         {t("users.filters")}
         {hasActiveFilters && (
-          <span className="w-2 h-2 rounded-full bg-[#4e6700]" />
+          <span className="h-2 w-2 rounded-full bg-primary-strong" />
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl border border-[#C4C7C5] shadow-xl p-4 z-50 animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute right-0 z-50 mt-2 w-64 rounded-2xl border border-border-strong bg-white p-4 shadow-xl animate-in fade-in zoom-in-95 duration-150">
           <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-100">
-            <span className="font-bold text-sm text-[#191c1d]">
+            <span className="text-sm font-bold text-text">
               {t("users.filterMembers")}
             </span>
             {hasActiveFilters && (
@@ -64,7 +64,7 @@ export const UserFilterPopover: React.FC<UserFilterPopoverProps> = ({
           <div className="space-y-4">
             {/* Filter by Role */}
             <div>
-              <label className="block text-xs font-semibold text-[#5e5e62] mb-1.5">
+              <label className="mb-1.5 block text-xs font-semibold text-muted">
                 {t("users.role")}
               </label>
               <select
@@ -75,7 +75,7 @@ export const UserFilterPopover: React.FC<UserFilterPopoverProps> = ({
                     role: e.target.value as UserFilterState["role"],
                   })
                 }
-                className="w-full px-3 py-2 border border-[#C4C7C5] rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#4e6700] bg-white"
+                className="w-full rounded-xl border border-border-strong bg-white px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary-strong"
               >
                 <option value="all">{t("users.allRoles")}</option>
                 <option value="regular">{t("users.regularUsers")}</option>
@@ -85,7 +85,7 @@ export const UserFilterPopover: React.FC<UserFilterPopoverProps> = ({
 
             {/* Filter by Status */}
             <div>
-              <label className="block text-xs font-semibold text-[#5e5e62] mb-1.5">
+              <label className="mb-1.5 block text-xs font-semibold text-muted">
                 {t("users.status")}
               </label>
               <select
@@ -96,7 +96,7 @@ export const UserFilterPopover: React.FC<UserFilterPopoverProps> = ({
                     status: e.target.value as UserFilterState["status"],
                   })
                 }
-                className="w-full px-3 py-2 border border-[#C4C7C5] rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#4e6700] bg-white"
+                className="w-full rounded-xl border border-border-strong bg-white px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary-strong"
               >
                 <option value="all">{t("users.allStatuses")}</option>
                 <option value="active">{t("users.activeOnly")}</option>
@@ -107,7 +107,7 @@ export const UserFilterPopover: React.FC<UserFilterPopoverProps> = ({
             {/* Optional Filter by Company for Super Admins */}
             {profile?.role === "super_admin" && (
               <div>
-                <label className="block text-xs font-semibold text-[#5e5e62] mb-1.5">
+                <label className="mb-1.5 block text-xs font-semibold text-muted">
                   {t("users.company")}
                 </label>
                 <input
@@ -120,7 +120,7 @@ export const UserFilterPopover: React.FC<UserFilterPopoverProps> = ({
                     })
                   }
                   placeholder={t("users.companyPlaceholder")}
-                  className="w-full px-3 py-2 border border-[#C4C7C5] rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#4e6700] bg-white"
+                  className="w-full rounded-xl border border-border-strong bg-white px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary-strong"
                 />
               </div>
             )}

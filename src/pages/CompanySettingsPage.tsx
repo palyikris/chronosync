@@ -53,13 +53,13 @@ export const CompanySettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="mx-auto w-full space-y-8">
+    <div className="mx-auto w-full max-w-6xl space-y-6 pb-10">
       <CompanySettingsHeader
         title={t("companySettings.title")}
         subtitle={t("companySettings.subtitle")}
       />
 
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-6">
         <ClientManagementCard
           clients={clients}
           onRefresh={refreshCompanySettings}

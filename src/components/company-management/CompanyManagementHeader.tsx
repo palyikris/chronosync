@@ -1,12 +1,14 @@
 import React from "react";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Plus, Search, SlidersHorizontal } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Button } from "../shared/Button";
 
 interface CompanyManagementHeaderProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   filterActiveOnly: boolean;
   onFilterToggle: () => void;
+  onAddClick: () => void;
 }
 
 export const CompanyManagementHeader: React.FC<CompanyManagementHeaderProps> = ({
@@ -14,45 +16,46 @@ export const CompanyManagementHeader: React.FC<CompanyManagementHeaderProps> = (
   onSearchChange,
   filterActiveOnly,
   onFilterToggle,
+  onAddClick,
 }) => {
   const { t } = useTranslation();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[#C4C7C5] bg-white px-6 py-4">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#4e6700] text-white">
-            <span className="material-symbols-outlined">account_tree</span>
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-[#191c1d]">
-              {t("companyManagement.brand")}
-            </p>
-            <p className="text-xs text-[#5e5e62]">
-              {t("companyManagement.directory")}
-            </p>
-          </div>
+    <header className="space-y-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="mb-1.5 text-[11px] font-medium text-primary-strong">
+            {t("companyManagement.directory")}
+          </p>
+          <h1 className="text-2xl font-semibold tracking-[-0.03em] text-text sm:text-[28px]">
+            {t("companyManagement.title")}
+          </h1>
+          <p className="mt-1.5 text-sm text-muted">{t("companyManagement.subtitle")}</p>
         </div>
+        <Button onClick={onAddClick} icon={<Plus className="h-4 w-4" />}>
+          {t("companyManagement.addCompany")}
+        </Button>
+      </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center w-full lg:w-auto">
-          <div className="relative flex-1 w-full sm:min-w-[280px]">
-            <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-[#C4C7C5]" />
+      <div className="flex flex-col gap-2.5 rounded-2xl border border-border bg-surface-strong/80 p-2.5 shadow-card backdrop-blur-xl sm:flex-row sm:items-center">
+          <div className="relative min-w-0 flex-1">
+            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
             <input
               type="text"
               value={searchQuery}
               onChange={(event) => onSearchChange(event.target.value)}
               placeholder={t("companyManagement.searchPlaceholder")}
-              className="w-full pl-10 pr-4 py-2.5 border border-[#C4C7C5] rounded-xl bg-white focus:ring-2 focus:ring-[#4e6700] outline-none text-sm"
+              className="h-9 w-full rounded-[10px] border border-border-strong bg-white/45 pl-9 pr-3 text-[13px] outline-none transition focus:border-primary-strong/40 focus:bg-white/80 focus:ring-3 focus:ring-primary/12"
             />
           </div>
 
           <button
             type="button"
             onClick={onFilterToggle}
-            className={`flex items-center justify-center gap-2 px-4 py-2.5 border rounded-xl transition text-sm font-medium ${
+            className={`flex h-9 items-center justify-center gap-1.5 rounded-[10px] border px-3 text-[12px] font-medium transition ${
               filterActiveOnly
-                ? "border-[#4e6700] bg-[#e8f5c2] text-[#4e6700]"
-                : "border-[#C4C7C5] bg-white text-[#5e5e62] hover:bg-[#e7e8e9]"
+                ? "border-primary-strong/30 bg-primary/20 text-primary-strong"
+                : "border-border-strong bg-white text-muted-strong hover:bg-bg"
             }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
@@ -60,7 +63,6 @@ export const CompanyManagementHeader: React.FC<CompanyManagementHeaderProps> = (
               ? t("companyManagement.activeOnly")
               : t("companyManagement.allCompanies")}
           </button>
-        </div>
       </div>
     </header>
   );

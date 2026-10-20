@@ -22,8 +22,8 @@ const RootRedirect: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="flex min-h-screen items-center justify-center bg-bg">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/25 border-t-primary-strong"></div>
       </div>
     );
   }
@@ -63,9 +63,15 @@ export default function App() {
                 element={<CompanyManagementPage />}
               />
               <Route
-                path="/admin/review"
-                element={<TimesheetReviewPage />}
-              ></Route>
+                element={
+                  <ProtectedRoute allowedRoles={["company_admin"]} />
+                }
+              >
+                <Route
+                  path="/admin/review"
+                  element={<TimesheetReviewPage />}
+                />
+              </Route>
               <Route
                 path="/super-admin/logs"
                 element={<AuditLogPage></AuditLogPage>}

@@ -6,14 +6,15 @@ import { Input } from "../shared/Input";
 import { Select } from "../shared/Select";
 import type { Client, Project } from "../../types/client-project";
 import type { TimesheetEntryStatus } from "../../types/timesheet";
+import type { SelectableTimesheetUser } from "../../types/timesheet";
 
 export interface TimesheetReviewFilterState {
   status: TimesheetEntryStatus | "all";
-  user: string | null;
+  userId: string | null;
   startDate: string | null;
   endDate: string | null;
-  project: string | null;
-  client: string | null;
+  projectId: string | null;
+  clientId: string | null;
 }
 
 interface TimesheetReviewFilterPopoverProps {
@@ -24,7 +25,7 @@ interface TimesheetReviewFilterPopoverProps {
   isOpen: boolean;
   onToggle: () => void;
   onReset: () => void;
-  employees: string[];
+  employees: SelectableTimesheetUser[];
 }
 
 export const TimesheetReviewFilterPopover: React.FC<
@@ -57,8 +58,8 @@ export const TimesheetReviewFilterPopover: React.FC<
     };
   }, [isOpen, onToggle]);
 
-  const selectedClient = filters.client
-    ? (clients.find((client) => client.name === filters.client) ?? null)
+  const selectedClient = filters.clientId
+    ? (clients.find((client) => client.id === filters.clientId) ?? null)
     : null;
   const availableProjects = selectedClient
     ? projects
@@ -68,11 +69,11 @@ export const TimesheetReviewFilterPopover: React.FC<
     : [];
   const hasActiveFilters =
     filters.status !== "all" ||
-    Boolean(filters.user) ||
+    Boolean(filters.userId) ||
     Boolean(filters.startDate) ||
     Boolean(filters.endDate) ||
-    Boolean(filters.project) ||
-    Boolean(filters.client);
+    Boolean(filters.projectId) ||
+    Boolean(filters.clientId);
 
   return (
     <div className="relative inline-block text-left">
@@ -135,12 +136,12 @@ export const TimesheetReviewFilterPopover: React.FC<
 
             <div>
               <Select
-                value={filters.client ?? ""}
+                value={filters.clientId ?? ""}
                 onChange={(event) =>
                   onChange({
                     ...filters,
-                    client: event.target.value || null,
-                    project: null,
+                    clientId: event.target.value || null,
+                    projectId: null,
                   })
                 }
                 label={t("timesheetReview.clientLabel")}
@@ -148,7 +149,7 @@ export const TimesheetReviewFilterPopover: React.FC<
               >
                 <option value="">{t("timesheetReview.allClients")}</option>
                 {clients.map((client) => (
-                  <option key={client.id} value={client.name}>
+                  <option key={client.id} value={client.id}>
                     {client.name}
                   </option>
                 ))}
@@ -157,11 +158,11 @@ export const TimesheetReviewFilterPopover: React.FC<
 
             <div>
               <Select
-                value={filters.project ?? ""}
+                value={filters.projectId ?? ""}
                 onChange={(event) =>
                   onChange({
                     ...filters,
-                    project: event.target.value || null,
+                    projectId: event.target.value || null,
                   })
                 }
                 label={t("timesheetReview.projectLabel")}
@@ -178,7 +179,7 @@ export const TimesheetReviewFilterPopover: React.FC<
                   <>
                     <option value="">{t("timesheetReview.allProjects")}</option>
                     {availableProjects.map((project) => (
-                      <option key={project.id} value={project.name}>
+                      <option key={project.id} value={project.id}>
                         {project.name}
                       </option>
                     ))}
@@ -188,11 +189,11 @@ export const TimesheetReviewFilterPopover: React.FC<
             </div>
 
             {/* <Input
-              value={filters.user ?? ""}
+              value={filters.userId ?? ""}
               onChange={(event) =>
                 onChange({
                   ...filters,
-                  user: event.target.value || null,
+                  userId: event.target.value || null,
                 })
               }
               label={t("timesheetReview.userLabel")}
@@ -200,11 +201,11 @@ export const TimesheetReviewFilterPopover: React.FC<
             /> */}
 
             <Select
-              value={filters.user ?? ""}
+              value={filters.userId ?? ""}
               onChange={(event) =>
                 onChange({
                   ...filters,
-                  user: event.target.value || null,
+                  userId: event.target.value || null,
                 })
               }
               label={t("timesheetReview.userLabel")}
@@ -212,8 +213,8 @@ export const TimesheetReviewFilterPopover: React.FC<
             >
               <option value="">{t("common.all")}</option>
               {employees.map((employee) => (
-                <option key={employee} value={employee}>
-                  {employee}
+                <option key={employee.id} value={employee.id}>
+                  {employee.full_name || employee.id}
                 </option>
               ))}
             </Select>
@@ -222,6 +223,7 @@ export const TimesheetReviewFilterPopover: React.FC<
             <Input
               type="date"
               value={filters.startDate ?? ""}
+              max={filters.endDate ?? undefined}
               onChange={(event) =>
                 onChange({
                   ...filters,
@@ -234,6 +236,7 @@ export const TimesheetReviewFilterPopover: React.FC<
             <Input
               type="date"
               value={filters.endDate ?? ""}
+              min={filters.startDate ?? undefined}
               onChange={(event) =>
                 onChange({
                   ...filters,

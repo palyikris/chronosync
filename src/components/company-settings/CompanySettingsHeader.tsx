@@ -3,9 +3,9 @@ import type { CompanySettingsHeaderProps } from "../../types/company-settings";
 
 export const CompanySettingsHeader: React.FC<CompanySettingsHeaderProps> = ({ title, subtitle }) => {
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-[#191c1d]">{title}</h1>
-      <p className="mt-1 text-sm text-[#5e5e62]">{subtitle}</p>
+    <div className="pb-1">
+      <h1 className="text-2xl font-semibold tracking-[-0.03em] text-text sm:text-[28px]">{title}</h1>
+      <p className="mt-1.5 text-sm text-muted">{subtitle}</p>
     </div>
   );
 };

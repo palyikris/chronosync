@@ -35,18 +35,18 @@ export const CompanyTable: React.FC<CompanyTableProps> = ({
 
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl border border-border-strong shadow-sm overflow-hidden">
+      <div className="overflow-hidden rounded-2xl border border-border bg-surface-strong/84 shadow-card backdrop-blur-xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
-            <thead className="bg-[#f3f4f5] border-b border-border-strong text-xs font-semibold text-text">
+            <thead className="border-b border-border bg-bg-accent/45 text-[11px] font-medium text-muted-strong">
               <tr>
-                <th className="px-6 py-4">{t("companyManagement.company")}</th>
-                <th className="px-6 py-4">{t("companyManagement.users")}</th>
-                <th className="px-6 py-4">
+                <th className="px-4 py-3">{t("companyManagement.company")}</th>
+                <th className="px-4 py-3">{t("companyManagement.users")}</th>
+                <th className="px-4 py-3">
                   {t("companyManagement.billingContact")}
                 </th>
-                <th className="px-6 py-4">{t("companyManagement.status")}</th>
-                <th className="px-6 py-4 text-center">
+                <th className="px-4 py-3">{t("companyManagement.status")}</th>
+                <th className="px-4 py-3 text-center">
                   {t("companyManagement.actions")}
                 </th>
               </tr>
@@ -65,18 +65,18 @@ export const CompanyTable: React.FC<CompanyTableProps> = ({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-border-strong shadow-sm overflow-hidden">
+    <div className="overflow-hidden rounded-2xl border border-border bg-surface-strong/84 shadow-card backdrop-blur-xl">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
-          <thead className="bg-[#f3f4f5] border-b border-border-strong text-xs font-semibold text-text">
+          <thead className="border-b border-border bg-bg-accent/45 text-[11px] font-medium text-muted-strong">
             <tr>
-              <th className="px-6 py-4">{t("companyManagement.company")}</th>
-              <th className="px-6 py-4">{t("companyManagement.users")}</th>
-              <th className="px-6 py-4">
+              <th className="px-4 py-3">{t("companyManagement.company")}</th>
+              <th className="px-4 py-3">{t("companyManagement.users")}</th>
+              <th className="px-4 py-3">
                 {t("companyManagement.billingContact")}
               </th>
-              <th className="px-6 py-4">{t("companyManagement.status")}</th>
-              <th className="px-6 py-4 text-center">
+              <th className="px-4 py-3">{t("companyManagement.status")}</th>
+              <th className="px-4 py-3 text-center">
                 {t("companyManagement.actions")}
               </th>
             </tr>
@@ -95,11 +95,11 @@ export const CompanyTable: React.FC<CompanyTableProps> = ({
                 return (
                   <tr
                     key={company.id}
-                    className={`transition ${isDeleted ? "opacity-50 bg-gray-50" : "hover:bg-bg"}`}
+                    className={`transition ${isDeleted ? "bg-bg opacity-50" : "hover:bg-bg-accent"}`}
                   >
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary-strong text-white flex items-center justify-center font-bold text-sm shrink-0">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/35 text-[11px] font-semibold text-text shadow-[inset_0_0_0_1px_rgba(75,87,57,0.07)]">
                           {company.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="flex flex-col">
@@ -123,31 +123,31 @@ export const CompanyTable: React.FC<CompanyTableProps> = ({
                       </div>
                     </td>
 
-                    <td className="px-6 py-4 text-sm text-muted">
+                    <td className="px-4 py-3 text-[13px] text-muted">
                       {company.user_count ?? 0}
                     </td>
 
-                    <td className="px-6 py-4 text-sm text-muted">
+                    <td className="px-4 py-3 text-[13px] text-muted">
                       {company.billing_email || "—"}
                     </td>
 
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-3">
                       {isDeleted ? (
-                        <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-bold uppercase tracking-wider">
+                        <span className="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-700">
                           {t("companyManagement.deleted")}
                         </span>
                       ) : company.is_active ? (
-                        <span className="px-3 py-1 bg-[#e8f5c2] text-primary-strong rounded-full text-xs font-bold uppercase tracking-wider">
+                        <span className="rounded-full bg-primary/18 px-2.5 py-1 text-[11px] font-medium text-primary-strong">
                           {t("companyManagement.active")}
                         </span>
                       ) : (
-                        <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold uppercase tracking-wider">
+                        <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-medium text-amber-800">
                           {t("companyManagement.disabled")}
                         </span>
                       )}
                     </td>
 
-                    <td className="px-6 py-4 relative text-center">
+                    <td className="relative px-4 py-3 text-center">
                       <div className="flex justify-center items-center gap-2 text-muted">
                         {!isDeleted ? (
                           <>
@@ -235,7 +235,7 @@ export const CompanyTable: React.FC<CompanyTableProps> = ({
         </table>
       </div>
 
-      <div className="px-6 py-4 flex items-center justify-between bg-[#f3f4f5] border-t border-border-strong text-xs text-muted">
+      <div className="flex items-center justify-between border-t border-border bg-bg-accent/40 px-4 py-3 text-[11px] text-muted">
         <span>
           {t("companyManagement.showingCount", {
             count: filteredCompanies.length,

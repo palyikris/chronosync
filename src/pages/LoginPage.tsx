@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { signInUser } from "../services/authService";
 import { useAuth } from "../context/useAuth";
 import { getHomeRouteForRole } from "../utils/navigation";
+import { ArrowRight, Clock3, Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -41,20 +42,15 @@ export const LoginPage: React.FC = () => {
 
   if (authLoading) {
     return (
-      <div className="app-shell px-4 py-8">
-        <main className="w-full max-w-md">
-          <section className="auth-card flex min-h-112 items-center justify-center p-8 md:p-10">
+      <div className="app-shell">
+        <main className="auth-frame grid-cols-1!">
+          <section className="auth-card min-h-[32rem] items-center text-center">
             <div className="flex flex-col items-center gap-4 text-center">
-              <div className="auth-brand-badge bg-primary text-primary-foreground">
-                <span
-                  className="material-symbols-outlined text-[28px]"
-                  aria-hidden="true"
-                >
-                  schedule
-                </span>
+              <div className="auth-brand-badge">
+                <img src="/logo.png" alt="" className="chronosync-logo h-9 w-9 object-contain" />
               </div>
               <div className="space-y-2">
-                <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
+                <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-primary/20 border-t-primary-strong" />
                 <p className="auth-subtitle text-sm text-muted">
                   {t("common.loadingAccount")}
                 </p>
@@ -67,45 +63,66 @@ export const LoginPage: React.FC = () => {
   }
 
   return (
-    <div className="app-shell px-4 py-8">
-      <main className="w-full max-w-md">
-        <section className="auth-card p-8 md:p-10">
-          <div className="mb-8 flex flex-col items-center gap-2 text-center">
-            <div className="auth-brand-badge bg-primary text-primary-foreground">
-              <span
-                className="material-symbols-outlined text-[28px]"
-                aria-hidden="true"
-              >
-                schedule
-              </span>
+    <div className="app-shell">
+      <main className="auth-frame">
+        <section className="auth-showcase" aria-hidden="true">
+          <div className="relative z-10 flex items-center justify-between">
+            <div className="flex items-center gap-2" aria-hidden="true">
+              <span className="h-2.5 w-2.5 rounded-full bg-red-400 shadow-[inset_0_0_0_0.5px_rgba(91,104,66,0.16)]" />
+              <span className="h-2.5 w-2.5 rounded-full bg-amber-400 shadow-[inset_0_0_0_0.5px_rgba(91,104,66,0.13)]" />
+              <span className="h-2.5 w-2.5 rounded-full bg-green-400 shadow-[inset_0_0_0_0.5px_rgba(91,104,66,0.12)]" />
             </div>
-            <h1 className="auth-title text-3xl font-bold tracking-tight text-text">
-              ChronoSync
-            </h1>
-            <p className="auth-subtitle text-sm text-muted">
-              {t("auth.brandSubtitle")}
-            </p>
+            <div className="flex items-center gap-2">
+              <img src="/logo.png" alt="" className="chronosync-logo h-7 w-7 object-contain" />
+              <p className="text-[13px] font-semibold tracking-[-0.015em]">ChronoSync</p>
+            </div>
           </div>
 
-          <div className="mb-8 text-center">
-            <h2 className="auth-title text-2xl font-normal leading-8 text-text">
-              {t("auth.signInTitle")}
+          <div className="relative z-10 max-w-md pb-10">
+            <div className="mb-7 flex h-14 w-14 items-center justify-center rounded-2xl border border-black/[0.06] bg-white/35 shadow-[0_1px_2px_rgba(75,87,57,0.05)] backdrop-blur-sm">
+              <Clock3 className="h-7 w-7 text-primary-strong" />
+            </div>
+            <h2 className="max-w-sm text-[2rem] font-semibold leading-[1.12] tracking-[-0.035em]">
+              {t("auth.brandSubtitle")}
             </h2>
-            <p className="auth-subtitle mt-1 text-sm leading-5 text-muted">
+            <p className="mt-4 max-w-sm text-[13px] leading-5 text-muted-strong">
               {t("auth.signInSubtitle")}
             </p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-8">
+          <div className="relative z-10 flex items-center gap-2 text-[11px] font-medium text-muted">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary-strong/60" />
+            <span>{t("common.version")}</span>
+          </div>
+        </section>
+
+        <section className="auth-card">
+          <div className="mb-8 md:hidden">
+            <div className="mb-4 flex items-center gap-2.5">
+              <div className="auth-brand-badge">
+                <img src="/logo.png" alt="" className="chronosync-logo h-9 w-9 object-contain" />
+              </div>
+              <h1 className="text-base font-semibold tracking-tight">ChronoSync</h1>
+            </div>
+          </div>
+
+          <div className="mb-7">
+            <p className="mb-2 text-[11px] font-semibold tracking-[0.02em] text-primary-strong">
+              ChronoSync
+            </p>
+            <h1 className="auth-title text-2xl font-semibold leading-tight tracking-[-0.035em] text-text">
+              {t("auth.signInTitle")}
+            </h1>
+            <p className="auth-subtitle mt-2 text-[13px] leading-5 text-muted">
+              {t("auth.signInSubtitle")}
+            </p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-5">
             {errorMsg && <div className="auth-error">{errorMsg}</div>}
 
             <div className={`auth-field ${email ? "has-value" : ""}`}>
-              <span
-                className="material-symbols-outlined auth-field-icon"
-                aria-hidden="true"
-              >
-                mail
-              </span>
+              <Mail className="auth-field-icon h-[18px] w-[18px]" aria-hidden="true" />
               <input
                 id="email"
                 type="email"
@@ -120,12 +137,7 @@ export const LoginPage: React.FC = () => {
             </div>
 
             <div className={`auth-field ${password ? "has-value" : ""}`}>
-              <span
-                className="material-symbols-outlined auth-field-icon"
-                aria-hidden="true"
-              >
-                lock
-              </span>
+              <LockKeyhole className="auth-field-icon h-[18px] w-[18px]" aria-hidden="true" />
               <input
                 id="password"
                 type={showPassword ? "text" : "password"}
@@ -145,36 +157,26 @@ export const LoginPage: React.FC = () => {
                   showPassword ? t("auth.hidePassword") : t("auth.showPassword")
                 }
               >
-                <span
-                  className="material-symbols-outlined text-[20px]"
-                  aria-hidden="true"
-                >
-                  {showPassword ? "visibility_off" : "visibility"}
-                </span>
+                {showPassword ? <EyeOff className="h-[18px] w-[18px]" /> : <Eye className="h-[18px] w-[18px]" />}
               </button>
             </div>
 
-            <div className="flex flex-col gap-4 pt-4">
+            <div className="flex flex-col gap-2 pt-1">
               <button
                 type="submit"
                 disabled={loading}
-                className="auth-button-primary bg-primary text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                className="auth-button-primary disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <span>
                   {loading ? t("common.signingIn") : t("common.signIn")}
                 </span>
-                <span
-                  className="material-symbols-outlined text-[20px]"
-                  aria-hidden="true"
-                >
-                  arrow_forward
-                </span>
+                <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
               </button>
 
               <div className="flex justify-center">
                 <button
                   type="button"
-                  className="auth-link-button px-4 py-2 text-sm font-medium text-primary-strong transition hover:underline"
+                  className="auth-link-button px-3 py-2 text-[12px] font-medium text-primary-strong transition hover:underline"
                 >
                   {t("auth.forgotPassword")}
                 </button>
@@ -182,8 +184,8 @@ export const LoginPage: React.FC = () => {
             </div>
           </form>
 
-          <div className="mt-12 text-center">
-            <p className="text-sm leading-5 text-muted-strong">
+          <div className="mt-7 border-t border-border pt-5 text-center">
+            <p className="text-[12px] leading-5 text-muted-strong">
               {t("auth.dontHaveAccount")}{" "}
               <a
                 className="font-semibold text-primary-strong hover:underline"
@@ -194,10 +196,6 @@ export const LoginPage: React.FC = () => {
             </p>
           </div>
         </section>
-
-        <div className="mt-8 flex items-center justify-center gap-6 text-sm text-muted opacity-60">
-          <span>{t("common.version")}</span>
-        </div>
       </main>
     </div>
   );

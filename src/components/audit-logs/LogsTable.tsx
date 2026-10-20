@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Card } from "../shared/Card";
 import { Modal } from "../shared/Modal";
 import type { AuditLogEntry, AuditOperation } from "../../types/logs";
+import { ChevronLeft, ChevronRight, Copy } from "lucide-react";
 
 interface AuditLogTableProps {
   logs: AuditLogEntry[];
@@ -155,9 +156,7 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({
                               <span className="font-mono text-xs">
                                 #{log.record_id.slice(0, 8)}
                               </span>
-                              <span className="material-symbols-outlined text-[14px]">
-                                content_copy
-                              </span>
+                              <Copy className="h-3.5 w-3.5" />
                             </button>
                           )}
                         </div>
@@ -174,9 +173,7 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({
                       </td>
 
                       <td className="p-4 text-center align-top">
-                        <span className="material-symbols-outlined text-muted transition-colors group-hover:text-primary">
-                          chevron_right
-                        </span>
+                        <ChevronRight className="h-5 w-5 text-muted transition-colors group-hover:text-primary-strong" />
                       </td>
                     </tr>
                   );
@@ -203,9 +200,7 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({
               className="rounded-lg border border-border-strong bg-surface-strong p-1.5 transition-colors hover:bg-bg-accent disabled:opacity-50"
               aria-label={t("auditLogs.previousPage")}
             >
-              <span className="material-symbols-outlined text-[18px] text-text">
-                chevron_left
-              </span>
+              <ChevronLeft className="h-4 w-4 text-text" />
             </button>
             <button
               type="button"
@@ -214,9 +209,7 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({
               className="rounded-lg border border-border-strong bg-surface-strong p-1.5 transition-colors hover:bg-bg-accent disabled:opacity-50"
               aria-label={t("auditLogs.nextPage")}
             >
-              <span className="material-symbols-outlined text-[18px] text-text">
-                chevron_right
-              </span>
+              <ChevronRight className="h-4 w-4 text-text" />
             </button>
           </div>
         </div>

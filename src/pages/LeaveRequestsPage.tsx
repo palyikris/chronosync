@@ -169,14 +169,14 @@ export const LeaveRequestsPage: React.FC = () => {
   }
 
   return (
-    <div className="w-full space-y-8 pb-12">
+    <div className="w-full space-y-6 pb-10">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="space-y-1">
-          <div className="text-xs font-semibold uppercase tracking-[0.25em] text-muted">
+        <div>
+          <div className="mb-1.5 text-[11px] font-medium text-primary-strong">
             {t("navigation.leaveRequests")}
           </div>
-          <h1 className="text-3xl font-bold text-text">{t("leave.title")}</h1>
-          <p className="max-w-2xl text-sm text-muted-strong">
+          <h1 className="text-2xl font-semibold tracking-[-0.03em] text-text sm:text-[28px]">{t("leave.title")}</h1>
+          <p className="mt-1.5 max-w-2xl text-sm text-muted">
             {t("leave.subtitle")}
           </p>
         </div>
@@ -200,7 +200,7 @@ export const LeaveRequestsPage: React.FC = () => {
 
       <LeaveErrorBanner error={pageError} conflictingDates={conflictingDates} />
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.35fr_0.9fr]">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.35fr_0.9fr]">
         <LeaveCalendarPanel
           currentDate={currentDate}
           leaveRequests={leaveRequests}

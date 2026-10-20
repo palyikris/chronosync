@@ -125,7 +125,7 @@ export const UserManagementPage: React.FC = () => {
   };
 
   return (
-    <div className="w-full mx-auto space-y-6">
+    <div className="mx-auto w-full space-y-6 pb-10">
       <UserManagementPageHeader
         onInviteClick={() => setIsInviteModalOpen(true)}
       />

@@ -16,42 +16,42 @@ export const BreakdownPanel: React.FC<BreakdownPanelProps> = ({
   items,
 }) => {
   return (
-    <div className="bg-white p-6 rounded-2xl border border-[#C4C7C5] shadow-sm space-y-6">
-      <div className="border-b border-gray-100 pb-4">
-        <h2 className="text-lg font-bold text-[#191c1d]">{title}</h2>
-        <p className="text-xs text-[#5e5e62]">{subtitle}</p>
+    <div className="space-y-4 rounded-2xl border border-border bg-surface-strong/84 p-4.5 shadow-card backdrop-blur-xl">
+      <div className="border-b border-border pb-4">
+        <h2 className="text-[14px] font-semibold tracking-[-0.015em] text-text">{title}</h2>
+        <p className="mt-1 text-xs text-muted">{subtitle}</p>
       </div>
 
       {items.length === 0 ? (
-        <div className="py-16 text-center text-sm text-gray-400">
+        <div className="py-16 text-center text-sm text-muted">
           {emptyMessage}
         </div>
       ) : (
-        <div className="space-y-4 max-h-80 overflow-y-auto px-4">
+        <div className="max-h-80 space-y-4 overflow-y-auto pr-2">
           {items.map((item) => (
             <div key={item.id} className="space-y-1.5">
               <div className="flex justify-between text-xs font-semibold">
-                <span className="text-[#191c1d]">
+                <span className="text-text">
                   {item.primaryLabel}{" "}
                   {item.secondaryLabel && (
-                    <span className="font-normal text-[#5e5e62]">
+                    <span className="font-normal text-muted">
                       / {item.secondaryLabel}
                     </span>
                   )}
                 </span>
-                <span className="text-[#4e6700] font-bold">
+                <span className="font-bold text-primary-strong">
                   {item.totalHours} hrs
                 </span>
               </div>
-              <div className="w-full bg-[#f3f4f5] h-2 rounded-full overflow-hidden">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-bg">
                 <div
-                  className="bg-[#4e6700] h-full rounded-full transition-all duration-300"
+                  className="h-full rounded-full bg-primary-strong transition-all duration-500"
                   style={{
                     width: `${Math.min(Math.max(item.percentage, 0), 100)}%`,
                   }}
                 />
               </div>
-              <div className="text-[10px] text-[#5e5e62] text-right font-medium">
+              <div className="text-right text-[10px] font-medium text-muted">
                 {item.percentage}% of total time
               </div>
             </div>

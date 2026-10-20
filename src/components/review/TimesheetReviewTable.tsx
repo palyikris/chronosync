@@ -5,8 +5,12 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../context/useAuth";
 import type { TimesheetEntryStatus } from "../../types/timesheet";
-import { approveEntries, rejectEntry } from "../../services/reviewService";
-import { revertSubmittedTimesheetEntries } from "../../services/timesheetService";
+import {
+  approveEntries,
+  rejectEntry,
+  revertEntryToSubmitted,
+} from "../../services/reviewService";
+import { clampReviewPage } from "../../utils/reviewHelpers";
 import { RejectionModal } from "./RejectionModal";
 import { ReviewBulkActionsBar } from "./ReviewBulkActionsBar";
 import { ReviewClientGroup } from "./ReviewClientGroup";
@@ -26,7 +30,7 @@ export const TimesheetReviewTable: React.FC<TimesheetReviewTableProps> = ({
   isLoading = false,
 }) => {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const queryClient = useQueryClient();
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -34,31 +38,43 @@ export const TimesheetReviewTable: React.FC<TimesheetReviewTableProps> = ({
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [targetRejectId, setTargetRejectId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [actionError, setActionError] = useState<string | null>(null);
   const [collapsedProjects, setCollapsedProjects] = useState<
     Record<string, boolean>
   >({});
+
+  const refreshReviewData = () => {
+    queryClient.invalidateQueries({ queryKey: ["timesheets-for-review"] });
+    queryClient.invalidateQueries({ queryKey: ["kpis"] });
+  };
 
   const approveMutation = useMutation({
     mutationFn: (entryIds: string[]) =>
       approveEntries({
         entryIds,
         reviewerId: user?.id || "",
+        companyId: profile?.company_id || "",
       }),
+    onMutate: () => setActionError(null),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["timesheets-for-review"] });
-      queryClient.invalidateQueries({ queryKey: ["kpis"] });
       setSelectedIds([]);
     },
+    onError: () => setActionError(t("timesheetReview.actionError")),
+    onSettled: refreshReviewData,
   });
 
   const revertMutation = useMutation({
-    mutationFn: (entryIds: string[]) =>
-      revertSubmittedTimesheetEntries(entryIds),
+    mutationFn: (entryId: string) =>
+      revertEntryToSubmitted({
+        entryId,
+        companyId: profile?.company_id || "",
+      }),
+    onMutate: () => setActionError(null),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["timesheets-for-review"] });
-      queryClient.invalidateQueries({ queryKey: ["kpis"] });
       setSelectedIds([]);
     },
+    onError: () => setActionError(t("timesheetReview.actionError")),
+    onSettled: refreshReviewData,
   });
 
   const rejectMutation = useMutation({
@@ -66,16 +82,18 @@ export const TimesheetReviewTable: React.FC<TimesheetReviewTableProps> = ({
       rejectEntry({
         entryId,
         reviewerId: user?.id || "",
+        companyId: profile?.company_id || "",
         rejectionReason: reason,
       }),
+    onMutate: () => setActionError(null),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["timesheets-for-review"] });
-      queryClient.invalidateQueries({ queryKey: ["kpis"] });
       setSelectedIds([]);
       setIsRejectModalOpen(false);
       setRejectionReason("");
       setTargetRejectId(null);
     },
+    onError: () => setActionError(t("timesheetReview.actionError")),
+    onSettled: refreshReviewData,
   });
 
   // 1. Group ALL entries globally by Client -> Project and apply the default
@@ -176,7 +194,8 @@ export const TimesheetReviewTable: React.FC<TimesheetReviewTableProps> = ({
   // 2. Paginate over unique CLIENTS
   const totalPages =
     Math.ceil(allGroupedClients.length / CLIENTS_PER_PAGE) || 1;
-  const startClientIndex = (currentPage - 1) * CLIENTS_PER_PAGE;
+  const activePage = clampReviewPage(currentPage, totalPages);
+  const startClientIndex = (activePage - 1) * CLIENTS_PER_PAGE;
   const paginatedClients = useMemo(
     () =>
       allGroupedClients.slice(
@@ -186,16 +205,40 @@ export const TimesheetReviewTable: React.FC<TimesheetReviewTableProps> = ({
     [allGroupedClients, startClientIndex],
   );
 
-  // All entry IDs currently visible on the active page
+  const submittedEntryIdSet = useMemo(
+    () =>
+      new Set(
+        entries
+          .filter((entry) => entry.status === "submitted")
+          .map((entry) => entry.id),
+      ),
+    [entries],
+  );
+
+  const activeSelectedIds = useMemo(
+    () => selectedIds.filter((id) => submittedEntryIdSet.has(id)),
+    [selectedIds, submittedEntryIdSet],
+  );
+
+  // Only submitted entries are eligible for bulk review actions.
   const activePageEntryIds = useMemo(() => {
     return paginatedClients.flatMap((client) =>
-      client.projects.flatMap((project) => project.entries.map((e) => e.id)),
+      client.projects.flatMap((project) =>
+        project.entries
+          .filter((entry) => entry.status === "submitted")
+          .map((entry) => entry.id),
+      ),
     );
   }, [paginatedClients]);
 
   const isAllActivePageSelected =
     activePageEntryIds.length > 0 &&
-    activePageEntryIds.every((id) => selectedIds.includes(id));
+    activePageEntryIds.every((id) => activeSelectedIds.includes(id));
+
+  const isActionPending =
+    approveMutation.isPending ||
+    revertMutation.isPending ||
+    rejectMutation.isPending;
 
   const toggleProject = useCallback((groupKey: string) => {
     setCollapsedProjects((prev) => ({ ...prev, [groupKey]: !prev[groupKey] }));
@@ -241,7 +284,7 @@ export const TimesheetReviewTable: React.FC<TimesheetReviewTableProps> = ({
 
   const handleRevertSingle = useCallback(
     (id: string) => {
-      revertMutation.mutate([id]);
+      revertMutation.mutate(id);
     },
     [revertMutation],
   );
@@ -282,10 +325,19 @@ export const TimesheetReviewTable: React.FC<TimesheetReviewTableProps> = ({
 
   return (
     <div className="space-y-4">
+      {actionError ? (
+        <div
+          role="alert"
+          className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+        >
+          {actionError}
+        </div>
+      ) : null}
+
       <ReviewBulkActionsBar
-        selectedCount={selectedIds.length}
-        isPending={approveMutation.isPending}
-        onApprove={() => approveMutation.mutate(selectedIds)}
+        selectedCount={activeSelectedIds.length}
+        isPending={isActionPending}
+        onApprove={() => approveMutation.mutate(activeSelectedIds)}
         t={t}
       />
 
@@ -295,6 +347,9 @@ export const TimesheetReviewTable: React.FC<TimesheetReviewTableProps> = ({
             <ReviewTableHeader
               t={t}
               isAllActivePageSelected={isAllActivePageSelected}
+              isSelectionDisabled={
+                activePageEntryIds.length === 0 || isActionPending
+              }
               onSelectAll={handleSelectAll}
             />
             <tbody className="text-sm text-slate-800">
@@ -312,7 +367,7 @@ export const TimesheetReviewTable: React.FC<TimesheetReviewTableProps> = ({
                   <ReviewClientGroup
                     key={client.clientId}
                     client={client}
-                    selectedIds={selectedIds}
+                    selectedIds={activeSelectedIds}
                     collapsedProjects={collapsedProjects}
                     onToggleProject={toggleProject}
                     onSelectGroup={handleSelectGroup}
@@ -323,6 +378,7 @@ export const TimesheetReviewTable: React.FC<TimesheetReviewTableProps> = ({
                     handleApproveSingle={handleApproveSingle}
                     handleRevertSingle={handleRevertSingle}
                     handleOpenReject={handleOpenReject}
+                    isActionPending={isActionPending}
                   />
                 ))
               )}
@@ -331,7 +387,7 @@ export const TimesheetReviewTable: React.FC<TimesheetReviewTableProps> = ({
         </div>
 
         <ReviewTablePagination
-          currentPage={currentPage}
+          currentPage={activePage}
           totalPages={totalPages}
           startClientIndex={startClientIndex}
           totalClients={allGroupedClients.length}
@@ -368,4 +424,4 @@ export const TimesheetReviewTable: React.FC<TimesheetReviewTableProps> = ({
       />
     </div>
   );
-};;;
+};

@@ -11,111 +11,127 @@ import { ClockArrowUp, ClockCheck, UserRoundSearch } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { TimesheetEntryStatus } from "../types/timesheet";
 import {
-  fetchActiveClients,
-  fetchActiveProjects,
+  fetchClients,
+  fetchProjects,
 } from "../services/clientProjectService";
+import { fetchSelectableCompanyUsers } from "../services/timesheetService";
 import { TimesheetReviewTable } from "../components/review/TimesheetReviewTable";
 
 export default function TimesheetReviewPage() {
-
   const { profile } = useAuth();
   const { t } = useTranslation();
 
   const [statusFilter, setStatusFilter] = useState<TimesheetEntryStatus | "all">("all");
-  const [userFilter, setUserFilter] = useState<string | null>(null);
+  const [userIdFilter, setUserIdFilter] = useState<string | null>(null);
   const [startDateFilter, setStartDateFilter] = useState<string | null>(null);
   const [endDateFilter, setEndDateFilter] = useState<string | null>(null);
-  const [projectFilter, setProjectFilter] = useState<string | null>(null);
-  const [clientFilter, setClientFilter] = useState<string | null>(null);
+  const [projectIdFilter, setProjectIdFilter] = useState<string | null>(null);
+  const [clientIdFilter, setClientIdFilter] = useState<string | null>(null);
   const [isFilterPopoverOpen, setIsFilterPopoverOpen] = useState(false);
 
-  const { data: kpis, isLoading } = useQuery({
+  const {
+    data: kpis,
+    isLoading,
+    isError: isKpiError,
+  } = useQuery({
     queryKey: ["kpis", profile?.company_id],
     queryFn: () => getKPIsForCompany(profile?.company_id || ""),
     enabled: !!profile?.company_id,
   });
 
-  const { data: activeClients = [] } = useQuery({
-    queryKey: ["review-active-clients", profile?.company_id],
-    queryFn: () => fetchActiveClients(profile?.company_id || ""),
+  const { data: reviewClients = [], isError: isClientsError } = useQuery({
+    queryKey: ["review-clients", profile?.company_id],
+    queryFn: () => fetchClients(profile?.company_id || ""),
     enabled: !!profile?.company_id,
   });
 
-  const { data: activeProjects = [] } = useQuery({
-    queryKey: ["review-active-projects", profile?.company_id],
-    queryFn: () => fetchActiveProjects(profile?.company_id || ""),
+  const { data: reviewProjects = [], isError: isProjectsError } = useQuery({
+    queryKey: ["review-projects", profile?.company_id],
+    queryFn: () => fetchProjects(profile?.company_id || ""),
     enabled: !!profile?.company_id,
   });
 
-  const {data: timesheetsForReview} = useQuery({
-    queryKey: ["timesheets-for-review", profile?.company_id, statusFilter, startDateFilter, endDateFilter, projectFilter, clientFilter],
+  const { data: employees = [], isError: isEmployeesError } = useQuery({
+    queryKey: ["review-employees", profile?.company_id],
+    queryFn: () => fetchSelectableCompanyUsers(profile?.company_id),
+    enabled: !!profile?.company_id,
+  });
+
+  const {
+    data: timesheetsForReview = [],
+    isLoading: isReviewLoading,
+    isError: isReviewError,
+  } = useQuery({
+    queryKey: [
+      "timesheets-for-review",
+      profile?.company_id,
+      statusFilter,
+      userIdFilter,
+      startDateFilter,
+      endDateFilter,
+      projectIdFilter,
+      clientIdFilter,
+    ],
     queryFn: () => getTimesheetReviews(profile?.company_id || "", {
       status: statusFilter,
+      userId: userIdFilter,
       startDate: startDateFilter,
       endDate: endDateFilter,
-      projectId: projectFilter
-        ? activeProjects.find((project) => project.name === projectFilter)?.id ?? null
-        : null,
-      clientId: clientFilter
-        ? activeClients.find((client) => client.name === clientFilter)?.id ?? null
-        : null,
+      projectId: projectIdFilter,
+      clientId: clientIdFilter,
     }),
     enabled: !!profile?.company_id,
   });
 
-  const filteredTimesheetsForReview = useMemo(() => {
-    const searchTerm = userFilter?.trim().toLowerCase();
+  const tableResetKey = useMemo(
+    () =>
+      [
+        statusFilter,
+        userIdFilter,
+        startDateFilter,
+        endDateFilter,
+        projectIdFilter,
+        clientIdFilter,
+      ].join(":"),
+    [
+      statusFilter,
+      userIdFilter,
+      startDateFilter,
+      endDateFilter,
+      projectIdFilter,
+      clientIdFilter,
+    ],
+  );
 
-    if (!searchTerm) {
-      return timesheetsForReview || [];
-    }
-
-    return (timesheetsForReview || []).filter((entry) => {
-      const fullName = entry.profiles?.full_name?.toLowerCase() ?? "";
-      const fallbackId = entry.user_id.toLowerCase();
-      return fullName.includes(searchTerm) || fallbackId.includes(searchTerm);
-    });
-  }, [timesheetsForReview, userFilter]);
-
-  const employees = useMemo(() => {
-    const uniqueEmployees = new Set<string>();
-    (timesheetsForReview || []).forEach((entry) => {
-      const fullName = entry.profiles?.full_name;
-      uniqueEmployees.add(fullName);
-    });
-    return Array.from(uniqueEmployees).sort((a, b) => a.localeCompare(b));
-  }, [timesheetsForReview]);
+  const hasLoadError =
+    isKpiError ||
+    isClientsError ||
+    isProjectsError ||
+    isEmployeesError ||
+    isReviewError;
 
   const reviewFilters: TimesheetReviewFilterState = {
     status: statusFilter,
-    user: userFilter,
+    userId: userIdFilter,
     startDate: startDateFilter,
     endDate: endDateFilter,
-    project: projectFilter,
-    client: clientFilter,
+    projectId: projectIdFilter,
+    clientId: clientIdFilter,
   };
 
   const handleResetFilters = () => {
-    const thisMonthFirstDay = new Date();
-    thisMonthFirstDay.setDate(1);
-    const thisMonthLastDay = new Date(
-      thisMonthFirstDay.getFullYear(),
-      thisMonthFirstDay.getMonth() + 1,
-      0,
-    );
-
     setStatusFilter("all");
-    setUserFilter(null);
-    setStartDateFilter(thisMonthFirstDay.toISOString().split("T")[0]);
-    setEndDateFilter(thisMonthLastDay.toISOString().split("T")[0]);
-    setProjectFilter(null);
-    setClientFilter(null);
+    setUserIdFilter(null);
+    setStartDateFilter(null);
+    setEndDateFilter(null);
+    setProjectIdFilter(null);
+    setClientIdFilter(null);
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/25 border-t-primary-strong"></div>
       </div>
     );
   }
@@ -151,10 +167,10 @@ export default function TimesheetReviewPage() {
   ];
 
   return (
-    <div className="w-full mx-auto space-y-8 pb-12">
+    <div className="mx-auto w-full space-y-6 pb-10">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-text">
+          <h1 className="text-2xl font-semibold tracking-[-0.03em] text-text sm:text-[28px]">
             {t("navigation.timesheetReview")}
           </h1>
         </div>
@@ -163,14 +179,14 @@ export default function TimesheetReviewPage() {
           filters={reviewFilters}
           onChange={(nextFilters) => {
             setStatusFilter(nextFilters.status);
-            setUserFilter(nextFilters.user);
+            setUserIdFilter(nextFilters.userId);
             setStartDateFilter(nextFilters.startDate);
             setEndDateFilter(nextFilters.endDate);
-            setProjectFilter(nextFilters.project);
-            setClientFilter(nextFilters.client);
+            setProjectIdFilter(nextFilters.projectId);
+            setClientIdFilter(nextFilters.clientId);
           }}
-          clients={activeClients}
-          projects={activeProjects}
+          clients={reviewClients}
+          projects={reviewProjects}
           isOpen={isFilterPopoverOpen}
           onToggle={() => setIsFilterPopoverOpen((open) => !open)}
           onReset={handleResetFilters}
@@ -180,9 +196,19 @@ export default function TimesheetReviewPage() {
 
       <KpiSummaryCards items={kpiItems}></KpiSummaryCards>
 
+      {hasLoadError ? (
+        <div
+          role="alert"
+          className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+        >
+          {t("timesheetReview.loadError")}
+        </div>
+      ) : null}
+
       <TimesheetReviewTable
-        entries={filteredTimesheetsForReview}
-        isLoading={isLoading}
+        key={tableResetKey}
+        entries={timesheetsForReview}
+        isLoading={isReviewLoading}
       ></TimesheetReviewTable>
     </div>
   );

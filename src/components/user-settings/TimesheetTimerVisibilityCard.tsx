@@ -44,14 +44,14 @@ export const TimesheetTimerVisibilityCard: React.FC = () => {
   };
 
   return (
-    <Card className="space-y-6 p-6 shadow-sm">
+    <Card className="space-y-5 p-5">
       <CardHeader className="rounded-t-2xl border-b-0 bg-transparent px-0 py-0">
         <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-bg-accent p-2.5 text-primary-strong">
+          <div className="rounded-[10px] bg-primary/10 p-2 text-primary-strong">
             <Clock3 className="h-5 w-5" />
           </div>
           <div>
-            <CardTitle className="text-lg font-bold text-text">
+            <CardTitle className="text-[15px] font-semibold text-text">
               {t("userSettings.timerVisibilityCardTitle")}
             </CardTitle>
             <p className="mt-1 text-sm text-muted-strong">
@@ -71,7 +71,7 @@ export const TimesheetTimerVisibilityCard: React.FC = () => {
             onClick={handleToggle}
             disabled={isSaving}
             className={cn(
-              "inline-flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-70",
+              "inline-flex items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-70",
               showTimer
                 ? "border-primary-strong bg-primary/10"
                 : "border-border-strong bg-bg-accent",

@@ -1,6 +1,16 @@
 import React from "react";
 import { cn } from "../../utils/cn";
 import type { InputProps } from "../../types/ui";
+import { Badge, Clock3, FolderOpen, History, Languages, User } from "lucide-react";
+
+const iconMap: Record<string, React.ReactNode> = {
+  person: <User className="h-4 w-4" />,
+  badge: <Badge className="h-4 w-4" />,
+  translate: <Languages className="h-4 w-4" />,
+  schedule: <Clock3 className="h-4 w-4" />,
+  history: <History className="h-4 w-4" />,
+  folder_open: <FolderOpen className="h-4 w-4" />,
+};
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
   (
@@ -32,11 +42,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className={cn("auth-field", hasValue && "has-value", className)}>
         {leftIcon ? (
-          <span
-            className="material-symbols-outlined auth-field-icon"
-            aria-hidden="true"
-          >
-            {leftIcon}
+          <span className="auth-field-icon" aria-hidden="true">
+            {typeof leftIcon === "string" ? iconMap[leftIcon] : leftIcon}
           </span>
         ) : null}
         <input

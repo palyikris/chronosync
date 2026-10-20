@@ -40,7 +40,7 @@ const KpiCard: React.FC<KpiCardProps> = ({
   value,
   subtitle,
   icon: Icon,
-  iconClassName = "text-[#4e6700]",
+  iconClassName = "text-primary-strong",
   valueSuffix,
   valuePrefix,
   className = "",
@@ -50,27 +50,27 @@ const KpiCard: React.FC<KpiCardProps> = ({
 
   return (
     <div
-      className={`bg-white p-6 rounded-2xl border border-border-strong shadow-sm flex flex-col justify-between ${className}`.trim()}
+      className={`group flex min-h-36 flex-col justify-between rounded-2xl border border-border bg-surface-strong/84 p-4.5 shadow-card backdrop-blur-xl transition-[border-color,box-shadow] duration-300 hover:border-border-strong hover:shadow-card-hover ${className}`.trim()}
     >
       <div className="flex justify-between items-start">
-        <span className="text-xs font-semibold text-muted uppercase tracking-wider">
+        <span className="text-[11px] font-medium text-muted">
           {title}
         </span>
-        <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary-foreground">
-          <Icon className={`w-5 h-5 ${iconClassName}`} />
+        <div className="flex h-8 w-8 items-center justify-center rounded-[9px] border border-primary-strong/8 bg-primary/12 text-primary-strong">
+          <Icon className={`h-4 w-4 ${iconClassName}`} />
         </div>
       </div>
       <div className="mt-4">
         {numericValue !== null ? (
           <AnimatedNumber
-            className="text-3xl font-extrabold text-text"
+            className="text-[28px] font-semibold tracking-[-0.04em] text-text"
             value={numericValue}
             prefix={valuePrefix}
             suffix={valueSuffix}
             decimals={Number.isInteger(numericValue) ? 0 : 2}
           ></AnimatedNumber>
         ) : (
-          <span className="text-3xl font-extrabold text-text tabular-nums">
+          <span className="text-[28px] font-semibold tracking-[-0.04em] text-text tabular-nums">
             {valuePrefix}
             {value}
             {valueSuffix}
@@ -91,7 +91,7 @@ export const KpiSummaryCards: React.FC<KpiSummaryCardsProps> = ({ items }) => {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {items.map((item, index) => (
         <KpiCard
           key={`${item.title}-${index}`}

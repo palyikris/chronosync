@@ -45,6 +45,7 @@ export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextArea
 
 export interface ProtectedRouteProps {
   requireAdmin?: boolean;
+  allowedRoles?: UserRole[];
 }
 
 export interface NavItem {

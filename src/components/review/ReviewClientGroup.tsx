@@ -1,6 +1,8 @@
 import React from "react";
+import type { TFunction } from "i18next";
 import { Building2, ChevronDown, FolderGit2 } from "lucide-react";
 import { EntryRow } from "./EntryRow";
+import { REVIEW_PROJECT_TONE } from "./projectTones";
 import type { ClientGroup, TimesheetReviewRecord } from "./types";
 
 interface ReviewClientGroupProps {
@@ -10,12 +12,13 @@ interface ReviewClientGroupProps {
   onToggleProject: (groupKey: string) => void;
   onSelectGroup: (groupEntries: TimesheetReviewRecord[]) => void;
   onApproveProject: (ids: string[]) => void;
-  t: any;
+  t: TFunction;
   getStatusLabel: (status: "draft" | "submitted" | "approved" | "rejected" | "invoiced") => string;
   handleSelectRow: (id: string) => void;
   handleApproveSingle: (id: string) => void;
   handleRevertSingle: (id: string) => void;
   handleOpenReject: (id: string) => void;
+  isActionPending: boolean;
 }
 
 export const ReviewClientGroup: React.FC<ReviewClientGroupProps> = ({
@@ -31,11 +34,15 @@ export const ReviewClientGroup: React.FC<ReviewClientGroupProps> = ({
   handleApproveSingle,
   handleRevertSingle,
   handleOpenReject,
+  isActionPending,
 }) => {
   const allClientEntries = client.projects.flatMap((project) => project.entries);
-  const isAllClientSelected = allClientEntries.every((entry) =>
-    selectedIds.includes(entry.id),
+  const submittedClientEntries = allClientEntries.filter(
+    (entry) => entry.status === "submitted",
   );
+  const isAllClientSelected =
+    submittedClientEntries.length > 0 &&
+    submittedClientEntries.every((entry) => selectedIds.includes(entry.id));
 
   return (
     <React.Fragment key={client.clientId}>
@@ -44,11 +51,12 @@ export const ReviewClientGroup: React.FC<ReviewClientGroupProps> = ({
           <input
             type="checkbox"
             checked={isAllClientSelected}
+            disabled={submittedClientEntries.length === 0 || isActionPending}
             aria-label={t("timesheetReview.selectAllClient", {
               clientName: client.clientName,
             })}
-            onChange={() => onSelectGroup(allClientEntries)}
-            className="w-3.5 h-3.5 rounded border-slate-300 text-primary cursor-pointer accent-primary"
+            onChange={() => onSelectGroup(submittedClientEntries)}
+            className="w-3.5 h-3.5 rounded border-slate-300 text-primary cursor-pointer accent-primary disabled:cursor-not-allowed disabled:opacity-40"
           />
         </td>
         <td colSpan={6} className="py-2.5 pr-4">
@@ -76,43 +84,63 @@ export const ReviewClientGroup: React.FC<ReviewClientGroupProps> = ({
       {client.projects.map((project) => {
         const groupKey = `${client.clientId}-${project.projectId}`;
         const isCollapsed = !!collapsedProjects[groupKey];
+        const projectTone = REVIEW_PROJECT_TONE;
         const submittedEntries = project.entries.filter(
           (entry) => entry.status === "submitted",
         );
-        const isAllProjectSelected = project.entries.every((entry) =>
-          selectedIds.includes(entry.id),
-        );
+        const isAllProjectSelected =
+          submittedEntries.length > 0 &&
+          submittedEntries.every((entry) => selectedIds.includes(entry.id));
 
         return (
           <React.Fragment key={groupKey}>
-            <tr className="bg-slate-50/50 border-b border-slate-200">
-              <td className="p-2 text-center">
+            <tr
+              className={`border-y ${projectTone.header} ${
+                isCollapsed ? projectTone.end : ""
+              }`}
+            >
+              <td
+                className={`border-l-2 p-2 text-center ${projectTone.rail}`}
+              >
                 <input
                   type="checkbox"
                   checked={isAllProjectSelected}
+                  disabled={submittedEntries.length === 0 || isActionPending}
                   aria-label={t("timesheetReview.selectAllProject", {
                     projectName: project.projectName,
                   })}
-                  onChange={() => onSelectGroup(project.entries)}
-                  className="w-3.5 h-3.5 rounded border-slate-300 text-primary cursor-pointer accent-primary"
+                  onChange={() => onSelectGroup(submittedEntries)}
+                  className="w-3.5 h-3.5 rounded border-slate-300 text-primary cursor-pointer accent-primary disabled:cursor-not-allowed disabled:opacity-40"
                 />
               </td>
-              <td colSpan={6} className="py-2 pr-4">
-                <div className="flex items-center justify-between text-xs">
+              <td colSpan={6} className="py-2.5 pr-4">
+                <div className="flex items-center justify-between gap-4 text-xs">
                   <button
                     type="button"
                     onClick={() => onToggleProject(groupKey)}
-                    className="flex items-center gap-2 font-medium text-slate-700 hover:text-slate-900 transition-colors"
+                    aria-expanded={!isCollapsed}
+                    className="flex min-w-0 items-center gap-2.5 text-left font-medium text-slate-700 transition-colors hover:text-slate-900"
                   >
                     <ChevronDown
-                      className={`w-3.5 h-3.5 text-slate-400 transition-transform ${
+                      className={`h-4 w-4 shrink-0 text-slate-500 transition-transform ${
                         isCollapsed ? "-rotate-90" : ""
                       }`}
                     />
-                    <FolderGit2 className="w-3.5 h-3.5 text-slate-400" />
-                    <span>{project.projectName}</span>
-                    <span className="text-slate-400 font-normal">
-                      ({project.entries.length})
+                    <span
+                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${projectTone.icon}`}
+                    >
+                      <FolderGit2 className="h-4 w-4" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                        {t("timesheetReview.projectLabel")}
+                      </span>
+                      <span className="block truncate text-[13px] font-bold text-slate-900">
+                        {project.projectName}
+                      </span>
+                    </span>
+                    <span className="shrink-0 rounded-full border border-current/10 bg-white/55 px-2 py-0.5 font-normal text-slate-500">
+                      {project.entries.length}
                     </span>
                   </button>
 
@@ -130,7 +158,7 @@ export const ReviewClientGroup: React.FC<ReviewClientGroupProps> = ({
                             submittedEntries.map((entry) => entry.id),
                           )
                         }
-                        disabled={false}
+                        disabled={isActionPending}
                         className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200 transition-colors disabled:opacity-50"
                       >
                         {t("timesheetReview.approveProject", {
@@ -144,7 +172,7 @@ export const ReviewClientGroup: React.FC<ReviewClientGroupProps> = ({
             </tr>
 
             {!isCollapsed &&
-              project.entries.map((entry) => (
+              project.entries.map((entry, entryIndex) => (
                 <EntryRow
                   key={entry.id}
                   entry={entry}
@@ -154,15 +182,15 @@ export const ReviewClientGroup: React.FC<ReviewClientGroupProps> = ({
                   approveLabel={t("common.approve", "Approve")}
                   revertLabel={t("common.revert", "Revert")}
                   selectLabel={t("timesheetReview.selectEntry", {
-                    user:
-                      entry.profiles?.full_name ||
-                      entry.profiles?.email ||
-                      entry.user_id,
+                    user: entry.profiles?.full_name || entry.user_id,
                   })}
                   onSelect={handleSelectRow}
                   onApprove={handleApproveSingle}
                   onRevert={handleRevertSingle}
                   onOpenReject={handleOpenReject}
+                  isActionPending={isActionPending}
+                  projectTone={projectTone}
+                  isProjectEnd={entryIndex === project.entries.length - 1}
                 />
               ))}
           </React.Fragment>

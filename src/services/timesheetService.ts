@@ -13,6 +13,10 @@ import type {
   TimesheetEntryUpdatePayload,
   UpsertDailyEntryParams,
 } from "../types/timesheet";
+import {
+  getLocalDateValue,
+  getRoundedTimerHours,
+} from "../utils/timesheetWorkflow";
 
 const pad = (value: number) => String(value).padStart(2, "0");
 const ACTIVE_TIMER_STORAGE_PREFIX = "chronosync:active-timer";
@@ -250,10 +254,10 @@ export async function stopTimer(
     throw new Error(i18n.t("errors.invalidActiveTimerState"));
   }
 
-  const roundedHoursLogged = Math.round((durationMinutes / 60) * 10) / 10;
+  const roundedHoursLogged = getRoundedTimerHours(durationMinutes);
 
   const createdEntry = await createTimesheetEntry({
-    work_date: new Date().toISOString().slice(0, 10),
+    work_date: getLocalDateValue(new Date()),
     hours_logged: roundedHoursLogged,
     description: entryData.description,
     company_id: entryData.company_id,
@@ -270,7 +274,7 @@ export async function cloneEntry(
   entryId: string,
   workDate: string,
 ): Promise<TimesheetEntry> {
-  const user = await getCurrentUser();
+  await getCurrentUser();
 
   const { data: existingEntry, error: fetchError } = await supabase
     .from("timesheets")
@@ -283,30 +287,37 @@ export async function cloneEntry(
     throw new Error(i18n.t("errors.timesheetEntryNotFound"));
   }
 
-  const { data, error } = await supabase
-    .from("timesheets")
-    .insert([
-      {
-        user_id: user.id,
-        company_id: existingEntry.company_id,
-        client_id: existingEntry.client_id,
-        project_id: existingEntry.project_id,
-        work_date: workDate,
-        hours_logged: Number(existingEntry.hours_logged),
-        description: existingEntry.description,
-      },
-    ])
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data as TimesheetEntry;
+  return createTimesheetEntry({
+    target_user_id: existingEntry.user_id,
+    company_id: existingEntry.company_id,
+    client_id: existingEntry.client_id,
+    project_id: existingEntry.project_id,
+    work_date: workDate,
+    hours_logged: Number(existingEntry.hours_logged),
+    description: existingEntry.description,
+  });
 }
 
 /**
  * Delete a timesheet entry
  */
 export async function deleteTimesheetEntry(id: string): Promise<void> {
+  const { data: existingEntry, error: fetchError } = await supabase
+    .from("timesheets")
+    .select("user_id, work_date")
+    .eq("id", id)
+    .single<{ user_id: string; work_date: string }>();
+
+  if (fetchError) throw fetchError;
+  if (!existingEntry) {
+    throw new Error(i18n.t("errors.timesheetEntryNotFound"));
+  }
+
+  await assertTimesheetDateIsUnlocked(
+    existingEntry.user_id,
+    existingEntry.work_date,
+  );
+
   const { error } = await supabase.from("timesheets").delete().eq("id", id);
 
   if (error) throw error;
@@ -439,6 +450,8 @@ export async function upsertDailyEntry(
 export async function submitTimesheetEntries(
   entryIds: string[],
 ): Promise<void> {
+  if (entryIds.length === 0) return;
+
   const { error } = await supabase
     .from("timesheets")
     .update({
@@ -453,6 +466,8 @@ export async function submitTimesheetEntries(
 export async function revertSubmittedTimesheetEntries(
   entryIds: string[],
 ): Promise<void> {
+  if (entryIds.length === 0) return;
+
   const { error } = await supabase
     .from("timesheets")
     .update({

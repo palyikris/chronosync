@@ -88,7 +88,7 @@ const AuditLogPage: React.FC = () => {
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 pb-12 sm:px-6 lg:px-8">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 pb-10">
       <AuditLogHeader
         logs={logs}
         totalCount={totalCount}

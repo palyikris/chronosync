@@ -187,18 +187,18 @@ export const LiveTimerWidget: React.FC = () => {
 
   return (
     <Card className="overflow-visible">
-      <div className="h-1 bg-linear-to-r from-primary-strong via-primary to-primary/60" />
+      <div className="h-px bg-linear-to-r from-transparent via-primary-strong/35 to-transparent" />
 
       <CardContent className="flex flex-col gap-3 px-3 py-3 lg:px-4 lg:py-4">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex items-center gap-3 rounded-2xl border border-border-strong bg-bg-accent px-3 py-2">
-            <div className="flex h-10 min-w-20 items-center justify-center rounded-xl border border-border-strong bg-surface-strong px-2.5">
-              <div className="font-mono text-lg font-semibold tracking-[0.16em] text-text lg:text-xl">
+          <div className="flex items-center gap-3 rounded-xl border border-border bg-bg-accent/45 px-2.5 py-2">
+            <div className="flex h-9 min-w-20 items-center justify-center rounded-[9px] border border-border-strong bg-white/55 px-2.5 shadow-sm">
+              <div className="font-mono text-[15px] font-medium tracking-[0.14em] text-text">
                 {timerDisplay}
               </div>
             </div>
             <div className="hidden sm:block">
-              <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">
+              <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted">
                 <Clock3 className="h-3 w-3" />
                 {t("timesheet.readyToStart")}
               </div>
@@ -215,7 +215,7 @@ export const LiveTimerWidget: React.FC = () => {
             type="button"
             onClick={isRunning ? handleStopTimer : handleStartTimer}
             disabled={isActionDisabled}
-            className="min-w-32 rounded-2xl px-4 py-2.5 text-sm font-semibold shadow-sm transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60"
+            className="min-w-28 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isRunning ? (
               <Square className="h-4 w-4 fill-current" />

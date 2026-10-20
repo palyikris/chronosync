@@ -1,24 +1,38 @@
-import React, { useState } from "react";
+import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard,
-  Clock,
-  Users,
   Building2,
+  CalendarRange,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Columns3Cog,
+  LayoutDashboard,
   LogOut,
-  Settings,
   ScanEye,
   ScrollText,
-  Columns3Cog,
-  CalendarRange,
+  Settings,
+  Users,
+  X,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/useAuth";
 import { getRoleLabel } from "../../utils/getRoleLabel";
 import type { NavItem } from "../../types/ui";
-import { useTranslation } from "react-i18next";
 
-export const Sidebar: React.FC = () => {
-  const [isHovered, setIsHovered] = useState(false);
+interface SidebarProps {
+  isCollapsed: boolean;
+  isMobileOpen: boolean;
+  onCollapsedChange: (collapsed: boolean) => void;
+  onMobileClose: () => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({
+  isCollapsed,
+  isMobileOpen,
+  onCollapsedChange,
+  onMobileClose,
+}) => {
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -28,188 +42,134 @@ export const Sidebar: React.FC = () => {
     navigate("/login");
   };
 
-  // Define navigation items mapped to Lucide Icons
   const mainNavItems: NavItem[] = [
     { to: "/timesheet", label: t("navigation.timesheets"), icon: Clock },
-    {
-      to: "/leaves",
-      label: t("navigation.leaveRequests"),
-      icon: CalendarRange,
-    },
-    {
-      to: "/admin/dashboard",
-      label: t("navigation.dashboard"),
-      icon: LayoutDashboard,
-      roleRequired: "company_admin",
-    },
-    {
-      to: "/admin/review",
-      label: t("navigation.timesheetReview"),
-      icon: ScanEye,
-      roleRequired: "company_admin",
-    },
-    {
-      to: "/admin/users",
-      label: t("navigation.teamMembers"),
-      icon: Users,
-      roleRequired: "company_admin",
-    },
-    {
-      to: "/admin/settings",
-      label: t("navigation.companySettings"),
-      icon: Columns3Cog,
-      roleRequired: "company_admin",
-    },
-    {
-      to: "/super-admin/companies",
-      label: t("navigation.companies"),
-      icon: Building2,
-      roleRequired: "super_admin",
-    },
-    {
-      to: "/super-admin/logs",
-      label: t("navigation.logs"),
-      icon: ScrollText,
-      roleRequired: "super_admin",
-    },
-    {
-      to: "/settings",
-      label: t("navigation.userSettings"),
-      icon: Settings,
-    },
+    { to: "/leaves", label: t("navigation.leaveRequests"), icon: CalendarRange },
+    { to: "/admin/dashboard", label: t("navigation.dashboard"), icon: LayoutDashboard, roleRequired: "company_admin" },
+    { to: "/admin/review", label: t("navigation.timesheetReview"), icon: ScanEye, roleRequired: "company_admin" },
+    { to: "/admin/users", label: t("navigation.teamMembers"), icon: Users, roleRequired: "company_admin" },
+    { to: "/admin/settings", label: t("navigation.companySettings"), icon: Columns3Cog, roleRequired: "company_admin" },
+    { to: "/super-admin/companies", label: t("navigation.companies"), icon: Building2, roleRequired: "super_admin" },
+    { to: "/super-admin/logs", label: t("navigation.logs"), icon: ScrollText, roleRequired: "super_admin" },
+    { to: "/settings", label: t("navigation.userSettings"), icon: Settings },
   ];
 
-  // Filter items based on user's active role
   const filteredNavItems = mainNavItems.filter((item) => {
     if (!item.roleRequired) return true;
-    // Hide company settings from super_admins
-    if (item.to === "/admin/settings" && profile?.role === "super_admin")
-      return false;
-    if (item.to === "/admin/review" && profile?.role === "super_admin")
-      return false;
-    if (item.to === "/admin/dashboard" && profile?.role === "super_admin")
-      return false;
-    if (item.to === "/leaves" && profile?.role === "super_admin") return false;
-    if (item.roleRequired === "super_admin")
-      return profile?.role === "super_admin";
-    if (item.roleRequired === "company_admin")
-      return (
-        profile?.role === "company_admin" || profile?.role === "super_admin"
-      );
-    return true;
+    if (
+      ["/admin/settings", "/admin/review", "/admin/dashboard", "/leaves"].includes(item.to) &&
+      profile?.role === "super_admin"
+    ) return false;
+    if (item.roleRequired === "super_admin") return profile?.role === "super_admin";
+    return profile?.role === "company_admin" || profile?.role === "super_admin";
   });
 
   return (
-    <aside
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className={`fixed left-0 top-0 h-screen bg-bg border-r border-border-strong z-50 flex flex-col justify-between py-6 transition-all duration-300 ease-in-out shadow-sm ${
-        isHovered ? "w-64" : "w-20"
-      }`}
-    >
-      {/* Brand Header */}
-      <div className="flex items-center px-4 gap-3">
-        <div className="w-12 h-12 flex items-center justify-center text-white shrink-0">
-          <img src="/logo.png" alt="Logo image in sidebar" width={40} />
-        </div>
-        <div
-          className={`overflow-hidden transition-all duration-300 ${
-            isHovered ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
-          }`}
-        >
-          <h1 className="font-bold text-lg text-text whitespace-nowrap leading-tight">
-            Chrono<span className="text-primary-strong">Sync</span>
-          </h1>
-          <p className="text-xs text-gray-500 uppercase font-semibold tracking-wider whitespace-nowrap">
-            {profile?.role?.replace("_", " ") || t("navigation.portal")}
-          </p>
-        </div>
-      </div>
-
-      {/* Primary Navigation Links */}
-      <nav className="flex flex-col gap-2 w-full px-3 mt-8">
-        {filteredNavItems.map((item) => {
-          const IconComponent = item.icon;
-          return (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                `relative flex items-center h-12 rounded-full transition-all duration-200 group overflow-hidden ${
-                  isActive
-                    ? "bg-primary text-primary-foreground font-bold shadow-sm"
-                    : "text-muted hover:bg-border hover:text-text"
-                }`
-              }
+    <>
+      <button
+        type="button"
+        aria-label="Close navigation"
+        onClick={onMobileClose}
+        className={`fixed inset-0 z-40 bg-text/24 backdrop-blur-[3px] transition-opacity duration-300 lg:hidden ${
+          isMobileOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+        }`}
+      />
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-72 border-r border-border bg-surface-strong/94 shadow-[12px_0_36px_rgba(75,87,57,0.08)] backdrop-blur-2xl transition-[transform,width] duration-300 ease-out lg:inset-y-3 lg:left-3 lg:translate-x-0 lg:rounded-[20px] lg:border ${
+          isMobileOpen ? "translate-x-0" : "-translate-x-full"
+        } ${isCollapsed ? "lg:w-17" : "lg:w-64"}`}
+      >
+        <div className="flex h-full flex-col">
+          <div className={`flex h-16 items-center ${isCollapsed ? "px-4 lg:justify-center lg:px-2" : "px-4"}`}>
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] bg-primary/25 shadow-[inset_0_0_0_1px_rgba(96,120,42,0.09)]">
+                <img src="/logo.png" alt="ChronoSync" className="chronosync-logo h-8 w-8 object-contain" />
+              </div>
+              <div className={`${isCollapsed ? "lg:hidden" : ""} min-w-0`}>
+                  <h1 className="truncate text-[14px] font-semibold tracking-[-0.02em] text-text">
+                    Chrono<span className="text-primary-strong">Sync</span>
+                  </h1>
+                  <p className="truncate text-[9px] font-medium uppercase tracking-[0.11em] text-muted">
+                    {profile?.role?.replace("_", " ") || t("navigation.portal")}
+                  </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onMobileClose}
+              className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-[9px] text-muted hover:bg-black/[0.04] hover:text-text lg:hidden"
+              aria-label="Close navigation"
             >
-              {({ isActive }) => (
-                <>
-                  {/* Icon Container (Fixed 80px width centering) */}
-                  <div className="w-14 h-12 flex items-center justify-center shrink-0">
-                    <IconComponent
-                      className={`w-5 h-5 transition-transform duration-200 group-hover:scale-110 ${
-                        isActive ? "text-primary-foreground" : "text-muted"
-                      }`}
-                    />
-                  </div>
-
-                  {/* Text Label (Fades/expands on hover) */}
-                  <span
-                    className={`whitespace-nowrap text-sm tracking-wide transition-all duration-300 ${
-                      isHovered
-                        ? "opacity-100 translate-x-0"
-                        : "opacity-0 -translate-x-4 pointer-events-none"
-                    }`}
-                  >
-                    {item.label}
-                  </span>
-                </>
-              )}
-            </NavLink>
-          );
-        })}
-      </nav>
-
-      {/* Footer Settings & Sign Out */}
-      <div className="flex flex-col gap-2 w-full px-3 mt-auto pt-4 border-t border-border-strong">
-        {/* Profile Card (Expands on Sidebar Hover) */}
-        <div className="flex items-center h-12 px-2 gap-3 overflow-hidden">
-          <div className="w-10 h-10 rounded-full bg-primary-strong text-white flex items-center justify-center font-bold text-sm shrink-0">
-            {profile?.full_name?.charAt(0).toUpperCase() || "U"}
+              <X className="h-5 w-5" />
+            </button>
           </div>
-          <div
-            className={`flex flex-col transition-all duration-300 overflow-hidden ${
-              isHovered ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
-            }`}
+
+          <div className="mx-3.5 h-px bg-border" />
+
+          <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2.5 py-3.5">
+            <p className={`${isCollapsed ? "lg:hidden" : ""} mb-1.5 px-2.5 text-[10px] font-medium text-muted/75`}>
+                {t("navigation.portal")}
+            </p>
+            {filteredNavItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  title={isCollapsed ? item.label : undefined}
+                  className={({ isActive }) =>
+                    `group relative flex h-9 items-center rounded-[9px] transition-all duration-150 ${
+                      isCollapsed ? "gap-2.5 px-2.5 lg:justify-center lg:gap-0 lg:px-0" : "gap-2.5 px-2.5"
+                    } ${
+                      isActive
+                        ? "bg-black/[0.06] text-text shadow-[inset_0_0_0_1px_rgba(75,87,57,0.035)]"
+                        : "text-muted-strong hover:bg-black/[0.035] hover:text-text"
+                    }`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <Icon className={`h-4 w-4 shrink-0 transition-colors duration-150 ${isActive ? "text-primary-strong stroke-[2.2]" : "stroke-[1.8]"}`} />
+                      <span className={`${isCollapsed ? "lg:hidden" : ""} truncate text-[12.5px] font-medium`}>{item.label}</span>
+                      {isActive && !isCollapsed ? <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary-strong/65" /> : null}
+                    </>
+                  )}
+                </NavLink>
+              );
+            })}
+          </nav>
+
+          <div className="border-t border-border p-2.5">
+            <div className={`mb-1 flex items-center rounded-xl border border-border bg-white/35 ${isCollapsed ? "gap-2.5 p-2.5 lg:justify-center lg:p-1.5" : "gap-2.5 p-2.5"}`}>
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/35 text-[11px] font-semibold text-text shadow-[inset_0_0_0_1px_rgba(75,87,57,0.07)]">
+                {profile?.full_name?.charAt(0).toUpperCase() || "U"}
+              </div>
+              <div className={`${isCollapsed ? "lg:hidden" : ""} min-w-0 flex-1`}>
+                  <p className="truncate text-[12px] font-medium text-text">{profile?.full_name || "User Profile"}</p>
+                  <p className="truncate text-[10px] text-muted">{getRoleLabel(profile?.role || "regular")}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleLogout}
+              title={isCollapsed ? t("navigation.signOut") : undefined}
+              className={`flex h-8 w-full items-center rounded-[9px] text-danger transition hover:bg-danger-bg/70 ${isCollapsed ? "gap-2.5 px-2.5 lg:justify-center lg:gap-0 lg:px-0" : "gap-2.5 px-2.5"}`}
+            >
+              <LogOut className="h-4 w-4 shrink-0" />
+              <span className={`${isCollapsed ? "lg:hidden" : ""} text-[12px] font-medium`}>{t("navigation.signOut")}</span>
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => onCollapsedChange(!isCollapsed)}
+            className="absolute -right-2.5 top-5 hidden h-5 w-5 items-center justify-center rounded-full border border-border-strong bg-surface-strong text-muted shadow-sm transition hover:text-text lg:flex"
+            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            <span className="text-sm font-semibold text-text truncate">
-              {profile?.full_name || "User Profile"}
-            </span>
-            <span className="text-xs text-gray-400 truncate">
-              {getRoleLabel(profile?.role || "regular")}
-            </span>
-          </div>
+            {isCollapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
+          </button>
         </div>
-
-        {/* Sign Out Button */}
-        <button
-          onClick={handleLogout}
-          className="flex items-center h-12 rounded-full text-red-600 hover:bg-red-50 transition-all duration-200 group overflow-hidden w-full text-left"
-        >
-          <div className="w-14 h-12 flex items-center justify-center shrink-0">
-            <LogOut className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
-          </div>
-          <span
-            className={`whitespace-nowrap text-sm font-semibold tracking-wide transition-all duration-300 ${
-              isHovered
-                ? "opacity-100 translate-x-0"
-                : "opacity-0 -translate-x-4 pointer-events-none"
-            }`}
-          >
-            {t("navigation.signOut")}
-          </span>
-        </button>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 };

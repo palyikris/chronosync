@@ -5,20 +5,20 @@ import { Tooltip } from "./Tooltip";
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    "bg-primary text-primary-foreground shadow-sm hover:opacity-90 active:scale-[0.98]",
-  secondary: "bg-surface-strong text-text hover:bg-bg-accent shadow-sm",
-  ghost: "bg-transparent text-text hover:bg-border",
-  outline: "border border-border-strong bg-transparent text-text hover:bg-bg-accent",
-  danger: "bg-danger text-white hover:opacity-90",
+    "border border-primary-strong/20 bg-primary text-primary-foreground shadow-[0_1px_2px_rgba(96,120,42,0.2)] hover:brightness-[1.02]",
+  secondary: "border border-border-strong bg-surface-strong/80 text-text shadow-[0_1px_2px_rgba(75,87,57,0.05)] hover:bg-white",
+  ghost: "border border-transparent bg-transparent text-muted-strong hover:bg-black/[0.045] hover:text-text",
+  outline: "border border-border-strong bg-white/45 text-text shadow-[0_1px_1px_rgba(75,87,57,0.035)] hover:bg-white/80",
+  danger: "border border-danger/15 bg-danger text-white shadow-[0_1px_2px_rgba(120,67,54,0.16)] hover:brightness-95",
   dashed:
-    "border-2 border-dashed border-primary-strong text-primary-strong hover:bg-primary/10",
+    "border border-dashed border-primary-strong/40 bg-primary/5 text-primary-strong hover:bg-primary/10",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: "h-9 px-3 text-sm",
-  md: "h-11 px-4 text-sm",
-  lg: "h-12 px-5 text-base",
-  icon: "h-9 w-9 p-0",
+  sm: "h-7 px-2.5 text-[11.5px]",
+  md: "h-8 px-3 text-[12px]",
+  lg: "h-9 px-3.5 text-[12px]",
+  icon: "h-7 w-7 p-0",
 };
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -37,14 +37,11 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref,
   ) => {
     const isDisabled = Boolean(props.disabled);
-    const showIconSwap = Boolean(icon && children && !isDisabled);
     const buttonClasses = cn(
-      "inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-all duration-200 ease-out disabled:opacity-50",
-      showIconSwap
-        ? "group relative overflow-hidden [perspective:1000px] cursor-pointer hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md active:scale-[0.98]"
-        : isDisabled
-          ? "cursor-not-allowed"
-          : "cursor-pointer hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md active:scale-[0.98]",
+      "ui-control group inline-flex shrink-0 items-center justify-center gap-1.5 rounded-[8px] font-[500] leading-none tracking-[-0.012em] transition-[background-color,border-color,box-shadow,filter,transform] duration-150 ease-out [&>svg]:h-3.5 [&>svg]:w-3.5 [&>svg]:stroke-[1.8] disabled:opacity-45",
+      isDisabled
+        ? "cursor-not-allowed"
+        : "cursor-pointer active:scale-[0.985]",
       variantClasses[variant],
       sizeClasses[size],
       className,
@@ -52,32 +49,19 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     const button = (
       <button ref={ref} type={type} className={buttonClasses} {...props}>
-        {showIconSwap ? (
-          <>
-            <span className="pointer-events-none invisible whitespace-nowrap opacity-0">
-              {children}
-            </span>
-            <span className="pointer-events-none absolute inset-0 flex items-center justify-center transform-3d transition-transform duration-300 ease-out group-hover:transform-[rotateX(180deg)]">
-              <span
-                aria-hidden="true"
-                className="absolute inset-0 flex items-center justify-center backface-hidden transition-opacity duration-200 group-hover:opacity-0"
-              >
-                {icon}
-              </span>
-              <span
-                aria-hidden="true"
-                className="absolute inset-0 flex items-center justify-center transform-[rotateX(180deg)] backface-hidden"
-              >
-                {children}
-              </span>
-            </span>
-          </>
-        ) : (
-          <>
-            {icon ? <span aria-hidden="true">{icon}</span> : null}
+        {icon ? (
+          <span
+            aria-hidden="true"
+            className="flex h-3.5 w-3.5 shrink-0 items-center justify-center [&>svg]:h-full [&>svg]:w-full [&>svg]:stroke-[1.8]"
+          >
+            {icon}
+          </span>
+        ) : null}
+        {children ? (
+          <span className="inline-flex items-center gap-1.5 whitespace-nowrap [&>svg]:h-3.5 [&>svg]:w-3.5 [&>svg]:stroke-[1.8]">
             {children}
-          </>
-        )}
+          </span>
+        ) : null}
       </button>
     );
 

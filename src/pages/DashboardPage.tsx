@@ -144,7 +144,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ companyId }) => {
       icon: Briefcase,
       className: "col-span-1 sm:col-span-2 lg:col-span-1",
       footer: (
-        <div className="w-full bg-[#e7e8e9] h-2 rounded-full mt-3 overflow-hidden">
+        <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100">
           <div
             className="bg-primary-strong h-full rounded-full transition-all duration-500"
             style={{
@@ -157,7 +157,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ companyId }) => {
   ];
 
   return (
-    <div className="w-full mx-auto space-y-8 pb-12">
+    <div className="mx-auto w-full space-y-6 pb-10">
       <DashboardHeader
         startDate={startDate}
         endDate={endDate}
@@ -178,7 +178,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ companyId }) => {
         <>
           <KpiSummaryCards items={summaryCardItems} />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <ProjectBreakdownPanel
               breakdown={data?.clientProjectBreakdown || []}
             />

@@ -10,6 +10,10 @@ type SelectOption = {
   disabled?: boolean;
 };
 
+type StyledSelectProps = SelectProps & {
+  menuPlacement?: "top" | "bottom";
+};
+
 const extractOptions = (children: React.ReactNode): SelectOption[] => {
   const options: SelectOption[] = [];
 
@@ -60,7 +64,7 @@ const extractOptions = (children: React.ReactNode): SelectOption[] => {
   return options;
 };
 
-export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
+export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
   (
     {
       className,
@@ -72,6 +76,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
       onChange,
       disabled,
       placeholder,
+      menuPlacement = "bottom",
       ...props
     },
     ref,
@@ -162,27 +167,22 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         ref={wrapperRef}
         className={cn("auth-field", hasValue && "has-value", className)}
       >
-        {leftIcon ? (
-          <span
-            className="material-symbols-outlined auth-field-icon"
-            aria-hidden="true"
-          >
-            {leftIcon}
-          </span>
-        ) : null}
+        {leftIcon ? <span className="auth-field-icon" aria-hidden="true">{leftIcon}</span> : null}
 
         <button
           type="button"
           id={id}
           className="auth-input relative flex cursor-pointer items-center text-left"
           disabled={disabled}
+          aria-label={props["aria-label"] ?? label}
+          aria-haspopup="listbox"
           aria-expanded={isOpen}
           aria-controls={isOpen ? `${id}-options` : undefined}
           onClick={() => !disabled && setIsOpen((open) => !open)}
         >
           <span
             className={cn(
-              "block truncate pr-6 text-sm sm:text-base",
+              "block truncate pr-6 text-[13px]",
               !hasValue && "text-muted",
             )}
           >
@@ -201,9 +201,14 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         {label ? <label htmlFor={id}>{label}</label> : null}
 
         {isOpen ? (
-          <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-md border border-[#dfe3e4] bg-white shadow-lg">
+          <div
+            className={cn(
+              "absolute z-50 w-full overflow-hidden rounded-xl border border-border-strong bg-surface-strong/95 shadow-[0_12px_32px_rgba(75,87,57,0.14)] backdrop-blur-2xl animate-[popover-in_160ms_cubic-bezier(0.22,1,0.36,1)]",
+              menuPlacement === "top" ? "bottom-full mb-1.5" : "mt-1.5",
+            )}
+          >
             {shouldShowSearch ? (
-              <div className="border-b border-[#edf0f0] px-3 py-3">
+              <div className="border-b border-border bg-bg-accent/60 px-3 py-3">
                 <div className="auth-field">
                   <Search
                     className="auth-field-icon h-4 w-4"
@@ -238,10 +243,10 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
                       aria-selected={isSelected}
                       disabled={option.disabled}
                       className={cn(
-                        "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm transition-colors duration-150",
+                        "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-[13px] transition-colors duration-150",
                         isSelected
-                          ? "bg-[#eef7bf] text-primary-foreground"
-                          : "text-text hover:bg-[#f3f6f4]",
+                          ? "bg-black/[0.06] text-text"
+                          : "text-text hover:bg-black/[0.035]",
                         option.disabled && "cursor-not-allowed opacity-50",
                       )}
                       onClick={() => {

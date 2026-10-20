@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import {
   CalendarCheck2,
   Copy,
@@ -11,12 +11,17 @@ import {
 import { useTranslation } from "react-i18next";
 import { Button } from "../shared/Button";
 import { Card, CardContent, CardFooter, CardHeader } from "../shared/Card";
+import { Select } from "../shared/Select";
 import type { TimesheetEntryListProps } from "../../types/timesheet";
 import {
   revertSubmittedTimesheetEntries,
   submitTimesheetEntries,
 } from "../../services/timesheetService";
 import { useQueryClient } from "@tanstack/react-query";
+import {
+  getDraftEntryIdsForPeriod,
+  type TimesheetSubmissionPeriod,
+} from "../../utils/timesheetWorkflow";
 
 export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
   selectedDate,
@@ -44,80 +49,92 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
     day: "numeric",
   });
   const queryClient = useQueryClient();
+  const [isStatusUpdating, setIsStatusUpdating] = useState(false);
+  const [submissionPeriod, setSubmissionPeriod] =
+    useState<TimesheetSubmissionPeriod>("day");
 
-  const handleSubmitDay = async () => {
-    const entryIdsToSubmit = allEntries
-      .filter(
-        (entry) => entry.status === "draft" && entry.work_date === selectedDate,
-      )
-      .map((entry) => entry.id);
-    await submitTimesheetEntries(entryIdsToSubmit);
-    queryClient.invalidateQueries({
-      queryKey: ["timesheets"],
-    });
+  const draftEntryIds = useMemo(
+    () => ({
+      day: getDraftEntryIdsForPeriod(allEntries, selectedDate, "day"),
+      week: getDraftEntryIdsForPeriod(allEntries, selectedDate, "week"),
+      month: getDraftEntryIdsForPeriod(allEntries, selectedDate, "month"),
+    }),
+    [allEntries, selectedDate],
+  );
+  const selectedDraftEntryIds = draftEntryIds[submissionPeriod];
+
+  const runStatusUpdate = async (update: () => Promise<void>) => {
+    setIsStatusUpdating(true);
+
+    try {
+      await update();
+      await queryClient.invalidateQueries({ queryKey: ["timesheets"] });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : t("timesheet.statusUpdateFailed");
+      window.alert(message);
+    } finally {
+      setIsStatusUpdating(false);
+    }
   };
 
-  const handleSubmitWeek = async () => {
-    const selectedDateObj = new Date(`${selectedDate}T12:00:00`);
-    const startOfWeek = new Date(selectedDateObj);
-    startOfWeek.setDate(selectedDateObj.getDate() - selectedDateObj.getDay());
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
-
-    const entryIdsToSubmit = allEntries
-      .filter(
-        (entry) =>
-          entry.status === "draft" &&
-          new Date(`${entry.work_date}T12:00:00`) >= startOfWeek &&
-          new Date(`${entry.work_date}T12:00:00`) <= endOfWeek,
-      )
-      .map((entry) => entry.id);
-    await submitTimesheetEntries(entryIdsToSubmit);
-    queryClient.invalidateQueries({
-      queryKey: ["timesheets"],
-    });
+  const handleSubmit = (entryIds: string[]) => {
+    if (entryIds.length === 0) return;
+    void runStatusUpdate(() => submitTimesheetEntries(entryIds));
   };
 
-  const handleRevertToDraft = async (entryIds: string[]) => {
-    await revertSubmittedTimesheetEntries(entryIds);
-    queryClient.invalidateQueries({
-      queryKey: ["timesheets"],
-    });
+  const handleRevertToDraft = (entryIds: string[]) => {
+    void runStatusUpdate(() => revertSubmittedTimesheetEntries(entryIds));
   };
 
-  const handleSubmitSingleEntry = async (entryId: string) => {
-    await submitTimesheetEntries([entryId]);
-    queryClient.invalidateQueries({
-      queryKey: ["timesheets"],
-    });
-  };
+  const handleSubmitSingleEntry = (entryId: string) => handleSubmit([entryId]);
 
-  const handleSubmitMonth = async () => {
-    const selectedDateObj = new Date(`${selectedDate}T12:00:00`);
-    const startOfMonth = new Date(
-      selectedDateObj.getFullYear(),
-      selectedDateObj.getMonth(),
-      1,
-    );
-    const endOfMonth = new Date(
-      selectedDateObj.getFullYear(),
-      selectedDateObj.getMonth() + 1,
-      0,
-    );
-
-    const entryIdsToSubmit = allEntries
-      .filter(
-        (entry) =>
-          entry.status === "draft" &&
-          new Date(`${entry.work_date}T12:00:00`) >= startOfMonth &&
-          new Date(`${entry.work_date}T12:00:00`) <= endOfMonth,
-      )
-      .map((entry) => entry.id);
-    await submitTimesheetEntries(entryIdsToSubmit);
-    queryClient.invalidateQueries({
-      queryKey: ["timesheets"],
-    });
-  };
+  const submissionControls = (
+    <div className="flex shrink-0 items-center gap-1.5">
+      <Select
+        id="timesheet-submission-period"
+        aria-label={t("timesheet.submissionPeriod")}
+        value={submissionPeriod}
+        onChange={(event) =>
+          setSubmissionPeriod(
+            event.target.value as TimesheetSubmissionPeriod,
+          )
+        }
+        disabled={isStatusUpdating}
+        menuPlacement="bottom"
+        className="w-[6.75rem] shrink-0 [&_.auth-input]:h-8 [&_.auth-input]:min-h-8 [&_.auth-input]:rounded-[8px] [&_.auth-input]:bg-surface-strong/80 [&_.auth-input]:px-2.5 [&_.auth-input]:py-0 [&_.auth-input>span]:text-[12px]"
+      >
+        <option value="day">
+          {t("timesheet.day")} ({draftEntryIds.day.length})
+        </option>
+        <option value="week">
+          {t("timesheet.week")} ({draftEntryIds.week.length})
+        </option>
+        <option value="month">
+          {t("timesheet.month")} ({draftEntryIds.month.length})
+        </option>
+      </Select>
+      <Button
+        variant="primary"
+        size="md"
+        onClick={() => handleSubmit(selectedDraftEntryIds)}
+        disabled={isStatusUpdating || selectedDraftEntryIds.length === 0}
+      >
+        {isStatusUpdating ? (
+          t("timesheet.submitting")
+        ) : (
+          <>
+            {t("timesheet.submitDrafts")}
+            <span className="rounded-full bg-black/10 px-1.5 py-0.5 text-[10px] tabular-nums">
+              {selectedDraftEntryIds.length}
+            </span>
+          </>
+        )}
+      </Button>
+    </div>
+  );
 
   return (
     <Card className="flex h-full flex-col">
@@ -136,6 +153,25 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
           </div>
         </div>
       </CardHeader>
+
+      {canManageTarget && viewMode === "calendar" ? (
+        <div className="flex flex-col gap-2 border-b border-border bg-bg-accent/25 px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] bg-primary/15 text-primary-strong">
+              <CalendarCheck2 className="h-3.5 w-3.5" aria-hidden="true" />
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-xs font-semibold text-text">
+                {t("timesheet.submitDraftEntries")}
+              </p>
+              <p className="truncate text-[11px] text-muted">
+                {t("timesheet.submissionPeriod")}
+              </p>
+            </div>
+          </div>
+          {submissionControls}
+        </div>
+      ) : null}
 
       <CardContent className="flex-1 space-y-3 overflow-y-auto">
         {loading ? (
@@ -176,7 +212,7 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
                 className="group relative rounded-xl border border-border-strong bg-surface-strong p-3 transition-all hover:shadow-md"
               >
                 <div className="mb-1 flex items-start justify-between gap-2">
-                  <span className="rounded bg-[#e3e2e6] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-strong">
+                  <span className="rounded bg-slate-200 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-strong">
                     {(() => {
                       const clientName =
                         clients.find((c) => c.id === entry.client_id)?.name ??
@@ -210,7 +246,7 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
                           size="icon"
                           onClick={() => onEditEntry(entry)}
                           disabled={isUpdating}
-                          className="h-8 w-8 rounded-full text-primary-strong hover:bg-[#e6f0d6]"
+                          className="text-primary-strong hover:bg-green-100"
                           tooltip={t("timesheet.editEntry")}
                           aria-label={t("timesheet.editEntry")}
                           icon={<Edit className="h-4 w-4" />}
@@ -221,8 +257,8 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
                         variant="ghost"
                         size="icon"
                         onClick={() => onDuplicateEntry(entry)}
-                        disabled={isDuplicating}
-                        className="h-8 w-8 rounded-full text-indigo-600 hover:bg-indigo-50"
+                        disabled={isDuplicating || isSelectedDateLocked}
+                        className="text-indigo-600 hover:bg-indigo-50"
                         tooltip={t("timesheet.copyEntry")}
                         aria-label={t("timesheet.copyEntry")}
                         icon={<Copy className="h-4 w-4" />}
@@ -233,8 +269,8 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
                           variant="ghost"
                           size="icon"
                           onClick={() => handleRevertToDraft([entry.id])}
-                          disabled={isDuplicating}
-                          className="h-8 w-8 rounded-full text-indigo-600 hover:bg-indigo-50"
+                          disabled={isStatusUpdating}
+                          className="text-indigo-600 hover:bg-indigo-50"
                           tooltip={t("timesheet.revertToDraft")}
                           aria-label={t("timesheet.revertToDraft")}
                           icon={<Undo2 className="w-4 h-4" />}
@@ -248,7 +284,7 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
                           size="icon"
                           onClick={() => onDeleteEntry(entry.id)}
                           disabled={isDeleting}
-                          className="h-8 w-8 rounded-full text-danger hover:bg-red-50"
+                          className="text-danger hover:bg-red-50"
                           tooltip={t("timesheet.deleteEntry")}
                           aria-label={t("timesheet.deleteEntry")}
                           icon={<Trash2 className="h-4 w-4" />}
@@ -260,8 +296,8 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
                           variant="ghost"
                           size="icon"
                           onClick={() => handleSubmitSingleEntry(entry.id)}
-                          disabled={isUpdating}
-                          className="h-8 w-8 rounded-full text-green-600 hover:bg-green-50"
+                          disabled={isUpdating || isStatusUpdating}
+                          className="text-green-600 hover:bg-green-50"
                           tooltip={t("timesheet.submitEntry")}
                           aria-label={t("timesheet.submitEntry")}
                           icon={<CalendarCheck2 className="h-4 w-4" />}
@@ -284,20 +320,14 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
       </CardContent>
 
       {canManageTarget ? (
-        <CardFooter
-          className={
-            viewMode === "calendar"
-              ? "flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between"
-              : "flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between"
-          }
-        >
+        <CardFooter className="flex items-center">
           {/* <p className="order-1 text-sm text-muted sm:order-3 sm:text-right">
             {totalDailyHours} {t("timesheet.hoursLogged")}
           </p> */}
 
           <Button
             variant="primary"
-            className="order-2 w-full rounded-xl sm:order-1 sm:w-auto"
+            size="sm"
             onClick={onAddEntry}
             disabled={isSelectedDateLocked}
             icon={<Plus className="h-4 w-4" />}
@@ -306,35 +336,6 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
               ? t("leave.lockedDay")
               : t("timesheet.addEntry")}
           </Button>
-
-          {viewMode === "calendar" ? (
-            <div className="order-3 grid w-full grid-cols-3 gap-2 sm:order-2 sm:flex sm:items-center sm:justify-end sm:gap-3">
-              <Button
-                variant="outline"
-                className="rounded-xl"
-                icon={<CalendarCheck2 className="h-4 w-4" />}
-                onClick={handleSubmitDay}
-              >
-                {t("timesheet.day")}
-              </Button>
-              <Button
-                variant="outline"
-                className="rounded-xl"
-                icon={<CalendarCheck2 className="h-4 w-4" />}
-                onClick={handleSubmitWeek}
-              >
-                {t("timesheet.week")}
-              </Button>
-              <Button
-                variant="outline"
-                className="rounded-xl"
-                icon={<CalendarCheck2 className="h-4 w-4" />}
-                onClick={handleSubmitMonth}
-              >
-                {t("timesheet.month")}
-              </Button>
-            </div>
-          ) : null}
         </CardFooter>
       ) : null}
     </Card>

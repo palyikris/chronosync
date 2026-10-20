@@ -18,14 +18,14 @@ export const LanguagePreferencesCard: React.FC<Props> = ({
   const { t } = useTranslation();
 
   return (
-    <Card className="space-y-6 p-6 shadow-sm">
+    <Card className="space-y-5 p-5">
       <CardHeader className="rounded-t-2xl border-b-0 bg-transparent px-0 py-0">
         <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-bg-accent p-2.5 text-primary-strong">
+          <div className="rounded-[10px] bg-primary/10 p-2 text-primary-strong">
             <Languages className="h-5 w-5" />
           </div>
           <div>
-            <CardTitle className="text-lg font-bold text-text">
+            <CardTitle className="text-[15px] font-semibold text-text">
               {t("userSettings.languageCardTitle")}
             </CardTitle>
             <p className="mt-1 text-sm text-muted-strong">

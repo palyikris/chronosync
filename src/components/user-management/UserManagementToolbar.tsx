@@ -28,13 +28,13 @@ export const UserManagementToolbar: React.FC<UserManagementToolbarProps> = ({
   return (
     <div className="flex flex-col sm:flex-row items-center gap-4">
       <div className="relative flex-1 w-full max-w-md">
-        <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-[#C4C7C5]" />
+        <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
         <input
           type="text"
           value={searchTerm}
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder={t("users.searchPlaceholder")}
-          className="w-full pl-10 pr-4 py-2.5 border border-[#C4C7C5] rounded-xl bg-white focus:ring-2 focus:ring-[#4e6700] outline-none text-sm"
+          className="w-full rounded-xl border border-border-strong bg-white py-2.5 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-primary-strong"
         />
       </div>
 
@@ -48,7 +48,7 @@ export const UserManagementToolbar: React.FC<UserManagementToolbarProps> = ({
         />
         <button
           type="button"
-          className="flex items-center gap-2 px-4 py-2.5 border border-[#C4C7C5] bg-white rounded-xl hover:bg-[#e7e8e9] transition text-sm font-medium text-[#5e5e62]"
+          className="flex items-center gap-2 rounded-xl border border-border-strong bg-white px-4 py-2.5 text-sm font-medium text-muted transition hover:bg-slate-100"
         >
           <Download className="w-4 h-4" /> {t("users.export")}
         </button>

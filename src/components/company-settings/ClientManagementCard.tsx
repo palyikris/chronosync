@@ -3,8 +3,6 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Check,
-  ChevronDown,
-  ChevronUp,
   PencilLine,
   Plus,
   Star,
@@ -237,68 +235,55 @@ export const ClientManagementCard: React.FC<Props> = ({
   };
 
   return (
-    <Card className="space-y-6 p-6 shadow-sm">
-      <CardHeader className="relative rounded-t-2xl border-b-0 bg-transparent px-0 py-0">
-        <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-bg-accent p-2.5 text-primary-strong">
+    <Card className="border-border-strong">
+      <CardHeader className="flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/30 text-primary-strong ring-1 ring-primary-strong/10">
             <Users className="h-5 w-5" />
           </div>
-          <div>
-            <CardTitle className="text-lg font-bold text-text">
-              {t("companySettings.clientsTitle")}
-            </CardTitle>
-            <p className="mt-1 text-sm text-muted-strong">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-base font-semibold">
+                {t("companySettings.clientsTitle")}
+              </CardTitle>
+              <span className="rounded-full bg-bg px-2 py-0.5 text-[11px] font-semibold tabular-nums text-muted-strong ring-1 ring-border">
+                {clients.length}
+              </span>
+            </div>
+            <p className="mt-0.5 truncate text-xs text-muted-strong sm:text-sm">
               {t("companySettings.clientsSubtitle")}
             </p>
           </div>
         </div>
-        <Button
-          variant="primary"
-          onClick={() => setIsImportModalOpen(true)}
-          className="absolute right-0 top-0 flex items-center gap-2 rounded-xl px-4 py-3 text-sm"
-        >
-          <FileSpreadsheet className="h-4 w-4" />
-          {t("companySettings.clientImportButton")}
-        </Button>
-      </CardHeader>
-
-      <CardContent className="space-y-6 px-0 pb-0">
-        <div className="flex items-center justify-between rounded-xl border border-border-strong bg-bg-accent px-4 py-3">
-          <div>
-            <p className="text-sm font-medium text-text">
-              {t("companySettings.clientsTitle")}
-            </p>
-            <p className="text-xs text-muted-strong">
-              {t("companySettings.clientsSubtitle")}
-            </p>
-          </div>
+        <div className="flex items-center gap-2 sm:shrink-0">
+          <Button
+            variant="outline"
+            onClick={() => setIsImportModalOpen(true)}
+            className="flex-1 sm:flex-none"
+            icon={<FileSpreadsheet />}
+          >
+            {t("companySettings.clientImportButton")}
+          </Button>
           <Button
             type="button"
-            variant="primary"
+            variant={showNewClientForm ? "secondary" : "primary"}
             onClick={() => setShowNewClientForm((value) => !value)}
-            className="rounded-xl px-3"
-            tooltip={
-              showNewClientForm
-                ? t("companySettings.hideClientForm")
-                : t("companySettings.showClientForm")
-            }
-            aria-label={
-              showNewClientForm
-                ? t("companySettings.hideClientForm")
-                : t("companySettings.showClientForm")
-            }
-            icon={
-              showNewClientForm ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )
-            }
-          />
+            className="flex-1 sm:flex-none"
+            icon={showNewClientForm ? <X /> : <Plus />}
+          >
+            {showNewClientForm
+              ? t("common.cancel")
+              : t("companySettings.newClientButton")}
+          </Button>
         </div>
+      </CardHeader>
 
+      <CardContent className="space-y-4 p-4 sm:p-5">
         {showNewClientForm && (
-          <form onSubmit={handleCreate} className="space-y-3">
+          <form
+            onSubmit={handleCreate}
+            className="space-y-4 rounded-2xl border border-primary-strong/15 bg-primary/[0.08] p-4"
+          >
             <div className="flex flex-col gap-3 md:flex-row">
               <Input
                 id="new-client-name"
@@ -371,7 +356,7 @@ export const ClientManagementCard: React.FC<Props> = ({
                 }
               />
             </div>
-            <div className="flex items-center justify-between rounded-xl border border-border-strong bg-bg-accent px-4 py-3">
+            <div className="flex items-center justify-between rounded-xl border border-border bg-surface-strong/70 px-4 py-3">
               <div>
                 <p className="text-sm font-medium text-text">
                   {t("companySettings.defaultLabel")}
@@ -405,129 +390,160 @@ export const ClientManagementCard: React.FC<Props> = ({
           </form>
         )}
 
-        <div className="max-h-120 space-y-2 overflow-y-auto px-2">
+        <div className="max-h-120 space-y-3 overflow-x-hidden overflow-y-auto pr-1">
           {clients.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-border-strong bg-bg-accent px-4 py-3 text-sm text-muted-strong">
+            <p className="rounded-xl border border-dashed border-border-strong bg-bg-accent px-4 py-6 text-center text-sm text-muted-strong">
               {t("companySettings.noClients")}
             </p>
           ) : (
             clients.map((client) => (
-              <div
+              <article
                 key={client.id}
-                className={`flex items-center justify-between rounded-xl border border-border-strong bg-bg p-3 ${
-                  client.is_active ? "" : "opacity-60"
-                }`}
+                className="group rounded-2xl border border-border-strong bg-surface-strong/80 p-4 shadow-[0_1px_2px_rgba(76,65,92,0.035)] transition-[border-color,box-shadow,background-color] duration-200 hover:border-primary-strong/35 hover:bg-surface-strong hover:shadow-card"
               >
-                <div className="min-w-0">
-                  <span className="block truncate font-medium text-text">
-                    {client.name}
-                  </span>
-                  <span className="mt-1 block text-xs text-muted-strong">
-                    {t("companySettings.clientCodeLabel")}: {client.client_code}
-                  </span>
-                  <span className="mt-1 block text-xs text-muted-strong">
-                    {t("companySettings.invoiceAttachmentLabel")}{" "}
-                    {normalizeInvoiceAttachmentLanguage(
-                      client.invoice_attachment_language,
-                    ).toUpperCase()}
-                  </span>
-                  <span className="mt-1 block text-xs text-muted-strong">
-                    {t("companySettings.availableHoursPerMonth")}:{" "}
-                    {client.available_hours_per_month ?? 0}
-                  </span>
-                  <span className="mt-1 block text-xs text-muted-strong">
-                    {t("companySettings.hoursFromPreviousMonth")}:{" "}
-                    {client.hours_from_previous_month ?? 0}
-                  </span>
-                  <span className="mt-1 text-xs text-muted-strong">
-                    {client.is_active
-                      ? t("common.active")
-                      : t("common.inactive")}
-                  </span>
-                  <span className="mt-1 block text-xs text-muted-strong">
-                    {client.is_default
-                      ? t("companySettings.defaultLabel")
-                      : t("companySettings.defaultClientNotSelected")}
-                  </span>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-bg-accent text-xs font-bold uppercase tracking-[0.08em] text-primary-strong ring-1 ring-border">
+                      {client.client_code.slice(0, 3)}
+                    </div>
+                    <div className="min-w-0 pt-0.5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="truncate text-[15px] font-semibold tracking-[-0.01em] text-text">
+                          {client.name}
+                        </h3>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] ${
+                            client.is_active
+                              ? "bg-green-100 text-green-700"
+                              : "bg-slate-100 text-slate-600"
+                          }`}
+                        >
+                          {client.is_active
+                            ? t("common.active")
+                            : t("common.inactive")}
+                        </span>
+                        {client.is_default && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-amber-800">
+                            <Star className="h-3 w-3 fill-current" />
+                            {t("companySettings.defaultLabel")}
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 text-xs text-muted-strong">
+                        {t("companySettings.clientCodeLabel")}: {client.client_code}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-0.5 self-start rounded-xl border border-border bg-bg-accent/80 p-1">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => handleToggleActivity(client)}
+                      disabled={loading}
+                      className={client.is_active ? "text-primary-strong" : ""}
+                      tooltip={
+                        client.is_active
+                          ? t("companySettings.deactivateClient")
+                          : t("companySettings.activateClient")
+                      }
+                      aria-label={
+                        client.is_active
+                          ? t("companySettings.deactivateClient")
+                          : t("companySettings.activateClient")
+                      }
+                      icon={
+                        client.is_active ? (
+                          <ToggleRight className="h-4 w-4" />
+                        ) : (
+                          <ToggleLeft className="h-4 w-4" />
+                        )
+                      }
+                    />
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => handleToggleDefault(client)}
+                      disabled={loading}
+                      className={
+                        client.is_default
+                          ? "bg-amber-100 text-amber-800 hover:bg-amber-100"
+                          : ""
+                      }
+                      tooltip={
+                        client.is_default
+                          ? t("companySettings.removeClientDefault")
+                          : t("companySettings.setClientDefault")
+                      }
+                      aria-label={
+                        client.is_default
+                          ? t("companySettings.removeClientDefault")
+                          : t("companySettings.setClientDefault")
+                      }
+                      icon={<Star className="h-4 w-4" />}
+                    />
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() =>
+                        setEditingClient({
+                          ...client,
+                          invoice_attachment_language:
+                            normalizeInvoiceAttachmentLanguage(
+                              client.invoice_attachment_language,
+                            ),
+                          available_hours_per_month:
+                            client.available_hours_per_month ?? 0,
+                          hours_from_previous_month:
+                            client.hours_from_previous_month ?? 0,
+                          client_code: client.client_code,
+                        })
+                      }
+                      disabled={loading}
+                      tooltip={t("companySettings.editClient")}
+                      aria-label={t("companySettings.editClient")}
+                      icon={<PencilLine className="h-4 w-4" />}
+                    />
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => setDeletingClientId(client.id)}
+                      disabled={loading}
+                      className="text-danger hover:bg-danger-bg hover:text-danger"
+                      tooltip={t("companySettings.deleteClient")}
+                      aria-label={t("companySettings.deleteClient")}
+                      icon={<Trash2 className="h-4 w-4" />}
+                    />
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => handleToggleActivity(client)}
-                    disabled={loading}
-                    className="rounded-xl px-3"
-                    tooltip={
-                      client.is_active
-                        ? t("companySettings.deactivateClient")
-                        : t("companySettings.activateClient")
-                    }
-                    aria-label={
-                      client.is_active
-                        ? t("companySettings.deactivateClient")
-                        : t("companySettings.activateClient")
-                    }
-                    icon={
-                      client.is_active ? (
-                        <ToggleRight className="h-4 w-4" />
-                      ) : (
-                        <ToggleLeft className="h-4 w-4" />
-                      )
-                    }
-                  ></Button>
-                  <Button
-                    size="sm"
-                    variant={client.is_default ? "primary" : "secondary"}
-                    onClick={() => handleToggleDefault(client)}
-                    disabled={loading}
-                    className="rounded-xl px-3"
-                    tooltip={
-                      client.is_default
-                        ? t("companySettings.removeClientDefault")
-                        : t("companySettings.setClientDefault")
-                    }
-                    aria-label={
-                      client.is_default
-                        ? t("companySettings.removeClientDefault")
-                        : t("companySettings.setClientDefault")
-                    }
-                    icon={<Star className="h-4 w-4" />}
-                  ></Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() =>
-                      setEditingClient({
-                        ...client,
-                        invoice_attachment_language:
-                          normalizeInvoiceAttachmentLanguage(
-                            client.invoice_attachment_language,
-                          ),
-                        available_hours_per_month:
-                          client.available_hours_per_month ?? 0,
-                        hours_from_previous_month:
-                          client.hours_from_previous_month ?? 0,
-                        client_code: client.client_code,
-                      })
-                    }
-                    disabled={loading}
-                    className="rounded-xl px-3"
-                    tooltip={t("companySettings.editClient")}
-                    aria-label={t("companySettings.editClient")}
-                    icon={<PencilLine className="h-4 w-4" />}
-                  ></Button>
-                  <Button
-                    size="sm"
-                    variant="danger"
-                    onClick={() => setDeletingClientId(client.id)}
-                    disabled={loading}
-                    className="rounded-xl px-3"
-                    tooltip={t("companySettings.deleteClient")}
-                    aria-label={t("companySettings.deleteClient")}
-                    icon={<Trash2 className="h-4 w-4" />}
-                  ></Button>
-                </div>
-              </div>
+                <dl className="mt-4 grid grid-cols-1 gap-x-5 gap-y-3 border-t border-border pt-3 sm:ml-[3.25rem] sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="min-w-0">
+                    <dt className="text-[10px] font-semibold uppercase tracking-[0.07em] text-muted">
+                      {t("companySettings.invoiceAttachmentLanguageLabel")}
+                    </dt>
+                    <dd className="mt-0.5 text-sm font-medium text-text">
+                      {normalizeInvoiceAttachmentLanguage(
+                        client.invoice_attachment_language,
+                      ).toUpperCase()}
+                    </dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="text-[10px] font-semibold uppercase tracking-[0.07em] text-muted">
+                      {t("companySettings.availableHoursPerMonth")}
+                    </dt>
+                    <dd className="mt-0.5 text-sm font-medium tabular-nums text-text">
+                      {client.available_hours_per_month ?? 0}
+                    </dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="text-[10px] font-semibold uppercase tracking-[0.07em] text-muted">
+                      {t("companySettings.hoursFromPreviousMonth")}
+                    </dt>
+                    <dd className="mt-0.5 text-sm font-medium tabular-nums text-text">
+                      {client.hours_from_previous_month ?? 0}
+                    </dd>
+                  </div>
+                </dl>
+              </article>
             ))
           )}
         </div>

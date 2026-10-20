@@ -1,38 +1,24 @@
-import { supabase } from "../lib/supabaseClient"
+import { supabase } from "../lib/supabaseClient";
 import type { TimesheetEntryStatus } from "../types/timesheet";
-
+import { calculateReviewKpis } from "../utils/reviewHelpers";
 
 export const getKPIsForCompany = async (companyId: string) => {
-  const { data, error } = await supabase.from('timesheets').select("*, profiles(id, full_name, company_id)").eq("company_id", companyId)
-  
+  const { data, error } = await supabase
+    .from("timesheets")
+    .select("status, hours_logged, user_id")
+    .eq("company_id", companyId);
 
   if (error) {
     console.error("Error fetching KPIs:", error);
     throw new Error("Failed to fetch KPIs");
   }
 
-
-  // Calculate KPIs
-  const totalSubmittedHours =
-    data
-      ?.filter((ts) => ts.status === "submitted")
-      .reduce((sum, ts) => sum + (ts.hours_logged || 0), 0) || 0;
-  const totalApprovedHours = data?.filter(ts => ts.status === "approved").reduce((sum, ts) => sum + (ts.hours_logged || 0), 0) || 0;
-  const totalRejected = data?.filter(ts => ts.status === "rejected").length || 0;
-
-  const employeesPendingReview = new Set(data?.filter(ts => ts.status === "submitted").map(ts => ts.profiles.id)).size;
-
-  return {
-    totalSubmittedHours,
-    totalApprovedHours,
-    totalRejected,
-    employeesPendingReview
-  };
-
-}
+  return calculateReviewKpis(data ?? []);
+};
 
 interface ReviewFilterValues {
   status?: TimesheetEntryStatus | "all";
+  userId?: string | null;
   startDate?: string | null;
   endDate?: string | null;
   projectId?: string | null;
@@ -40,10 +26,21 @@ interface ReviewFilterValues {
 }
 
 export const getTimesheetReviews = async (companyId: string, filters: ReviewFilterValues) => {
-  let query = supabase.from('timesheets').select("*, profiles(id, full_name, company_id), clients(id, name), projects(id, name)").eq("company_id", companyId).neq("status", "draft").neq("status", "invoiced");
+  let query = supabase
+    .from("timesheets")
+    .select(
+      "*, profiles(id, full_name, company_id), clients(id, name), projects(id, name)",
+    )
+    .eq("company_id", companyId)
+    .neq("status", "draft")
+    .neq("status", "invoiced");
 
   if (filters.status && filters.status !== "all") {
     query = query.eq("status", filters.status);
+  }
+
+  if (filters.userId) {
+    query = query.eq("user_id", filters.userId);
   }
 
   if (filters.startDate) {
@@ -77,66 +74,119 @@ export const getTimesheetReviews = async (companyId: string, filters: ReviewFilt
 export const approveEntries = async ({
   entryIds,
   reviewerId,
+  companyId,
 }: {
   entryIds: string[];
   reviewerId: string;
+  companyId: string;
 }) => {
+  if (!reviewerId || !companyId || entryIds.length === 0) {
+    throw new Error("A company, reviewer, and at least one entry are required");
+  }
 
-  const { data, error } = await supabase.from('timesheets').update({
-    status: 'approved',
-    approved_by: reviewerId,
-    approved_at: new Date().toISOString()
-  }).in('id', entryIds);
+  const uniqueEntryIds = Array.from(new Set(entryIds));
+  const { data, error } = await supabase
+    .from("timesheets")
+    .update({
+      status: "approved",
+      approved_by: reviewerId,
+      approved_at: new Date().toISOString(),
+      rejection_reason: null,
+    })
+    .in("id", uniqueEntryIds)
+    .eq("company_id", companyId)
+    .eq("status", "submitted")
+    .select("id");
 
   if (error) {
     console.error("Error approving entries:", error);
     throw new Error("Failed to approve entries");
   }
 
+  if ((data?.length ?? 0) !== uniqueEntryIds.length) {
+    throw new Error("One or more entries are no longer awaiting review");
+  }
+
   return data;
-}
+};
 
 export const rejectEntry = async ({
   entryId,
   reviewerId,
+  companyId,
   rejectionReason,
 }: {
   entryId: string;
   reviewerId: string;
+  companyId: string;
   rejectionReason: string;
 }) => {
+  const trimmedReason = rejectionReason.trim();
+  if (!reviewerId || !companyId || !entryId || !trimmedReason) {
+    throw new Error(
+      "A company, reviewer, entry, and rejection reason are required",
+    );
+  }
 
-  const { data, error } = await supabase.from('timesheets').update({
-    status: 'rejected',
-    approved_by: reviewerId,
-    approved_at: new Date().toISOString(),
-    rejection_reason: rejectionReason
-  }).eq('id', entryId);
+  const { data, error } = await supabase
+    .from("timesheets")
+    .update({
+      status: "rejected",
+      approved_by: reviewerId,
+      approved_at: new Date().toISOString(),
+      rejection_reason: trimmedReason,
+    })
+    .eq("id", entryId)
+    .eq("company_id", companyId)
+    .eq("status", "submitted")
+    .select("id")
+    .maybeSingle();
 
   if (error) {
     console.error("Error rejecting entries:", error);
     throw new Error("Failed to reject entries");
   }
 
+  if (!data) {
+    throw new Error("This entry is no longer awaiting review");
+  }
+
   return data;
-}
+};
 
 export const revertEntryToSubmitted = async ({
   entryId,
+  companyId,
 }: {
   entryId: string;
+  companyId: string;
 }) => {
+  if (!entryId || !companyId) {
+    throw new Error("A company and entry are required");
+  }
 
-  const { data, error } = await supabase.from('timesheets').update({
-    status: 'submitted',
-    approved_by: null,
-    approved_at: null,
-  }).eq('id', entryId);
+  const { data, error } = await supabase
+    .from("timesheets")
+    .update({
+      status: "submitted",
+      approved_by: null,
+      approved_at: null,
+      rejection_reason: null,
+    })
+    .eq("id", entryId)
+    .eq("company_id", companyId)
+    .eq("status", "approved")
+    .select("id")
+    .maybeSingle();
 
   if (error) {
     console.error("Error reverting entry to submitted:", error);
     throw new Error("Failed to revert entry to submitted");
   }
 
+  if (!data) {
+    throw new Error("This entry is no longer approved");
+  }
+
   return data;
-}
+};

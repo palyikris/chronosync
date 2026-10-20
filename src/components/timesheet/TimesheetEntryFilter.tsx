@@ -25,6 +25,7 @@ interface TimesheetEntryFilterProps {
   projects: Project[];
   selectedClientId: string;
   selectedProjectId: string;
+  viewModeSwitcher: React.ReactNode;
   onClientChange: (clientId: string) => void;
   onProjectChange: (projectId: string) => void;
   onReset: () => void;
@@ -35,6 +36,7 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
   projects,
   selectedClientId,
   selectedProjectId,
+  viewModeSwitcher,
   onClientChange,
   onProjectChange,
   onReset,
@@ -105,21 +107,12 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
   }, [isCollapsed]);
 
   return (
-    <Card className="overflow-visible p-4">
+    <Card className="relative z-10 overflow-visible p-3">
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
-              {t("timesheet.filterEntries")}
-            </p>
-            {!isCollapsed ? (
-              <p className="mt-1 text-sm text-muted-strong">
-                {t("timesheet.filterEntriesHint")}
-              </p>
-            ) : null}
-          </div>
+        <div className="flex items-center justify-between gap-3">
+          {viewModeSwitcher}
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <Button
               type="button"
               variant="outline"
@@ -144,8 +137,8 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
               size="sm"
               onClick={onReset}
               disabled={!selectedClientId && !selectedProjectId}
-              icon={<X size={20} color="#ba1a1a" />}
-              className="border-danger"
+              icon={<X className="text-danger" />}
+              className="border-danger/30"
             >
               {t("common.cancel")}
             </Button>

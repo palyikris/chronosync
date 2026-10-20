@@ -3,7 +3,6 @@ import React, { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { CompanyManagementHeader } from "../components/company-management/CompanyManagementHeader";
-import { CompanyManagementSidebar } from "../components/company-management/CompanyManagementSidebar";
 import { CompanyModal } from "../components/company-management/CompanyModal";
 import { CompanyTable } from "../components/company-management/CompanyTable";
 import { companyService } from "../services/companyService";
@@ -203,50 +202,24 @@ export const CompanyManagementPage: React.FC = () => {
   }, [companies, filterActiveOnly, searchQuery]);
 
   return (
-    <div className="bg-background text-on-background min-h-screen flex flex-col">
+    <div className="space-y-6 pb-10">
       <CompanyManagementHeader
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         filterActiveOnly={filterActiveOnly}
         onFilterToggle={() => setFilterActiveOnly((prev) => !prev)}
+        onAddClick={handleOpenCreateModal}
       />
 
-      <div className="flex flex-1">
-        <CompanyManagementSidebar />
-
-        <main className="flex-1 ml-20 p-8 bg-surface-canvas">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex justify-between items-end mb-8">
-              <div>
-                <h1 className="text-3xl font-normal text-on-surface mb-2">
-                  {t("companyManagement.title")}
-                </h1>
-                <p className="text-sm text-secondary">
-                  {t("companyManagement.subtitle")}
-                </p>
-              </div>
-            </div>
-
-            <CompanyTable
-              loading={loading}
-              filteredCompanies={filteredCompanies}
-              onToggleActive={handleToggleActive}
-              onEdit={handleOpenEditModal}
-              onSoftDelete={handleSoftDelete}
-              onRestore={handleRestore}
-              onHardDelete={handleHardDelete}
-            />
-          </div>
-        </main>
-      </div>
-
-      <button
-        onClick={handleOpenCreateModal}
-        className="fixed bottom-8 right-8 bg-primary text-on-primary-container hover:shadow-lg transition-all flex items-center gap-3 px-6 py-4 rounded-xl active:scale-95 z-50 font-bold"
-      >
-        <span className="material-symbols-outlined font-bold">add</span>
-        <span>{t("companyManagement.addCompany")}</span>
-      </button>
+      <CompanyTable
+        loading={loading}
+        filteredCompanies={filteredCompanies}
+        onToggleActive={handleToggleActive}
+        onEdit={handleOpenEditModal}
+        onSoftDelete={handleSoftDelete}
+        onRestore={handleRestore}
+        onHardDelete={handleHardDelete}
+      />
 
       <CompanyModal
         isOpen={isModalOpen}

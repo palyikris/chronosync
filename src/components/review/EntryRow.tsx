@@ -2,6 +2,7 @@ import React from "react";
 import { Check, Undo2, X } from "lucide-react";
 import { Tooltip } from "../shared/Tooltip";
 import { StatusBadge } from "./StatusBadge";
+import type { ReviewProjectTone } from "./projectTones";
 import type { TimesheetReviewRecord } from "./types";
 
 export interface EntryRowProps {
@@ -16,6 +17,9 @@ export interface EntryRowProps {
   onApprove: (id: string) => void;
   onRevert: (id: string) => void;
   onOpenReject: (id: string) => void;
+  isActionPending: boolean;
+  projectTone: ReviewProjectTone;
+  isProjectEnd: boolean;
 }
 
 export const EntryRow: React.FC<EntryRowProps> = React.memo(
@@ -31,23 +35,32 @@ export const EntryRow: React.FC<EntryRowProps> = React.memo(
     onApprove,
     onRevert,
     onOpenReject,
+    isActionPending,
+    projectTone,
+    isProjectEnd,
   }) => {
-    const userDisplay =
-      entry.profiles?.full_name || entry.profiles?.email || entry.user_id;
+    const userDisplay = entry.profiles?.full_name || entry.user_id;
 
     return (
       <tr
-        className={`hover:bg-slate-50/80 transition-colors border-b border-slate-100 last:border-0 ${
+        className={`bg-white transition-colors hover:bg-slate-50/80 ${
+          isProjectEnd
+            ? `border-b ${projectTone.end}`
+            : "border-b border-slate-100"
+        } ${
           isSelected ? "bg-primary/5" : ""
         }`}
       >
-        <td className="p-3.5 text-center w-12">
+        <td
+          className={`w-12 border-l-2 p-3.5 text-center ${projectTone.rail}`}
+        >
           <input
             type="checkbox"
             checked={isSelected}
+            disabled={entry.status !== "submitted" || isActionPending}
             aria-label={selectLabel}
             onChange={() => onSelect(entry.id)}
-            className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer accent-primary"
+            className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer accent-primary disabled:cursor-not-allowed disabled:opacity-40"
           />
         </td>
 
@@ -85,7 +98,8 @@ export const EntryRow: React.FC<EntryRowProps> = React.memo(
                   <button
                     type="button"
                     onClick={() => onOpenReject(entry.id)}
-                    className="w-7 h-7 rounded flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                    disabled={isActionPending}
+                    className="w-7 h-7 rounded flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -94,7 +108,8 @@ export const EntryRow: React.FC<EntryRowProps> = React.memo(
                   <button
                     type="button"
                     onClick={() => onApprove(entry.id)}
-                    className="w-7 h-7 rounded flex items-center justify-center text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
+                    disabled={isActionPending}
+                    className="w-7 h-7 rounded flex items-center justify-center text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <Check className="w-4 h-4" />
                   </button>
@@ -106,7 +121,8 @@ export const EntryRow: React.FC<EntryRowProps> = React.memo(
                 <button
                   type="button"
                   onClick={() => onRevert(entry.id)}
-                  className="w-7 h-7 rounded flex items-center justify-center text-slate-400 hover:bg-amber-50 hover:text-amber-600 transition-colors"
+                  disabled={isActionPending}
+                  className="w-7 h-7 rounded flex items-center justify-center text-slate-400 hover:bg-amber-50 hover:text-amber-600 transition-colors disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <Undo2 className="w-4 h-4" />
                 </button>

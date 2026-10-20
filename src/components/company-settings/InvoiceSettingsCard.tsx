@@ -104,13 +104,13 @@ export const InvoiceSettingsCard: React.FC<InvoiceSettingsCardProps> = ({
       : t("companySettings.szamlazzHu");
 
   return (
-    <Card className="p-6">
+    <Card className="p-5">
       <div className="mb-4 flex items-center justify-between gap-4">
         <div>
-          <h3 className="text-lg font-medium text-gray-900">
+          <h3 className="text-[15px] font-semibold tracking-[-0.015em] text-text">
             {t("companySettings.invoiceSettingsTitle")}
           </h3>
-          <p className="text-sm text-gray-500">
+          <p className="mt-1 text-[13px] text-muted">
             {t("companySettings.invoiceSettingsSubtitle")}
           </p>
         </div>

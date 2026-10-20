@@ -35,7 +35,7 @@ export const getLeaveRequestBadgeClasses = (
   isOwnRequest: boolean,
 ) => {
   const baseClasses = [
-    "relative overflow-visible rounded-md border px-2 py-1 text-[10px] font-semibold",
+    "relative w-full overflow-visible rounded-md border px-1 py-0.5 text-center text-[10px] font-medium",
     requestStatusClasses[status],
   ];
 

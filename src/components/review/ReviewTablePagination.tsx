@@ -1,4 +1,5 @@
 import React from "react";
+import type { TFunction } from "i18next";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ReviewTablePaginationProps {
@@ -11,7 +12,7 @@ interface ReviewTablePaginationProps {
   onPageChange: (page: number) => void;
   onPrevPage: () => void;
   onNextPage: () => void;
-  t: any;
+  t: TFunction;
 }
 
 export const ReviewTablePagination: React.FC<ReviewTablePaginationProps> = ({

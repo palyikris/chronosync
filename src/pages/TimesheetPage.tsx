@@ -27,6 +27,8 @@ import { Button } from "../components/shared/Button";
 import { Card } from "../components/shared/Card";
 import { Select } from "../components/shared/Select";
 import { getRoleLabel } from "../utils/getRoleLabel";
+import { getLocalDateValue } from "../utils/timesheetWorkflow";
+import { DateLockedForLeaveError } from "../services/leaveService";
 import type { Client, Project } from "../types/client-project";
 import type {
   SelectableTimesheetUser,
@@ -37,9 +39,6 @@ import type {
 } from "../types/timesheet";
 
 const pad = (value: number) => String(value).padStart(2, "0");
-
-const getLocalDateValue = (date: Date) =>
-  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 
 const getMonthKey = (date: Date) =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}`;
@@ -159,17 +158,17 @@ export const TimesheetPage: React.FC = () => {
     enabled: Boolean((targetCompanyId || isSuperAdmin) && formData.client_id),
   });
 
-    const { data: allClients = [] } = useQuery<Client[]>({
-      queryKey: ["all-clients", targetCompanyId || "all"],
-      queryFn: () => fetchClients(targetCompanyId || ""),
-      enabled: Boolean(targetCompanyId || isSuperAdmin),
-    });
+  const { data: allClients = [] } = useQuery<Client[]>({
+    queryKey: ["all-clients", targetCompanyId || "all"],
+    queryFn: () => fetchClients(targetCompanyId || ""),
+    enabled: Boolean(targetCompanyId || isSuperAdmin),
+  });
 
-    const { data: allProjects = [] } = useQuery<Project[]>({
-      queryKey: ["all-projects", targetCompanyId || "all"],
-      queryFn: () => fetchProjects(targetCompanyId || ""),
-      enabled: Boolean(targetCompanyId || isSuperAdmin),
-    });
+  const { data: allProjects = [] } = useQuery<Project[]>({
+    queryKey: ["all-projects", targetCompanyId || "all"],
+    queryFn: () => fetchProjects(targetCompanyId || ""),
+    enabled: Boolean(targetCompanyId || isSuperAdmin),
+  });
 
   // --------------------------------------------------------------------------
   // TanStack Query: Fetch Logs
@@ -287,6 +286,40 @@ export const TimesheetPage: React.FC = () => {
   );
   const isSelectedDateLocked = approvedLeaveDates.includes(selectedDate);
 
+  const modalClients = React.useMemo(() => {
+    if (!editEntryId || activeClients.some((item) => item.id === formData.client_id)) {
+      return activeClients;
+    }
+
+    const currentClient = allClients.find(
+      (item) => item.id === formData.client_id,
+    );
+    return currentClient ? [currentClient, ...activeClients] : activeClients;
+  }, [activeClients, allClients, editEntryId, formData.client_id]);
+
+  const modalProjects = React.useMemo(() => {
+    if (
+      !editEntryId ||
+      activeProjects.some((item) => item.id === formData.project_id)
+    ) {
+      return activeProjects;
+    }
+
+    const currentProject = allProjects.find(
+      (item) => item.id === formData.project_id,
+    );
+    return currentProject ? [currentProject, ...activeProjects] : activeProjects;
+  }, [activeProjects, allProjects, editEntryId, formData.project_id]);
+
+  const showMutationError = (error: unknown, fallbackKey: string) => {
+    const message =
+      error instanceof DateLockedForLeaveError
+        ? t("leave.dateLockedForLeave")
+        : error instanceof Error
+          ? error.message
+          : t(fallbackKey);
+    window.alert(message);
+  };
 
   const resetForm = (date = selectedDate) => {
     setFormData({
@@ -338,10 +371,11 @@ export const TimesheetPage: React.FC = () => {
   const createMutation = useMutation({
     mutationFn: createTimesheetEntry,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["timesheets", targetUserId] });
+      queryClient.invalidateQueries({ queryKey: ["timesheets"] });
       closeModal();
       resetForm();
     },
+    onError: (error) => showMutationError(error, "timesheet.saveFailed"),
   });
 
   // --------------------------------------------------------------------------
@@ -356,9 +390,10 @@ export const TimesheetPage: React.FC = () => {
       payload: TimesheetEntryUpdatePayload;
     }) => updateTimesheetEntry(id, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["timesheets", targetUserId] });
+      queryClient.invalidateQueries({ queryKey: ["timesheets"] });
       closeModal();
     },
+    onError: (error) => showMutationError(error, "timesheet.saveFailed"),
   });
 
   // --------------------------------------------------------------------------
@@ -367,8 +402,9 @@ export const TimesheetPage: React.FC = () => {
   const deleteMutation = useMutation({
     mutationFn: deleteTimesheetEntry,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["timesheets", targetUserId] });
+      queryClient.invalidateQueries({ queryKey: ["timesheets"] });
     },
+    onError: (error) => showMutationError(error, "timesheet.deleteFailed"),
   });
 
   const duplicateMutation = useMutation({
@@ -380,9 +416,7 @@ export const TimesheetPage: React.FC = () => {
       workDate: string;
     }) => cloneEntry(entry.id, workDate),
     onError: (error) => {
-      const message =
-        error instanceof Error ? error.message : t("timesheet.duplicateFailed");
-      window.alert(message);
+      showMutationError(error, "timesheet.duplicateFailed");
     },
     onSettled: () => {
       queryClient.invalidateQueries({
@@ -451,6 +485,7 @@ export const TimesheetPage: React.FC = () => {
   };
 
   const handleStartCopy = (entry: TimesheetEntry) => {
+    if (approvedLeaveDates.includes(entry.work_date)) return;
     setPendingCopyEntry(entry);
     setViewMode("calendar");
   };
@@ -500,6 +535,7 @@ export const TimesheetPage: React.FC = () => {
     setSelectedUserId(event.target.value);
     setSelectedClientId("");
     setSelectedProjectId("");
+    setPendingCopyEntry(null);
     closeModal();
   };
 
@@ -518,37 +554,34 @@ export const TimesheetPage: React.FC = () => {
   };
 
   const viewModeSwitcher = (
-    <Card className="p-3 sm:p-4">
-      <div className="inline-flex w-full items-center gap-2 rounded-full border border-border-strong bg-bg-accent p-1 xl:w-auto">
-        <Button
-          variant={viewMode === "calendar" ? "primary" : "ghost"}
-          size="sm"
-          className="min-w-0 flex-1 basis-1/2 rounded-full text-xs sm:flex-none sm:basis-auto sm:text-sm"
-          onClick={() => setViewMode("calendar")}
-          icon={<Calendar className="h-4 w-4" />}
-        >
-          Calendar View
-        </Button>
-        <Button
-          variant={viewMode === "list" ? "primary" : "ghost"}
-          size="sm"
-          className="min-w-0 flex-1 basis-1/2 rounded-full text-xs sm:flex-none sm:basis-auto sm:text-sm"
-          onClick={() => setViewMode("list")}
-          icon={<List className="h-4 w-4" />}
-        >
-          List View
-        </Button>
-      </div>
-    </Card>
+    <div className="inline-flex min-w-0 items-center gap-0.5 rounded-[9px] border border-border bg-black/[0.035] p-0.5">
+      <Button
+        variant={viewMode === "calendar" ? "secondary" : "ghost"}
+        size="sm"
+        className="min-w-0 flex-1 basis-1/2 border-transparent sm:flex-none sm:basis-auto"
+        onClick={() => setViewMode("calendar")}
+        icon={<Calendar className="h-4 w-4" />}
+      >
+        {t("timesheet.calendarView")}
+      </Button>
+      <Button
+        variant={viewMode === "list" ? "secondary" : "ghost"}
+        size="sm"
+        className="min-w-0 flex-1 basis-1/2 border-transparent sm:flex-none sm:basis-auto"
+        onClick={() => setViewMode("list")}
+        icon={<List className="h-4 w-4" />}
+      >
+        {t("timesheet.listView")}
+      </Button>
+    </div>
   );
 
   const listNavigationControls = (
-    <Card className="p-3 sm:p-4">
+    <Card className="p-2.5">
       <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end">
         <Button
           variant="outline"
           size="sm"
-          className="rounded-full text-xs sm:text-sm"
           onClick={handlePreviousWeek}
           icon={<ChevronLeft className="h-4 w-4" />}
         >
@@ -556,30 +589,27 @@ export const TimesheetPage: React.FC = () => {
         </Button>
         <Button
           variant="outline"
-          size="sm"
-          className="rounded-full"
+          size="icon"
           onClick={handlePreviousDay}
           icon={<ChevronLeft className="h-4 w-4" />}
         />
         <Button
           variant="outline"
           size="sm"
-          className="rounded-full"
           onClick={handleGoToToday}
         >
           Today
         </Button>
         <Button
           variant="outline"
-          size="sm"
-          className="rounded-full"
+          size="icon"
           onClick={handleNextDay}
           icon={<ChevronRight className="h-4 w-4" />}
         />
         <Button
           variant="outline"
           size="sm"
-          className="col-span-2 rounded-full text-xs sm:col-span-1 sm:text-sm"
+          className="col-span-2 sm:col-span-1"
           onClick={handleNextWeek}
           icon={<ChevronRight className="h-4 w-4" />}
         >
@@ -590,23 +620,32 @@ export const TimesheetPage: React.FC = () => {
   );
 
   return (
-    <div className="mx-auto w-full space-y-4 md:space-y-5">
+    <div className="mx-auto w-full space-y-5 pb-10">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-[-0.03em] text-text sm:text-[28px]">
+          {t("timesheet.title")}
+        </h1>
+        <p className="mt-1.5 text-sm text-muted">{t("timesheet.subtitle")}</p>
+      </div>
+
       {isSuperAdmin ? (
         <>
           <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-muted">
             {t("timesheet.viewingFor")}
           </label>
-          <Select
-            value={targetUserId ?? ""}
-            onChange={handleSelectedUserChange}
-            disabled={!availableUsers.length}
-          >
-            {availableUsers.map((candidate) => (
-              <option key={candidate.id} value={candidate.id}>
-                {candidate.full_name} · {getRoleLabel(candidate.role)}
-              </option>
-            ))}
-          </Select>
+          <div className="max-w-xl">
+            <Select
+              value={targetUserId ?? ""}
+              onChange={handleSelectedUserChange}
+              disabled={!availableUsers.length}
+            >
+              {availableUsers.map((candidate) => (
+                <option key={candidate.id} value={candidate.id}>
+                  {candidate.full_name} · {getRoleLabel(candidate.role)}
+                </option>
+              ))}
+            </Select>
+          </div>
         </>
       ) : null}
 
@@ -615,6 +654,7 @@ export const TimesheetPage: React.FC = () => {
         projects={allProjects}
         selectedClientId={selectedClientId}
         selectedProjectId={selectedProjectId}
+        viewModeSwitcher={viewModeSwitcher}
         onClientChange={handleClientFilterChange}
         onProjectChange={handleProjectFilterChange}
         onReset={handleResetFilters}
@@ -622,8 +662,6 @@ export const TimesheetPage: React.FC = () => {
 
       {viewMode === "calendar" ? (
         <>
-          {viewModeSwitcher}
-
           <div className="grid gap-4 lg:gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.75fr)] xl:items-stretch">
             <div className="space-y-3">
               {pendingCopyEntry ? (
@@ -667,7 +705,7 @@ export const TimesheetPage: React.FC = () => {
                   selectedDate={selectedDate}
                   totalDailyHours={totalDailyHours}
                   entries={selectedDayLogs}
-                  allEntries={filteredTimesheets}
+                  allEntries={timesheets}
                   loading={isLoading}
                   onAddEntry={openCreateModal}
                   onEditEntry={openEditModal}
@@ -689,14 +727,13 @@ export const TimesheetPage: React.FC = () => {
 
       {viewMode === "list" ? (
         <>
-          {viewModeSwitcher}
           {listNavigationControls}
 
           <TimesheetEntryList
             selectedDate={selectedDate}
             totalDailyHours={totalDailyHours}
             entries={selectedDayLogs}
-            allEntries={filteredTimesheets}
+            allEntries={timesheets}
             loading={isLoading}
             onAddEntry={openCreateModal}
             onEditEntry={openEditModal}
@@ -717,8 +754,8 @@ export const TimesheetPage: React.FC = () => {
         open={isModalOpen}
         isEditing={Boolean(editEntryId)}
         formData={formData}
-        clients={activeClients}
-        projects={activeProjects}
+        clients={modalClients}
+        projects={modalProjects}
         onClose={closeModal}
         onSubmit={handleFormSubmit}
         onChange={setFormData}

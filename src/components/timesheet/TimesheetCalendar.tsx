@@ -68,14 +68,14 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
 
   return (
     <Card className="h-full overflow-hidden">
-      <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
-          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+          <div className="text-[11px] font-medium text-muted">
             {t("common.monthView")}
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <span className="font-semibold text-text">{monthLabel}</span>
-            <span className="rounded-full border border-border-strong bg-bg-accent px-3 py-1 text-xs font-semibold text-muted-strong">
+            <span className="text-[14px] font-semibold tracking-[-0.015em] text-text">{monthLabel}</span>
+            <span className="rounded-full border border-border bg-white/40 px-2.5 py-1 text-[11px] font-medium text-muted-strong">
               {t("timesheet.totalLogged")}: {formatHours(totalMonthlyHours)} hrs
             </span>
           </div>
@@ -87,21 +87,21 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
             size="icon"
             onClick={onPreviousMonth}
             aria-label={t("common.previousMonth")}
-            icon={<ChevronLeft className="h-5 w-5 text-muted" />}
+            icon={<ChevronLeft className="text-muted" />}
           ></Button>
           <Button
             variant="ghost"
             size="icon"
             onClick={onNextMonth}
             aria-label={t("common.nextMonth")}
-            icon={<ChevronRight className="h-5 w-5 text-muted" />}
+            icon={<ChevronRight className="text-muted" />}
           ></Button>
         </div>
       </CardHeader>
 
       <div className="overflow-x-auto">
         <div className="min-w-140">
-          <div className="grid grid-cols-7 border-b border-border-strong bg-surface-strong py-2 text-center text-xs font-semibold text-muted">
+          <div className="grid grid-cols-7 border-b border-border bg-transparent py-2 text-center text-[11px] font-medium text-muted">
             {weekDays.map((day) => (
               <div key={day}>{day}</div>
             ))}
@@ -112,7 +112,7 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
               {Array.from({ length: startDayOfWeek }).map((_, index) => (
                 <div
                   key={`empty-${index}`}
-                  className="border-b border-r border-border-strong bg-bg-accent p-2 opacity-40"
+                  className="border-b border-r border-border bg-bg-accent/35 p-2 opacity-40"
                 />
               ))}
 
@@ -128,6 +128,7 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
                 const isSelected = selectedDate === dateStr;
                 const isToday = dateStr === todayDateStr;
                 const isLocked = lockedDateSet.has(dateStr);
+                const isCopyTargetDisabled = copyModeActive && isLocked;
 
                 const entryStatuses = dayLogs.map((entry) => entry.status);
                 const colorClass = getColorOfEntriesForEntries(entryStatuses);
@@ -136,21 +137,23 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
                   <button
                     key={dateStr}
                     type="button"
-                    disabled={isLocked}
+                    disabled={isCopyTargetDisabled}
                     onClick={() => onSelectDate(dateStr)}
-                    className={`flex min-h-14 flex-col justify-between border-b border-r border-border-strong p-1.5 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-strong focus-visible:ring-inset sm:min-h-17.5 sm:p-2 ${
-                      isLocked
+                    className={`relative flex min-h-14 flex-col justify-between border-b border-r border-border p-1.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-strong/45 focus-visible:ring-inset sm:min-h-17.5 sm:p-2 ${
+                      isCopyTargetDisabled
                         ? "cursor-not-allowed bg-slate-100/80 opacity-70"
+                        : isLocked
+                          ? "cursor-pointer bg-slate-100/80 opacity-70 hover:opacity-90"
                         : copyModeActive
                           ? "cursor-pointer bg-primary/5 ring-1 ring-inset ring-primary/20 hover:bg-primary/10 hover:ring-primary/40"
-                          : "cursor-pointer hover:bg-bg-accent"
+                          : "cursor-pointer hover:bg-black/[0.025]"
                     } ${
                       isToday
-                        ? "relative bg-bg-accent/60 border border-primary"
+                        ? "bg-primary/5"
                         : ""
                     } ${
                       isSelected
-                        ? "bg-primary/20 font-bold ring-2 ring-primary-strong ring-inset"
+                        ? "bg-black/[0.055] font-semibold ring-1 ring-primary-strong/25 ring-inset"
                         : ""
                     }`}
                   >
@@ -168,7 +171,7 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
                     <span className="text-xs text-text">{dayNumber}</span>
                     {hasLogs ? (
                       <div
-                        className={`w-full truncate rounded px-1 py-0.5 text-center text-[10px] font-bold ${colorClass}`}
+                        className={`w-full truncate rounded-md px-1 py-0.5 text-center text-[10px] font-medium ${colorClass}`}
                       >
                         {formatHours(
                           dayLogs.reduce(

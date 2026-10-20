@@ -67,14 +67,16 @@ export const LeaveCalendarPanel: React.FC<LeaveCalendarPanelProps> = ({
   }, [currentDate, i18n.language, leaveRequests]);
 
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <Card className="h-full overflow-hidden">
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
-          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+          <div className="text-[11px] font-medium text-muted">
             {t("common.monthView")}
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <span className="font-semibold text-text">{currentMonthLabel}</span>
+            <span className="text-[14px] font-semibold tracking-[-0.015em] text-text">
+              {currentMonthLabel}
+            </span>
           </div>
         </div>
 
@@ -84,21 +86,21 @@ export const LeaveCalendarPanel: React.FC<LeaveCalendarPanelProps> = ({
             size="icon"
             onClick={onPreviousMonth}
             aria-label={t("common.previousMonth")}
-            icon={<ChevronLeft className="h-5 w-5 text-muted" />}
+            icon={<ChevronLeft className="text-muted" />}
           />
           <Button
             variant="ghost"
             size="icon"
             onClick={onNextMonth}
             aria-label={t("common.nextMonth")}
-            icon={<ChevronRight className="h-5 w-5 text-muted" />}
+            icon={<ChevronRight className="text-muted" />}
           />
         </div>
       </CardHeader>
 
       <div className="overflow-x-auto">
         <div className="min-w-140">
-          <div className="grid grid-cols-7 border-b border-border-strong bg-surface-strong py-2 text-center text-xs font-semibold text-muted">
+          <div className="grid grid-cols-7 border-b border-border bg-transparent py-2 text-center text-[11px] font-medium text-muted">
             {monthMatrix.weekDays.map((day) => (
               <div key={day}>{day}</div>
             ))}
@@ -109,7 +111,7 @@ export const LeaveCalendarPanel: React.FC<LeaveCalendarPanelProps> = ({
               {Array.from({ length: monthMatrix.startDayOfWeek }).map((_, index) => (
                 <div
                   key={`empty-${index}`}
-                  className="border-b border-r border-border-strong bg-bg-accent p-2 opacity-40"
+                  className="border-b border-r border-border bg-bg-accent/35 p-2 opacity-40"
                 />
               ))}
 
@@ -122,20 +124,17 @@ export const LeaveCalendarPanel: React.FC<LeaveCalendarPanelProps> = ({
                 return (
                   <div
                     key={dateStr}
-                    className={`flex min-h-20 flex-col justify-between border-b border-r border-border-strong p-2 text-left transition-all ${isToday ? "bg-bg-accent/60" : ""}`}
+                    className={`relative flex min-h-14 flex-col justify-between border-b border-r border-border p-1.5 text-left transition-colors sm:min-h-17.5 sm:p-2 ${isToday ? "bg-primary/5" : ""}`}
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="text-xs font-semibold text-text">
-                        {dayNumber}
-                      </span>
-                      {isToday ? (
-                        <span className="rounded-full bg-primary-strong px-2 py-0.5 text-[10px] font-semibold text-white">
-                          {t("leave.today")}
-                        </span>
-                      ) : null}
-                    </div>
+                    {isToday ? (
+                      <span
+                        aria-hidden="true"
+                        className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary-strong shadow-sm"
+                      />
+                    ) : null}
+                    <span className="text-xs text-text">{dayNumber}</span>
 
-                    <div className="mt-2 space-y-1">
+                    <div className="mt-1 space-y-1">
                       {dayRequests.slice(0, 2).map((request) => {
                         const isVisible =
                           request.status === "APPROVED" ||

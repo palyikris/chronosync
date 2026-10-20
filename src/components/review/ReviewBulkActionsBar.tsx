@@ -1,11 +1,12 @@
 import React from "react";
+import type { TFunction } from "i18next";
 import { Check } from "lucide-react";
 
 interface ReviewBulkActionsBarProps {
   selectedCount: number;
   isPending: boolean;
   onApprove: () => void;
-  t: any;
+  t: TFunction;
 }
 
 export const ReviewBulkActionsBar: React.FC<ReviewBulkActionsBarProps> = ({

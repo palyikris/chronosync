@@ -36,7 +36,7 @@ export const AuditLogHeader: React.FC<AuditLogHeaderProps> = ({
       {/* Title & Top Actions */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold tracking-tight text-text sm:text-3xl">
+          <h1 className="text-2xl font-semibold tracking-[-0.03em] text-text sm:text-[28px]">
             {t("auditLogs.title")}
           </h1>
         </div>
@@ -61,7 +61,7 @@ export const AuditLogHeader: React.FC<AuditLogHeaderProps> = ({
             {t("auditLogs.totalEvents")}
           </span>
           <div className="flex items-end gap-2">
-            <span className="text-3xl font-bold leading-none text-text">
+            <span className="text-[28px] font-semibold leading-none tracking-[-0.035em] text-text">
               {totalCount.toLocaleString()}
             </span>
           </div>
@@ -71,7 +71,7 @@ export const AuditLogHeader: React.FC<AuditLogHeaderProps> = ({
           <span className="text-xs font-semibold uppercase tracking-wider text-muted">
             {t("auditLogs.primaryTarget")}
           </span>
-          <span className="text-3xl font-bold leading-none text-primary">
+          <span className="text-[28px] font-semibold leading-none tracking-[-0.035em] text-primary-strong">
             {t("auditLogs.primaryTargetValue")}
           </span>
           <span className="text-xs text-muted">

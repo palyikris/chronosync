@@ -67,11 +67,11 @@ export const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
   
 
   return (
-    <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-border-strong shadow-sm space-y-6">
+    <div className="space-y-4 rounded-2xl border border-border bg-surface-strong/84 p-4.5 shadow-card backdrop-blur-xl lg:col-span-2">
       {/* Header */}
-      <div className="flex justify-between items-center border-b border-gray-100 pb-4">
+      <div className="flex flex-col justify-between gap-3 border-b border-border pb-4 sm:flex-row sm:items-center">
         <div>
-          <h2 className="text-lg font-bold text-text">
+          <h2 className="text-[14px] font-semibold tracking-[-0.015em] text-text">
             {t("dashboard.dailyTrendTitle")}
           </h2>
           <p className="text-xs text-muted">
@@ -86,7 +86,7 @@ export const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
             <span className="text-muted">{t("dashboard.weekday")}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded bg-[#e3e2e6]" />
+            <span className="h-3 w-3 rounded bg-slate-200" />
             <span className="text-muted">{t("dashboard.weekend")}</span>
           </div>
         </div>
@@ -105,27 +105,27 @@ export const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
             >
               <XAxis
                 dataKey="formattedDate"
-                tick={{ fontSize: 10, fill: "#5e5e62" }}
-                axisLine={{ stroke: "#C4C7C5" }}
+                tick={{ fontSize: 10, fill: "var(--color-muted)" }}
+                axisLine={{ stroke: "var(--color-border-strong)" }}
                 tickLine={false}
               />
               <YAxis
-                tick={{ fontSize: 10, fill: "#5e5e62" }}
+                tick={{ fontSize: 10, fill: "var(--color-muted)" }}
                 axisLine={false}
                 tickLine={false}
               />
               <Tooltip
                 content={<CustomTooltip t={t} />}
-                cursor={{ fill: "rgba(0,0,0,0.03)" }}
+                cursor={{ fill: "rgba(91,104,66,0.05)" }}
               />
 
               <Bar dataKey="totalHours" radius={[4, 4, 0, 0]}>
                 {formattedData.map((entry, index) => {
-                  let fillColor = "#abdb11"; // Brand lime for normal weekdays
+                  let fillColor = "var(--color-primary)";
                   if (entry.isWeekend) {
-                    fillColor = "#e3e2e6"; // Soft gray for weekends
+                    fillColor = "var(--color-slate-200)";
                   } else if (entry.totalHours === maxHours && maxHours > 0) {
-                    fillColor = "#4e6700"; // Dark olive to highlight peak logging day
+                    fillColor = "var(--color-primary-strong)";
                   }
 
                   return <Cell key={`cell-${index}`} fill={fillColor} />;

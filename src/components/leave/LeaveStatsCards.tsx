@@ -20,14 +20,14 @@ export const LeaveStatsCards: React.FC<LeaveStatsCardsProps> = ({
   );
 
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
       {cards.map((card) => (
         <Card key={card.label}>
           <CardContent className="p-5">
-            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+            <div className="text-[11px] font-medium text-muted">
               {card.label}
             </div>
-            <div className="mt-3 text-3xl font-extrabold text-text">
+            <div className="mt-3 text-[28px] font-semibold tracking-[-0.04em] text-text">
               {card.value}
             </div>
           </CardContent>

@@ -61,8 +61,8 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
             </label>
             <Input
               type="number"
-              step="0.1"
-              min="0.1"
+              step="any"
+              min="0.01"
               max="24"
               required
               value={formData.hours_logged}
@@ -170,7 +170,7 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
           <Button
             type="button"
             variant="outline"
-            className="flex-1 rounded-full"
+            className="flex-1"
             onClick={onClose}
             icon={<X className="h-4 w-4" />}
           >
@@ -178,7 +178,7 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
           </Button>
           <Button
             type="submit"
-            className="flex-1 rounded-full"
+            className="flex-1"
             disabled={isSaving}
             icon={<Check className="h-4 w-4" />}
           >

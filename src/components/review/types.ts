@@ -7,7 +7,6 @@ export interface TimesheetReviewRecord extends Omit<
   profiles?: {
     id: string;
     full_name?: string | null;
-    email?: string | null;
   } | null;
   projects?: {
     id: string;

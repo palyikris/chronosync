@@ -29,8 +29,8 @@ export const Tooltip: React.FC<TooltipProps> = ({
       {children}
       <span
         className={cn(
-          "pointer-events-none absolute left-1/2 top-full z-50 mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-border-strong bg-white/95 px-2.5 py-1 text-[11px] font-semibold leading-none text-text shadow-lg transition-opacity duration-150",
-          isVisible ? "opacity-100" : "opacity-0",
+          "pointer-events-none absolute left-1/2 top-full z-50 mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-text px-2.5 py-1.5 text-[10px] font-semibold leading-none text-white shadow-lg transition-all duration-150",
+          isVisible ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-0",
         )}
       >
         {content}
