@@ -1,10 +1,13 @@
 // src/components/company-settings/ClientManagementCard.tsx
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Check,
+  ChevronDown,
+  ChevronUp,
   PencilLine,
   Plus,
+  Search,
   Star,
   ToggleLeft,
   ToggleRight,
@@ -16,6 +19,7 @@ import {
 import { Button } from "../shared/Button";
 import { Input } from "../shared/Input";
 import { Select } from "../shared/Select";
+import { cn } from "../../utils/cn";
 import { Modal } from "../shared/Modal";
 import { Card, CardContent, CardHeader, CardTitle } from "../shared/Card";
 import {
@@ -91,6 +95,34 @@ export const ClientManagementCard: React.FC<Props> = ({
   const [loading, setLoading] = useState(false);
   const [showNewClientForm, setShowNewClientForm] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isClientFiltersCollapsed, setIsClientFiltersCollapsed] =
+    useState(true);
+  const [clientSearchTerm, setClientSearchTerm] = useState("");
+  const [clientStatusFilter, setClientStatusFilter] = useState<
+    "all" | "active" | "inactive"
+  >("all");
+
+  const filteredClients = useMemo(() => {
+    const normalizedTerm = clientSearchTerm.trim().toLowerCase();
+
+    return [...clients]
+      .filter((client) => {
+        const matchesSearch =
+          !normalizedTerm ||
+          client.name.toLowerCase().includes(normalizedTerm) ||
+          client.client_code.toLowerCase().includes(normalizedTerm);
+
+        const matchesStatus =
+          clientStatusFilter === "all"
+            ? true
+            : clientStatusFilter === "active"
+              ? client.is_active
+              : !client.is_active;
+
+        return matchesSearch && matchesStatus;
+      })
+      .sort((left, right) => left.name.localeCompare(right.name));
+  }, [clientSearchTerm, clientStatusFilter, clients]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -390,13 +422,87 @@ export const ClientManagementCard: React.FC<Props> = ({
           </form>
         )}
 
+        <div className="flex items-end gap-3 transition-all duration-300 ease-out">
+          <div
+            className={cn(
+              "grid flex-1 gap-3 overflow-hidden transition-all duration-300 ease-out md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] md:items-end",
+              isClientFiltersCollapsed
+                ? "pointer-events-none max-w-0 translate-x-[-10px] opacity-0"
+                : "max-w-[1000px] translate-x-0 opacity-100",
+            )}
+          >
+            <Input
+              id="client-search"
+              type="text"
+              aria-label={t("companySettings.searchClients")}
+              placeholder={t("companySettings.clientSearchPlaceholder")}
+              leftIcon={<Search className="h-4 w-4" />}
+              value={clientSearchTerm}
+              onChange={(event) => setClientSearchTerm(event.target.value)}
+            />
+
+            <Select
+              id="client-status-filter"
+              label={t("companySettings.statusFilterLabel")}
+              value={clientStatusFilter}
+              onChange={(event) =>
+                setClientStatusFilter(
+                  event.target.value as "all" | "active" | "inactive",
+                )
+              }
+            >
+              <option value="all">
+                {t("companySettings.statusFilterAll")}
+              </option>
+              <option value="active">
+                {t("companySettings.statusFilterActive")}
+              </option>
+              <option value="inactive">
+                {t("companySettings.statusFilterInactive")}
+              </option>
+            </Select>
+          </div>
+
+          <div className="flex shrink-0 items-center justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className={cn(
+                "h-[2.75rem] min-h-[2.75rem] px-4 transition-transform duration-300 ease-out",
+                !isClientFiltersCollapsed && "translate-x-1",
+              )}
+              onClick={() => {
+                if (!isClientFiltersCollapsed) {
+                  setClientSearchTerm("");
+                  setClientStatusFilter("all");
+                }
+                setIsClientFiltersCollapsed((value) => !value);
+              }}
+              icon={
+                isClientFiltersCollapsed ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronUp className="h-4 w-4" />
+                )
+              }
+            >
+              {isClientFiltersCollapsed
+                ? t("companySettings.showFilters")
+                : t("companySettings.hideFilters")}
+            </Button>
+          </div>
+        </div>
+
         <div className="max-h-120 space-y-3 overflow-x-hidden overflow-y-auto pr-1">
-          {clients.length === 0 ? (
+          {filteredClients.length === 0 ? (
             <p className="rounded-xl border border-dashed border-border-strong bg-bg-accent px-4 py-6 text-center text-sm text-muted-strong">
-              {t("companySettings.noClients")}
+              {clients.length === 0
+                ? t("companySettings.noClients")
+                : t("companySettings.noClientsMatchFilter")}
             </p>
           ) : (
-            clients.map((client) => (
+            filteredClients.map((client) => (
               <article
                 key={client.id}
                 className="group rounded-2xl border border-border-strong bg-surface-strong/80 p-4 shadow-[0_1px_2px_rgba(76,65,92,0.035)] transition-[border-color,box-shadow,background-color] duration-200 hover:border-primary-strong/35 hover:bg-surface-strong hover:shadow-card"
@@ -430,7 +536,8 @@ export const ClientManagementCard: React.FC<Props> = ({
                         )}
                       </div>
                       <p className="mt-1 text-xs text-muted-strong">
-                        {t("companySettings.clientCodeLabel")}: {client.client_code}
+                        {t("companySettings.clientCodeLabel")}:{" "}
+                        {client.client_code}
                       </p>
                     </div>
                   </div>

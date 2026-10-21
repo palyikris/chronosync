@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "../shared/Button";
 import { Card } from "../shared/Card";
 import { Select } from "../shared/Select";
+import { cn } from "../../utils/cn";
 import type { Client, Project } from "../../types/client-project";
 
 const TIMESHEET_FILTERS_COLLAPSED_STORAGE_KEY =
@@ -63,8 +64,6 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
       .sort((left, right) => left.name.localeCompare(right.name));
   }, [projects, selectedClientId]);
 
-  const hasActiveFilter = Boolean(selectedClientId);
-
   const selectedClientExists =
     !selectedClientId ||
     availableClients.some((client) => client.id === selectedClientId);
@@ -109,50 +108,23 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
   return (
     <Card className="relative z-10 overflow-visible p-3">
       <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between gap-3">
-          {viewModeSwitcher}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center self-center">{viewModeSwitcher}</div>
 
-          <div className="flex shrink-0 items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setIsCollapsed((open) => !open)}
-              icon={
-                isCollapsed ? (
-                  <ChevronDown className="h-4 w-4" />
-                ) : (
-                  <ChevronUp className="h-4 w-4" />
-                )
-              }
+          <div className="ml-auto flex shrink-0 items-center gap-2">
+            <div
+              className={cn(
+                "flex items-center gap-3 overflow-hidden transition-all duration-300 ease-out",
+                isCollapsed
+                  ? "pointer-events-none max-w-0 translate-x-[-10px] opacity-0"
+                  : "max-w-[600px] translate-x-0 opacity-100",
+              )}
             >
-              {isCollapsed
-                ? t("timesheet.filtersExpand")
-                : t("timesheet.filtersCollapse")}
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={onReset}
-              disabled={!selectedClientId && !selectedProjectId}
-              icon={<X className="text-danger" />}
-              className="border-danger/30"
-            >
-              {t("common.cancel")}
-            </Button>
-          </div>
-        </div>
-
-        {!isCollapsed ? (
-          <>
-            <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
               <Select
                 value={selectedClientId}
                 onChange={(event) => onClientChange(event.target.value)}
                 label={t("timesheet.client")}
-                className="w-full"
+                className="w-[280px] shrink-0"
               >
                 <option value="">{t("timesheet.allClients")}</option>
                 {availableClients.map((client) => (
@@ -166,7 +138,7 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
                 value={selectedProjectId}
                 onChange={(event) => onProjectChange(event.target.value)}
                 label={t("timesheet.project")}
-                className="w-full"
+                className="w-[280px] shrink-0"
                 disabled={!selectedClientId}
               >
                 <option value="">
@@ -182,15 +154,43 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
               </Select>
             </div>
 
-            <p className="text-xs text-muted-strong">
-              {hasActiveFilter
-                ? selectedProjectId
-                  ? t("timesheet.filterEntriesActiveWithProject")
-                  : t("timesheet.filterEntriesActive")
-                : t("timesheet.filterEntriesInactive")}
-            </p>
-          </>
-        ) : null}
+            <div className="flex shrink-0 items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "h-[2.75rem] min-h-[2.75rem] px-4 transition-transform duration-300 ease-out",
+                  !isCollapsed && "translate-x-1",
+                )}
+                onClick={() => setIsCollapsed((open) => !open)}
+                icon={
+                  isCollapsed ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronUp className="h-4 w-4" />
+                  )
+                }
+              >
+                {isCollapsed
+                  ? t("timesheet.filtersExpand")
+                  : t("timesheet.filtersCollapse")}
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onReset}
+                disabled={!selectedClientId && !selectedProjectId}
+                icon={<X className="text-danger" />}
+                className="h-[2.75rem] min-h-[2.75rem] border-danger/30 px-4"
+              >
+                {t("common.cancel")}
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     </Card>
   );

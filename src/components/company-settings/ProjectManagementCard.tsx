@@ -1,11 +1,14 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Check,
+  ChevronDown,
+  ChevronUp,
   FileSpreadsheet,
   FolderPlus,
   PencilLine,
   Plus,
+  Search,
   ToggleLeft,
   ToggleRight,
   Trash2,
@@ -14,6 +17,7 @@ import {
 import { Button } from "../shared/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "../shared/Card";
 import { Modal } from "../shared/Modal";
+import { cn } from "../../utils/cn";
 import type { ProjectManagementCardProps } from "../../types/company-settings";
 import {
   createProject,
@@ -50,15 +54,40 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   const [loading, setLoading] = useState(false);
   const [showNewProjectForm, setShowNewProjectForm] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isProjectFiltersCollapsed, setIsProjectFiltersCollapsed] =
+    useState(true);
+  const [projectSearchTerm, setProjectSearchTerm] = useState("");
+  const [projectClientFilter, setProjectClientFilter] = useState("");
+  const [projectStatusFilter, setProjectStatusFilter] = useState<
+    "all" | "active" | "inactive"
+  >("all");
 
-  const selectedClient = clients.find(
+  const selectedClientForNewProject = clients.find(
     (client) => client.id === newProjectClientId,
   );
-  const visibleProjects = selectedClient
-    ? projects
-        .filter((project) => project.client_id === selectedClient.id)
-        .sort((a, b) => a.name.localeCompare(b.name))
-    : projects;
+  const visibleProjects = useMemo(() => {
+    const normalizedTerm = projectSearchTerm.trim().toLowerCase();
+
+    return [...projects]
+      .filter((project) => {
+        const matchesSearch =
+          !normalizedTerm ||
+          project.name.toLowerCase().includes(normalizedTerm);
+
+        const matchesClient =
+          !projectClientFilter || project.client_id === projectClientFilter;
+
+        const matchesStatus =
+          projectStatusFilter === "all"
+            ? true
+            : projectStatusFilter === "active"
+              ? project.is_active
+              : !project.is_active;
+
+        return matchesSearch && matchesClient && matchesStatus;
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [projectClientFilter, projectSearchTerm, projectStatusFilter, projects]);
 
   const handleCreate = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -254,23 +283,120 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
               </Button>
             </div>
             <p className="text-xs text-muted-strong">
-              {selectedClient
+              {selectedClientForNewProject
                 ? t("companySettings.creatingUnder", {
-                    clientName: selectedClient.name,
+                    clientName: selectedClientForNewProject.name,
                   })
                 : t("companySettings.pickClientToCreate")}
             </p>
           </form>
         )}
 
+        <div className="flex items-end gap-3 transition-all duration-300 ease-out">
+          <div
+            className={cn(
+              "grid flex-1 gap-3 overflow-hidden transition-all duration-300 ease-out lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)] lg:items-end",
+              isProjectFiltersCollapsed
+                ? "pointer-events-none max-w-0 translate-x-[-10px] opacity-0"
+                : "max-w-[1400px] translate-x-0 opacity-100",
+            )}
+          >
+            <Input
+              id="project-search"
+              type="text"
+              aria-label={t("companySettings.searchProjects")}
+              placeholder={t("companySettings.projectSearchPlaceholder")}
+              leftIcon={<Search className="h-4 w-4" />}
+              value={projectSearchTerm}
+              onChange={(event) => setProjectSearchTerm(event.target.value)}
+            />
+
+            <Select
+              id="project-client-filter"
+              label={t("companySettings.projectClientFilterLabel")}
+              value={projectClientFilter}
+              onChange={(event) => setProjectClientFilter(event.target.value)}
+            >
+              <option value="">
+                {t("companySettings.projectFilterAllClients")}
+              </option>
+              {clients.map((client) => (
+                <option key={client.id} value={client.id}>
+                  {client.name}
+                </option>
+              ))}
+            </Select>
+
+            <Select
+              id="project-status-filter"
+              label={t("companySettings.projectStatusFilterLabel")}
+              value={projectStatusFilter}
+              onChange={(event) =>
+                setProjectStatusFilter(
+                  event.target.value as "all" | "active" | "inactive",
+                )
+              }
+            >
+              <option value="all">
+                {t("companySettings.projectFilterAllStatuses")}
+              </option>
+              <option value="active">
+                {t("companySettings.projectFilterActive")}
+              </option>
+              <option value="inactive">
+                {t("companySettings.projectFilterInactive")}
+              </option>
+            </Select>
+          </div>
+
+          <div className="flex shrink-0 items-center justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className={cn(
+                "h-[2.75rem] min-h-[2.75rem] px-4 transition-transform duration-300 ease-out",
+                !isProjectFiltersCollapsed && "translate-x-1",
+              )}
+              onClick={() => {
+                if (!isProjectFiltersCollapsed) {
+                  setProjectSearchTerm("");
+                  setProjectClientFilter("");
+                  setProjectStatusFilter("all");
+                }
+                setIsProjectFiltersCollapsed((value) => !value);
+              }}
+              icon={
+                isProjectFiltersCollapsed ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronUp className="h-4 w-4" />
+                )
+              }
+            >
+              {isProjectFiltersCollapsed
+                ? t("companySettings.showFilters")
+                : t("companySettings.hideFilters")}
+            </Button>
+          </div>
+        </div>
+
         <div className="max-h-100 space-y-3 overflow-x-hidden overflow-y-auto pr-1">
           {visibleProjects.length === 0 ? (
             <p className="rounded-xl border border-dashed border-border-strong bg-bg-accent px-4 py-6 text-center text-sm text-muted-strong">
-              {selectedClient
-                ? t("companySettings.noProjectsForClient", {
-                    clientName: selectedClient.name,
-                  })
-                : t("companySettings.noProjects")}
+              {projectClientFilter
+                ? (() => {
+                    const client = clients.find(
+                      (item) => item.id === projectClientFilter,
+                    );
+
+                    return client
+                      ? t("companySettings.noProjectsForClient", {
+                          clientName: client.name,
+                        })
+                      : t("companySettings.noProjectsMatchFilter");
+                  })()
+                : t("companySettings.noProjectsMatchFilter")}
             </p>
           ) : (
             visibleProjects.map((project) => (

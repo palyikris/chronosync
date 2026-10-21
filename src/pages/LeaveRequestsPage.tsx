@@ -183,8 +183,10 @@ export const LeaveRequestsPage: React.FC = () => {
 
         <div className="flex items-center gap-3">
           <Button
-            variant="outline"
+            variant="primary"
+            size="lg"
             onClick={openCreateModal}
+            className="rounded-xl px-4 shadow-[0_10px_22px_rgba(96,120,42,0.22)] ring-2 ring-primary/15 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_28px_rgba(96,120,42,0.28)]"
             icon={<Plus className="h-4 w-4" />}
           >
             {t("leave.newRequest")}
