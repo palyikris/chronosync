@@ -39,6 +39,7 @@ export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElemen
   leftIcon?: React.ReactNode;
   label?: string;
   placeholder?: string;
+  disabledReason?: string;
 }
 
 export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}

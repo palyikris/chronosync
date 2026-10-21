@@ -109,7 +109,9 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
     <Card className="relative z-10 overflow-visible p-3">
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center self-center">{viewModeSwitcher}</div>
+          <div className="flex items-center self-center">
+            {viewModeSwitcher}
+          </div>
 
           <div className="ml-auto flex shrink-0 items-center gap-2">
             <div
@@ -140,6 +142,7 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
                 label={t("timesheet.project")}
                 className="w-[280px] shrink-0"
                 disabled={!selectedClientId}
+                disabledReason={t("common.selectClientFirst")}
               >
                 <option value="">
                   {selectedClientId

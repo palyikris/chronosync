@@ -308,13 +308,32 @@ button:not(:disabled),
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
 }
 
+.auth-input:disabled,
+button.auth-input:disabled {
+  cursor: not-allowed;
+  border-color: var(--color-border);
+  background: rgba(231, 235, 218, 0.72);
+  color: var(--color-muted);
+  box-shadow: none;
+  opacity: 0.9;
+}
+
 .auth-field-icon + .auth-input,
 .auth-field-icon + button.auth-input { padding-left: 2.8rem; }
 
-.auth-field input:focus,
-.auth-field button.auth-input:focus {
+.auth-field input:focus {
   border-color: rgba(96, 120, 42, 0.72);
   outline: none;
+  background: #fcfdf7;
+  box-shadow: 0 0 0 3px rgba(207, 231, 143, 0.38);
+}
+
+.auth-field button.auth-input:focus {
+  outline: none;
+}
+
+.auth-field button.auth-input:focus-visible {
+  border-color: rgba(96, 120, 42, 0.72);
   background: #fcfdf7;
   box-shadow: 0 0 0 3px rgba(207, 231, 143, 0.38);
 }
@@ -346,6 +365,16 @@ button:not(:disabled),
 .auth-field.has-value button ~ label,
 .auth-field:focus-within select ~ label,
 .auth-field.has-value select ~ label { opacity: 1; }
+
+/* Keep Select labels within field bounds to avoid clipping in overflow-managed parent layouts. */
+.auth-select-field > label {
+  top: 0.72rem;
+}
+
+.auth-select-field:focus-within > label,
+.auth-select-field.has-value > label {
+  transform: translateY(-0.56rem) scale(0.76);
+}
 
 .auth-input-floating-placeholder::placeholder { color: transparent; }
 .auth-field:focus-within .auth-input-floating-placeholder::placeholder { color: var(--color-muted); }
