@@ -1,8 +1,7 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../shared/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "../shared/Card";
-import { Select } from "../shared/Select";
 import {
   formatDateRange,
   getMonthKey,
@@ -12,7 +11,6 @@ import {
 import { getLeaveWorkingDayCount } from "../../services/leaveService";
 import type {
   LeaveRequest,
-  LeaveRequestEmployeeOption,
   LeaveRequestListProps,
 } from "./types";
 
@@ -52,7 +50,6 @@ export const LeaveRequestList: React.FC<LeaveRequestListProps> = ({
   currentUserId,
   isAdmin,
   selectedEmployeeId,
-  onEmployeeChange,
   onEditRequest,
   onApproveRequest,
   onRejectRequest,
@@ -71,37 +68,6 @@ export const LeaveRequestList: React.FC<LeaveRequestListProps> = ({
       .sort(compareRequests);
   }, [currentDate, leaveRequests]);
 
-  const employeeOptions = useMemo<LeaveRequestEmployeeOption[]>(() => {
-    const uniqueEmployees = new Map<string, LeaveRequestEmployeeOption>();
-
-    for (const request of monthRequests) {
-      if (!uniqueEmployees.has(request.user_id)) {
-        uniqueEmployees.set(request.user_id, {
-          id: request.user_id,
-          fullName: request.profiles?.full_name ?? t("common.unknown"),
-        });
-      }
-    }
-
-    return Array.from(uniqueEmployees.values()).sort((left, right) =>
-      left.fullName.localeCompare(right.fullName),
-    );
-  }, [monthRequests, t]);
-
-  useEffect(() => {
-    if (!selectedEmployeeId) {
-      return;
-    }
-
-    const selectedEmployeeExists = employeeOptions.some(
-      (employee) => employee.id === selectedEmployeeId,
-    );
-
-    if (!selectedEmployeeExists) {
-      onEmployeeChange("");
-    }
-  }, [employeeOptions, onEmployeeChange, selectedEmployeeId]);
-
   const visibleRequests = useMemo(() => {
     const filteredRequests = selectedEmployeeId
       ? monthRequests.filter(
@@ -114,22 +80,8 @@ export const LeaveRequestList: React.FC<LeaveRequestListProps> = ({
 
   return (
     <Card>
-      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <CardHeader>
         <CardTitle>{t("leave.requestList")}</CardTitle>
-
-        <Select
-          value={selectedEmployeeId}
-          onChange={(event) => onEmployeeChange(event.target.value)}
-          label={t("leave.employeeFilterLabel")}
-          className="w-full sm:w-72"
-        >
-          <option value="">{t("leave.allEmployees")}</option>
-          {employeeOptions.map((employee) => (
-            <option key={employee.id} value={employee.id}>
-              {employee.fullName}
-            </option>
-          ))}
-        </Select>
       </CardHeader>
       <CardContent className="space-y-4">
         {visibleRequests.length === 0 ? (

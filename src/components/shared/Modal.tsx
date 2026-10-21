@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "../../utils/cn";
@@ -77,9 +78,9 @@ export const Modal: React.FC<ModalProps> = ({ open, title, onClose, children, cl
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-60 flex animate-[fade-in_160ms_ease-out] items-end justify-center overflow-y-auto bg-text/28 p-0 backdrop-blur-[10px] sm:items-center sm:p-6"
+      className="fixed inset-0 z-60 flex min-h-dvh w-screen animate-[fade-in_160ms_ease-out] items-end justify-center overflow-y-auto bg-text/28 p-0 backdrop-blur-[10px] sm:items-center sm:p-6"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
@@ -95,7 +96,7 @@ export const Modal: React.FC<ModalProps> = ({ open, title, onClose, children, cl
           className,
         )}
       >
-        <div className="flex items-center justify-between border-b border-border bg-bg-accent/45 px-5 py-3.5">
+        <div className="flex items-center justify-between rounded-t-[calc(1.25rem-1px)] border-b border-border bg-bg-accent/45 px-5 py-3.5 sm:rounded-t-[calc(1.125rem-1px)]">
           <h2 id={titleId} className="text-[15px] font-semibold tracking-[-0.015em] text-text">{title}</h2>
           <Button
             variant="ghost"
@@ -107,6 +108,7 @@ export const Modal: React.FC<ModalProps> = ({ open, title, onClose, children, cl
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };

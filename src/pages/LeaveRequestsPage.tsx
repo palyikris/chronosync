@@ -45,6 +45,7 @@ export const LeaveRequestsPage: React.FC = () => {
   const [conflictingDates, setConflictingDates] = useState<string[]>([]);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
   const isAdmin = profile?.role === "company_admin";
+  const isRegularUser = profile?.role === "regular";
 
   const { data: leaveRequests = [], isLoading } = useQuery({
     queryKey: ["leave-requests", profile?.company_id, profile?.id],
@@ -194,20 +195,30 @@ export const LeaveRequestsPage: React.FC = () => {
         </div>
       </div>
 
-      <LeaveStatsCards
-        totalRequests={totalRequests}
-        pendingRequests={pendingRequests}
-        approvedRequests={approvedRequests}
-      />
+      {!isRegularUser ? (
+        <LeaveStatsCards
+          totalRequests={totalRequests}
+          pendingRequests={pendingRequests}
+          approvedRequests={approvedRequests}
+        />
+      ) : null}
 
       <LeaveErrorBanner error={pageError} conflictingDates={conflictingDates} />
 
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.35fr_0.9fr]">
+      <div
+        className={
+          isRegularUser
+            ? "grid grid-cols-1 gap-5"
+            : "grid grid-cols-1 gap-5 xl:grid-cols-[1.35fr_0.9fr]"
+        }
+      >
         <LeaveCalendarPanel
           currentDate={currentDate}
           leaveRequests={leaveRequests}
           currentUserId={profile?.id}
           isAdmin={isAdmin}
+          selectedEmployeeId={selectedEmployeeId}
+          onEmployeeChange={setSelectedEmployeeId}
           onPreviousMonth={() =>
             setCurrentDate(
               new Date(
@@ -228,21 +239,22 @@ export const LeaveRequestsPage: React.FC = () => {
           }
         />
 
-        <LeaveRequestList
-          currentDate={currentDate}
-          leaveRequests={leaveRequests}
-          currentUserId={profile?.id}
-          isAdmin={isAdmin}
-          selectedEmployeeId={selectedEmployeeId}
-          onEmployeeChange={setSelectedEmployeeId}
-          onEditRequest={openEditModal}
-          onApproveRequest={(requestId) => approveMutation.mutate(requestId)}
-          onRejectRequest={(requestId) => rejectMutation.mutate(requestId)}
-          onDeleteRequest={(requestId) => deleteMutation.mutate(requestId)}
-          isApproving={approveMutation.isPending}
-          isRejecting={rejectMutation.isPending}
-          isDeleting={deleteMutation.isPending}
-        />
+        {!isRegularUser ? (
+          <LeaveRequestList
+            currentDate={currentDate}
+            leaveRequests={leaveRequests}
+            currentUserId={profile?.id}
+            isAdmin={isAdmin}
+            selectedEmployeeId={selectedEmployeeId}
+            onEditRequest={openEditModal}
+            onApproveRequest={(requestId) => approveMutation.mutate(requestId)}
+            onRejectRequest={(requestId) => rejectMutation.mutate(requestId)}
+            onDeleteRequest={(requestId) => deleteMutation.mutate(requestId)}
+            isApproving={approveMutation.isPending}
+            isRejecting={rejectMutation.isPending}
+            isDeleting={deleteMutation.isPending}
+          />
+        ) : null}
       </div>
 
       <LeaveRequestModal

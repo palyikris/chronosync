@@ -2,6 +2,7 @@ import React from "react";
 import { CalendarDays } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../shared/Button";
+import { DatePicker } from "../shared/DatePicker";
 import { Input } from "../shared/Input";
 import { Modal } from "../shared/Modal";
 import type { LeaveRequestModalProps } from "./types";
@@ -34,27 +35,27 @@ export const LeaveRequestModal: React.FC<LeaveRequestModalProps> = ({
         }}
       >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Input
-            type="date"
+          <DatePicker
             label={t("leave.startDate")}
             value={formState.start_date}
-            onChange={(event) =>
+            onChange={(value) =>
               onFormStateChange((current) => ({
                 ...current,
-                start_date: event.target.value,
+                start_date: value,
               }))
             }
           />
-          <Input
-            type="date"
+          <DatePicker
             label={t("leave.endDate")}
             value={formState.end_date}
-            onChange={(event) =>
+            min={formState.start_date || undefined}
+            onChange={(value) =>
               onFormStateChange((current) => ({
                 ...current,
-                end_date: event.target.value,
+                end_date: value,
               }))
             }
+            align="end"
           />
         </div>
 

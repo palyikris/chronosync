@@ -1,7 +1,8 @@
 import React from "react";
-import { Calendar, Download } from "lucide-react";
+import { ArrowRight, Download } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../shared/Button";
+import { DatePicker } from "../shared/DatePicker";
 import { InvoiceAttachmentModal } from "./InvoiceAttachmentModal";
 
 interface DashboardHeaderProps {
@@ -36,46 +37,48 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         <p className="mt-1.5 text-sm text-muted">{t("dashboard.pageSubtitle")}</p>
       </div>
 
-      <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center xl:w-auto">
+      <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-end xl:w-auto">
         <div
-          className={`flex min-h-10 min-w-0 flex-1 items-center gap-1 rounded-[10px] border bg-white/50 p-1 text-[12px] shadow-[0_1px_2px_rgba(75,87,57,0.04)] sm:flex-none sm:gap-2 ${
-            isDateRangeValid ? "border-border-strong" : "border-red-300"
+          className={`flex min-w-0 flex-1 flex-col gap-2 rounded-2xl border p-2.5 shadow-[0_1px_2px_rgba(75,87,57,0.04)] sm:flex-none sm:flex-row sm:items-end ${
+            isDateRangeValid
+              ? "border-border bg-surface/55"
+              : "border-danger-border bg-danger-bg/45"
           }`}
         >
-          <Calendar
-            className="ml-1 hidden h-4 w-4 shrink-0 text-primary-strong min-[390px]:block sm:ml-2"
-            aria-hidden="true"
+          <DatePicker
+            value={startDate}
+            max={endDate || undefined}
+            invalid={!isDateRangeValid}
+            ariaLabel={t("dashboard.startDateLabel")}
+            label={t("dashboard.startDateLabel")}
+            onChange={onStartDateChange}
+            className="min-w-0 flex-1 sm:w-[10.5rem] sm:flex-none"
+            buttonClassName="bg-white/55"
           />
-          <label className="min-w-0 flex-1 sm:flex-none">
-            <span className="sr-only">{t("dashboard.startDateLabel")}</span>
-            <input
-              type="date"
-              value={startDate}
-              max={endDate || undefined}
-              aria-invalid={!isDateRangeValid}
-              onChange={(event) => onStartDateChange(event.target.value)}
-              className="w-full min-w-0 border-none bg-transparent px-1 text-xs font-semibold text-text outline-none sm:w-[8.4rem]"
-            />
-          </label>
-          <span className="shrink-0 text-border-strong" aria-hidden="true">
-            —
+
+          <span
+            className="flex h-6 shrink-0 items-center justify-center text-primary-strong/65 sm:mb-0 sm:h-11 sm:w-6"
+            aria-hidden="true"
+          >
+            <ArrowRight className="h-4 w-4 rotate-90 sm:rotate-0" />
           </span>
-          <label className="min-w-0 flex-1 sm:flex-none">
-            <span className="sr-only">{t("dashboard.endDateLabel")}</span>
-            <input
-              type="date"
-              value={endDate}
-              min={startDate || undefined}
-              aria-invalid={!isDateRangeValid}
-              onChange={(event) => onEndDateChange(event.target.value)}
-              className="w-full min-w-0 border-none bg-transparent px-1 text-xs font-semibold text-text outline-none sm:w-[8.4rem]"
-            />
-          </label>
+
+          <DatePicker
+            value={endDate}
+            min={startDate || undefined}
+            invalid={!isDateRangeValid}
+            ariaLabel={t("dashboard.endDateLabel")}
+            label={t("dashboard.endDateLabel")}
+            onChange={onEndDateChange}
+            align="end"
+            className="min-w-0 flex-1 sm:w-[10.5rem] sm:flex-none"
+            buttonClassName="bg-white/55"
+          />
         </div>
         <Button
           onClick={() => setIsInvoiceModalOpen(true)}
           icon={<Download className="h-4 w-4" />}
-          className="w-full sm:w-auto"
+          className="h-11 w-full px-4 sm:w-auto"
           disabled={!isDateRangeValid}
         >
           {t("dashboard.downloadReport")}

@@ -17,6 +17,8 @@ interface InvoiceAttachmentModalProps {
   onClose: () => void;
 }
 
+const MAX_INVOICE_ATTACHMENT_CLIENTS = 100;
+
 export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
   open,
   companyId,
@@ -163,6 +165,14 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
     if (selectedClientIds.length === 0 || isGenerating) {
       return;
     }
+    if (selectedClientIds.length > MAX_INVOICE_ATTACHMENT_CLIENTS) {
+      setSubmitError(
+        t("dashboard.invoiceAttachmentTooManyClients", {
+          max: MAX_INVOICE_ATTACHMENT_CLIENTS,
+        }),
+      );
+      return;
+    }
 
     setIsGenerating(true);
     setSubmitError(null);
@@ -190,6 +200,8 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
   };
 
   const hasSelection = selectedClientIds.length > 0;
+  const hasTooManySelectedClients =
+    selectedClientIds.length > MAX_INVOICE_ATTACHMENT_CLIENTS;
 
   return (
     <Modal
@@ -256,7 +268,7 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
               <label className="mt-4 flex items-start gap-3 rounded-2xl border border-border-strong bg-surface px-4 py-3 text-sm text-text">
                 <input
                   type="checkbox"
-                  checked={updateRemainingHours}
+                  checked={canUpdateRemainingHours && updateRemainingHours}
                   onChange={(event) =>
                     setUpdateRemainingHours(event.target.checked)
                   }
@@ -347,9 +359,12 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
           </div>
         )}
 
-        {submitError ? (
+        {submitError || hasTooManySelectedClients ? (
           <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {submitError}
+            {submitError ??
+              t("dashboard.invoiceAttachmentTooManyClients", {
+                max: MAX_INVOICE_ATTACHMENT_CLIENTS,
+              })}
           </div>
         ) : null}
 
@@ -363,7 +378,12 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
           </Button>
           <Button
             onClick={handleGenerate}
-            disabled={!hasSelection || isGenerating || clients.length === 0}
+            disabled={
+              !hasSelection ||
+              hasTooManySelectedClients ||
+              isGenerating ||
+              clients.length === 0
+            }
           >
             {isGenerating
               ? t("common.loading")

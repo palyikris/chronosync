@@ -1,15 +1,20 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { ChevronLeft, ChevronRight, User } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader } from "../shared/Card";
 import { Button } from "../shared/Button";
+import { Select } from "../shared/Select";
 import {
   getLeaveRequestBadgeClasses,
   getLocalDateValue,
   getMonthKey,
+  isRequestInMonth,
 } from "./leaveRequestHelpers";
 import { getLeaveDateRange } from "../../services/leaveService";
-import type { LeaveCalendarPanelProps } from "./types";
+import type {
+  LeaveCalendarPanelProps,
+  LeaveRequestEmployeeOption,
+} from "./types";
 
 const pad = (value: number) => String(value).padStart(2, "0");
 
@@ -18,6 +23,8 @@ export const LeaveCalendarPanel: React.FC<LeaveCalendarPanelProps> = ({
   leaveRequests,
   currentUserId,
   isAdmin,
+  selectedEmployeeId,
+  onEmployeeChange,
   onPreviousMonth,
   onNextMonth,
 }) => {
@@ -29,6 +36,40 @@ export const LeaveCalendarPanel: React.FC<LeaveCalendarPanelProps> = ({
   });
 
   const todayDateStr = getLocalDateValue(new Date());
+
+  const monthRequests = useMemo(() => {
+    const monthKey = getMonthKey(currentDate);
+
+    return leaveRequests.filter((request) =>
+      isRequestInMonth(request, monthKey),
+    );
+  }, [currentDate, leaveRequests]);
+
+  const employeeOptions = useMemo<LeaveRequestEmployeeOption[]>(() => {
+    const uniqueEmployees = new Map<string, LeaveRequestEmployeeOption>();
+
+    for (const request of monthRequests) {
+      if (!uniqueEmployees.has(request.user_id)) {
+        uniqueEmployees.set(request.user_id, {
+          id: request.user_id,
+          fullName: request.profiles?.full_name ?? t("common.unknown"),
+        });
+      }
+    }
+
+    return Array.from(uniqueEmployees.values()).sort((left, right) =>
+      left.fullName.localeCompare(right.fullName),
+    );
+  }, [monthRequests, t]);
+
+  useEffect(() => {
+    if (
+      selectedEmployeeId &&
+      !employeeOptions.some((employee) => employee.id === selectedEmployeeId)
+    ) {
+      onEmployeeChange("");
+    }
+  }, [employeeOptions, onEmployeeChange, selectedEmployeeId]);
 
   const monthMatrix = useMemo(() => {
     const daysInMonth = new Date(
@@ -48,14 +89,15 @@ export const LeaveCalendarPanel: React.FC<LeaveCalendarPanelProps> = ({
       );
     });
 
-    const monthKey = getMonthKey(currentDate);
-    const monthRequests = leaveRequests.filter((request) =>
-      request.start_date <= `${monthKey}-31` && request.end_date >= `${monthKey}-01`,
-    );
+    const visibleMonthRequests = selectedEmployeeId
+      ? monthRequests.filter(
+          (request) => request.user_id === selectedEmployeeId,
+        )
+      : monthRequests;
 
-    const dateMap = new Map<string, typeof monthRequests>();
+    const dateMap = new Map<string, typeof visibleMonthRequests>();
 
-    for (const request of monthRequests) {
+    for (const request of visibleMonthRequests) {
       for (const date of getLeaveDateRange(request.start_date, request.end_date)) {
         const existing = dateMap.get(date) ?? [];
         existing.push(request);
@@ -64,7 +106,7 @@ export const LeaveCalendarPanel: React.FC<LeaveCalendarPanelProps> = ({
     }
 
     return { daysInMonth, startDayOfWeek, weekDays, dateMap };
-  }, [currentDate, i18n.language, leaveRequests]);
+  }, [currentDate, i18n.language, monthRequests, selectedEmployeeId]);
 
   return (
     <Card className="h-full overflow-hidden">
@@ -80,21 +122,37 @@ export const LeaveCalendarPanel: React.FC<LeaveCalendarPanelProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onPreviousMonth}
-            aria-label={t("common.previousMonth")}
-            icon={<ChevronLeft className="text-muted" />}
-          />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onNextMonth}
-            aria-label={t("common.nextMonth")}
-            icon={<ChevronRight className="text-muted" />}
-          />
+        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-end">
+          <Select
+            value={selectedEmployeeId}
+            onChange={(event) => onEmployeeChange(event.target.value)}
+            label={t("leave.employeeFilterLabel")}
+            className="w-full sm:w-64"
+          >
+            <option value="">{t("leave.allEmployees")}</option>
+            {employeeOptions.map((employee) => (
+              <option key={employee.id} value={employee.id}>
+                {employee.fullName}
+              </option>
+            ))}
+          </Select>
+
+          <div className="flex items-center gap-1 self-end">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onPreviousMonth}
+              aria-label={t("common.previousMonth")}
+              icon={<ChevronLeft className="text-muted" />}
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onNextMonth}
+              aria-label={t("common.nextMonth")}
+              icon={<ChevronRight className="text-muted" />}
+            />
+          </div>
         </div>
       </CardHeader>
 

@@ -15,6 +15,26 @@ import { AuthProvider } from "./context/AuthContext";
 import TimesheetReviewPage from "./pages/TimesheetReviewPage";
 import AuditLogPage from "./pages/LogsPage";
 import LeaveRequestsPage from "./pages/LeaveRequestsPage";
+import { DashboardHeader } from "./components/dashboard/DashboardHeader";
+
+const DashboardHeaderPreview: React.FC = () => {
+  const [startDate, setStartDate] = React.useState("2026-10-01");
+  const [endDate, setEndDate] = React.useState("2026-10-21");
+
+  return (
+    <main className="min-h-screen bg-bg p-8">
+      <DashboardHeader
+        startDate={startDate}
+        endDate={endDate}
+        isDateRangeValid={startDate <= endDate}
+        isRefreshing={false}
+        onStartDateChange={setStartDate}
+        onEndDateChange={setEndDate}
+        companyId="preview"
+      />
+    </main>
+  );
+};
 
 // Dynamic Index Redirect Component
 const RootRedirect: React.FC = () => {
@@ -40,6 +60,9 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
+          {import.meta.env.DEV ? (
+            <Route path="/dashboard-header-preview" element={<DashboardHeaderPreview />} />
+          ) : null}
           {/* Public Auth Route */}
           <Route path="/login" element={<LoginPage />} />
 

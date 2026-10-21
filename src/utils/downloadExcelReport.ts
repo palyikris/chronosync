@@ -1,5 +1,9 @@
 import { supabase } from "../lib/supabaseClient";
 import i18n from "../lib/i18n";
+import {
+  getReportErrorMessage,
+  getReportFilename,
+} from "./invoiceAttachmentDownloadHelpers";
 
 interface DownloadReportParams {
   companyId: string;
@@ -19,55 +23,6 @@ interface ReportDownload {
 const XLSX_CONTENT_TYPE =
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
-const getErrorMessage = (payload: unknown): string | null => {
-  if (!payload || typeof payload !== "object") return null;
-  const detail = "detail" in payload ? payload.detail : null;
-  if (typeof detail === "string") return detail;
-  if (Array.isArray(detail)) {
-    const messages = detail
-      .map((item) =>
-        item && typeof item === "object" && "msg" in item
-          ? String(item.msg)
-          : null,
-      )
-      .filter((message): message is string => Boolean(message));
-    return messages.length > 0 ? messages.join(" ") : null;
-  }
-  return null;
-};
-
-export const getReportFilename = (contentDisposition: string | null) => {
-  if (!contentDisposition) return null;
-
-  const encodedMatch = contentDisposition.match(
-    /filename\*\s*=\s*UTF-8''([^;]+)/i,
-  );
-  const quotedMatch = contentDisposition.match(/filename\s*=\s*"([^"]+)"/i);
-  const plainMatch = contentDisposition.match(/filename\s*=\s*([^;]+)/i);
-  let rawFilename = quotedMatch?.[1] ?? plainMatch?.[1]?.trim();
-  if (encodedMatch?.[1]) {
-    try {
-      rawFilename = decodeURIComponent(encodedMatch[1].trim());
-    } catch {
-      return null;
-    }
-  }
-
-  if (!rawFilename) return null;
-  const safeFilename = Array.from(rawFilename, (character) => {
-    const codePoint = character.codePointAt(0) ?? 0;
-    return codePoint <= 31 || codePoint === 127 || '\\/:*?"<>|'.includes(character)
-      ? "_"
-      : character;
-  })
-    .join("")
-    .replace(/^\.+/, "")
-    .trim();
-  return safeFilename.toLowerCase().endsWith(".xlsx")
-    ? safeFilename
-    : null;
-};
-
 const fetchReportBlob = async (
   params: DownloadReportParams,
   accessToken: string,
@@ -75,7 +30,7 @@ const fetchReportBlob = async (
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
   if (!apiBaseUrl) {
-    throw new Error("API base URL is not configured.");
+    throw new Error(i18n.t("dashboard.invoiceAttachmentApiNotConfigured"));
   }
 
   const response = await fetch(
@@ -102,20 +57,37 @@ const fetchReportBlob = async (
     if (response.status === 404) {
       throw new Error(i18n.t("dashboard.invoiceAttachmentNoBillableEntries"));
     }
+    if (response.status === 401) {
+      throw new Error(i18n.t("dashboard.invoiceAttachmentAuthenticationRequired"));
+    }
+    if (response.status === 403) {
+      throw new Error(i18n.t("dashboard.invoiceAttachmentAdminRequired"));
+    }
+    if (response.status === 409) {
+      throw new Error(i18n.t("dashboard.invoiceAttachmentDataConflict"));
+    }
+    if (response.status === 413) {
+      throw new Error(i18n.t("dashboard.invoiceAttachmentReportTooLarge"));
+    }
+    if (response.status === 422) {
+      throw new Error(i18n.t("dashboard.invoiceAttachmentInvalidRequest"));
+    }
     throw new Error(
-      getErrorMessage(errorData) ||
-        `Failed to generate invoice attachments (HTTP ${response.status}).`,
+      getReportErrorMessage(errorData) ||
+        i18n.t("dashboard.invoiceAttachmentGenerationHttpError", {
+          status: response.status,
+        }),
     );
   }
 
   const contentType = response.headers.get("Content-Type")?.toLowerCase() ?? "";
   if (!contentType.includes(XLSX_CONTENT_TYPE)) {
-    throw new Error("The report service returned an invalid file type.");
+    throw new Error(i18n.t("dashboard.invoiceAttachmentInvalidFileType"));
   }
 
   const blob = await response.blob();
   if (blob.size === 0) {
-    throw new Error("The report service returned an empty file.");
+    throw new Error(i18n.t("dashboard.invoiceAttachmentEmptyFile"));
   }
 
   return {
@@ -142,7 +114,7 @@ export async function downloadSzamlamellekletReport(
   } = await supabase.auth.getSession();
 
   if (!session?.access_token) {
-    throw new Error("Nincs aktív munkamenet / hiányzó autentikáció.");
+    throw new Error(i18n.t("dashboard.invoiceAttachmentAuthenticationRequired"));
   }
 
   const { blob, filename } = await fetchReportBlob(

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Clock3, Folder, FolderKanban, Play, Square } from "lucide-react";
+import { Clock3, Play, Square } from "lucide-react";
 import { useAuth } from "../../context/useAuth";
 import { Button } from "./Button";
 import { Card, CardContent } from "./Card";
@@ -186,109 +186,166 @@ export const LiveTimerWidget: React.FC = () => {
   };
 
   return (
-    <Card className="overflow-visible">
-      <div className="h-px bg-linear-to-r from-transparent via-primary-strong/35 to-transparent" />
+    <Card className="relative overflow-visible border-primary-strong/10 bg-surface-strong/95 shadow-[0_12px_38px_rgba(75,87,57,0.075)]">
+      <div
+        className="pointer-events-none absolute inset-x-10 top-0 h-px bg-linear-to-r from-transparent via-primary-strong/30 to-transparent"
+        aria-hidden="true"
+      />
 
-      <CardContent className="flex flex-col gap-3 px-3 py-3 lg:px-4 lg:py-4">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex items-center gap-3 rounded-xl border border-border bg-bg-accent/45 px-2.5 py-2">
-            <div className="flex h-9 min-w-20 items-center justify-center rounded-[9px] border border-border-strong bg-white/55 px-2.5 shadow-sm">
-              <div className="font-mono text-[15px] font-medium tracking-[0.14em] text-text">
-                {timerDisplay}
+      <CardContent className="p-3 sm:p-4">
+        <div className="grid gap-3 xl:grid-cols-[minmax(15rem,0.75fr)_minmax(0,2.75fr)_auto] xl:items-end">
+          <section className="relative h-full min-h-[82px] overflow-hidden rounded-xl border border-primary-strong/12 bg-linear-to-br from-primary/25 via-bg-accent/85 to-white/70 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
+            <div
+              className="pointer-events-none absolute -top-12 -right-10 h-28 w-28 rounded-full border border-primary-strong/10 bg-primary/15"
+              aria-hidden="true"
+            />
+
+            <div className="relative flex items-center justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.13em] text-muted-strong">
+                <Clock3 className="h-3.5 w-3.5" aria-hidden="true" />
+                <span className="truncate">
+                  {t("timesheet.liveTimerTitle")}
+                </span>
+              </div>
+              <div className="flex shrink-0 items-center gap-1.5 rounded-full border border-white/65 bg-white/55 px-2 py-1 text-[9px] font-semibold text-muted-strong shadow-[0_1px_2px_rgba(75,87,57,0.06)] backdrop-blur-sm">
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    isRunning
+                      ? "animate-pulse bg-primary-strong"
+                      : "bg-muted/45"
+                  }`}
+                  aria-hidden="true"
+                />
+                {isRunning
+                  ? t("timesheet.activeTimer")
+                  : t("timesheet.readyToStart")}
               </div>
             </div>
-            <div className="hidden sm:block">
-              <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted">
-                <Clock3 className="h-3 w-3" />
-                {t("timesheet.readyToStart")}
-              </div>
-              <div className="mt-0.5 text-[11px] text-muted-strong">
-                {isRunning
-                  ? t("timesheet.timerRunning")
-                  : t("timesheet.timerIdle")}
-              </div>
+
+            <div className="relative mt-2 font-mono text-[27px] leading-none font-semibold tracking-[0.09em] tabular-nums text-text">
+              {timerDisplay}
+            </div>
+            <p
+              className="relative mt-1 truncate text-[10.5px] text-muted"
+              aria-live="polite"
+            >
+              {isRunning
+                ? t("timesheet.timerRunning")
+                : t("timesheet.timerIdle")}
+            </p>
+          </section>
+
+          <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)_minmax(12rem,1.25fr)]">
+            <div className="min-w-0">
+              <label
+                htmlFor="live-timer-client"
+                className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.11em] text-muted"
+              >
+                {t("timesheet.client")}
+              </label>
+              <Select
+                id="live-timer-client"
+                value={draftClientId}
+                onChange={handleClientChange}
+                disabled={isRunning || !activeClients.length}
+                disabledReason={
+                  isRunning
+                    ? t("timesheet.timerRunning")
+                    : t("timesheet.noActiveClients")
+                }
+                className="w-full [&_button.auth-input]:bg-white/75 [&_button.auth-input]:shadow-[0_1px_2px_rgba(75,87,57,0.04)]"
+              >
+                <option value="">
+                  {activeClients.length
+                    ? t("common.selectClient")
+                    : t("timesheet.noActiveClients")}
+                </option>
+                {activeClients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            <div className="min-w-0">
+              <label
+                htmlFor="live-timer-project"
+                className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.11em] text-muted"
+              >
+                {t("timesheet.project")}
+              </label>
+              <Select
+                id="live-timer-project"
+                value={draftProjectId}
+                onChange={(event) => setDraftProjectId(event.target.value)}
+                disabled={
+                  isRunning || !draftClientId || !activeProjects.length
+                }
+                disabledReason={
+                  isRunning
+                    ? t("timesheet.timerRunning")
+                    : !draftClientId
+                      ? t("common.selectClientFirst")
+                      : t("timesheet.noActiveProjects")
+                }
+                className="w-full [&_button.auth-input]:bg-white/75 [&_button.auth-input]:shadow-[0_1px_2px_rgba(75,87,57,0.04)]"
+              >
+                <option value="">
+                  {!draftClientId
+                    ? t("common.selectClientFirst")
+                    : activeProjects.length
+                      ? t("common.selectProject")
+                      : t("timesheet.noActiveProjects")}
+                </option>
+                {activeProjects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            <div className="min-w-0 sm:col-span-2 lg:col-span-1">
+              <label
+                htmlFor="live-timer-description"
+                className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.11em] text-muted"
+              >
+                {t("timesheet.whatAreYouWorkingOn")}
+              </label>
+              <input
+                id="live-timer-description"
+                value={draftDescription}
+                onChange={(event) => setDraftDescription(event.target.value)}
+                disabled={isRunning}
+                placeholder={t("timesheet.taskDescriptionPlaceholder")}
+                className="auth-input bg-white/75 shadow-[0_1px_2px_rgba(75,87,57,0.04)] placeholder:text-muted"
+              />
             </div>
           </div>
 
-          <Button
-            variant={isRunning ? "danger" : "primary"}
-            type="button"
-            onClick={isRunning ? handleStopTimer : handleStartTimer}
-            disabled={isActionDisabled}
-            className="min-w-28 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isRunning ? (
-              <Square className="h-4 w-4 fill-current" />
-            ) : (
-              <Play className="h-4 w-4 fill-current" />
-            )}
-            {isRunning ? t("timesheet.stopTimer") : t("timesheet.startTimer")}
-          </Button>
-        </div>
-
-        <div className="grid gap-2 md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)_minmax(0,1.15fr)]">
-          <label className="flex flex-col gap-1.5 rounded-xl border border-border-strong bg-bg px-3 py-2 transition-colors focus-within:border-primary/40 focus-within:bg-bg-accent">
-            <span className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted">
-              <Folder className="h-3.5 w-3.5" />
-              {t("timesheet.client")}
-            </span>
-            <Select
-              value={draftClientId}
-              onChange={handleClientChange}
-              disabled={isRunning || !activeClients.length}
-              className="w-full border-0 bg-transparent text-sm text-text focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+          <div className="flex sm:justify-end">
+            <Button
+              variant={isRunning ? "danger" : "primary"}
+              type="button"
+              onClick={isRunning ? handleStopTimer : handleStartTimer}
+              disabled={isActionDisabled}
+              className={`h-11 w-full px-5 text-[13px] sm:w-auto xl:min-w-40 disabled:cursor-not-allowed disabled:opacity-60 ${
+                isRunning
+                  ? "shadow-[0_6px_16px_rgba(162,89,82,0.18)]"
+                  : "border-primary-strong! bg-primary-strong! text-white! shadow-[0_6px_16px_rgba(96,120,42,0.2)] hover:brightness-105"
+              }`}
             >
-              <option value="">
-                {activeClients.length
-                  ? t("common.selectClient")
-                  : t("timesheet.noActiveClients")}
-              </option>
-              {activeClients.map((client) => (
-                <option key={client.id} value={client.id}>
-                  {client.name}
-                </option>
-              ))}
-            </Select>
-          </label>
-
-          <label className="flex flex-col gap-1.5 rounded-xl border border-border-strong bg-bg px-3 py-2 transition-colors focus-within:border-primary/40 focus-within:bg-bg-accent">
-            <span className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted">
-              <FolderKanban className="h-3.5 w-3.5" />
-              {t("timesheet.project")}
-            </span>
-            <Select
-              value={draftProjectId}
-              onChange={(event) => setDraftProjectId(event.target.value)}
-              disabled={isRunning || !draftClientId || !activeProjects.length}
-              className="w-full border-0 bg-transparent text-sm text-text focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <option value="">
-                {!draftClientId
-                  ? t("common.selectClientFirst")
-                  : activeProjects.length
-                    ? t("common.selectProject")
-                    : t("timesheet.noActiveProjects")}
-              </option>
-              {activeProjects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))}
-            </Select>
-          </label>
-
-          <label className="flex flex-col gap-1.5 rounded-xl border border-border-strong bg-bg px-3 py-2 transition-colors focus-within:border-primary/40 focus-within:bg-bg-accent">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted">
-              {t("timesheet.whatAreYouWorkingOn")}
-            </span>
-            <input
-              value={draftDescription}
-              onChange={(event) => setDraftDescription(event.target.value)}
-              disabled={isRunning}
-              placeholder={t("timesheet.taskDescriptionPlaceholder")}
-              className="w-full border-0 bg-transparent text-sm text-text placeholder:text-muted focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
-            />
-          </label>
+              {isRunning ? (
+                <Square className="fill-current" />
+              ) : (
+                <Play className="fill-current" />
+              )}
+              {isRunning
+                ? t("timesheet.stopTimer")
+                : t("timesheet.startTimer")}
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

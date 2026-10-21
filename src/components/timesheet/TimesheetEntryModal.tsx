@@ -1,7 +1,8 @@
 import React from "react";
-import { Calendar as CalendarIcon, Check, Clock, Info, X } from "lucide-react";
+import { Check, Clock, Info, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../shared/Button";
+import { DatePicker } from "../shared/DatePicker";
 import { Input } from "../shared/Input";
 import { Modal } from "../shared/Modal";
 import { Select } from "../shared/Select";
@@ -41,17 +42,15 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
             <label className="mb-1 block text-xs font-semibold text-muted">
               {t("timesheet.date")}
             </label>
-            <Input
-              type="date"
+            <DatePicker
               required
               value={formData.work_date}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+              onChange={(value) =>
                 onChange((current) => ({
                   ...current,
-                  work_date: event.target.value,
+                  work_date: value,
                 }))
               }
-              leftIcon={<CalendarIcon className="h-4 w-4" />}
             />
           </div>
 

@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { Filter, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../shared/Button";
-import { Input } from "../shared/Input";
+import { DatePicker } from "../shared/DatePicker";
 import { Select } from "../shared/Select";
 import type { Client, Project } from "../../types/client-project";
 import type { TimesheetEntryStatus } from "../../types/timesheet";
@@ -220,31 +220,32 @@ export const TimesheetReviewFilterPopover: React.FC<
             </Select>
 
             {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-3"> */}
-            <Input
-              type="date"
+            <DatePicker
               value={filters.startDate ?? ""}
               max={filters.endDate ?? undefined}
-              onChange={(event) =>
+              onChange={(value) =>
                 onChange({
                   ...filters,
-                  startDate: event.target.value || null,
+                  startDate: value || null,
                 })
               }
               label={t("timesheetReview.startDateLabel")}
               className="w-full"
+              placement="top"
             />
-            <Input
-              type="date"
+            <DatePicker
               value={filters.endDate ?? ""}
               min={filters.startDate ?? undefined}
-              onChange={(event) =>
+              onChange={(value) =>
                 onChange({
                   ...filters,
-                  endDate: event.target.value || null,
+                  endDate: value || null,
                 })
               }
               label={t("timesheetReview.endDateLabel")}
               className="w-full"
+              align="end"
+              placement="top"
             />
             {/* </div> */}
           </div>

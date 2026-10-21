@@ -25,6 +25,8 @@ export interface LeaveCalendarPanelProps {
   leaveRequests: LeaveRequest[];
   currentUserId?: string;
   isAdmin: boolean;
+  selectedEmployeeId: string;
+  onEmployeeChange: (employeeId: string) => void;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
 }
@@ -35,7 +37,6 @@ export interface LeaveRequestListProps {
   currentUserId?: string;
   isAdmin: boolean;
   selectedEmployeeId: string;
-  onEmployeeChange: (employeeId: string) => void;
   onEditRequest: (request: LeaveRequest) => void;
   onApproveRequest: (requestId: string) => void;
   onRejectRequest: (requestId: string) => void;
