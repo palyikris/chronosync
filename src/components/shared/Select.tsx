@@ -443,7 +443,7 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
           ? createPortal(
               <div
                 ref={dropdownRef}
-                style={menuStyles}
+                style={menuStyles ?? undefined}
                 className={cn(
                   "overflow-hidden rounded-xl border border-border-strong bg-surface-strong/95 shadow-[0_12px_32px_rgba(75,87,57,0.14)] backdrop-blur-2xl animate-[popover-in_160ms_cubic-bezier(0.22,1,0.36,1)]",
                   !menuStyles && "invisible",
