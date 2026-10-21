@@ -1,5 +1,6 @@
 import React, { type ReactNode } from "react";
 import { Clock, type LucideIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { AnimatedNumber } from "./AnimatedNumbers";
 
 export interface KpiSummaryCardItem {
@@ -10,6 +11,7 @@ export interface KpiSummaryCardItem {
   iconClassName?: string;
   valueSuffix?: string;
   valuePrefix?: string;
+  valueDecimals?: number;
   className?: string;
   footer?: ReactNode;
 }
@@ -43,9 +45,11 @@ const KpiCard: React.FC<KpiCardProps> = ({
   iconClassName = "text-primary-strong",
   valueSuffix,
   valuePrefix,
+  valueDecimals,
   className = "",
   footer,
 }) => {
+  const { i18n } = useTranslation();
   const numericValue = getNumericValue(value);
 
   return (
@@ -53,11 +57,9 @@ const KpiCard: React.FC<KpiCardProps> = ({
       className={`group flex min-h-36 flex-col justify-between rounded-2xl border border-border bg-surface-strong/84 p-4.5 shadow-card backdrop-blur-xl transition-[border-color,box-shadow] duration-300 hover:border-border-strong hover:shadow-card-hover ${className}`.trim()}
     >
       <div className="flex justify-between items-start">
-        <span className="text-[11px] font-medium text-muted">
-          {title}
-        </span>
+        <span className="text-[11px] font-medium text-muted">{title}</span>
         <div className="flex h-8 w-8 items-center justify-center rounded-[9px] border border-primary-strong/8 bg-primary/12 text-primary-strong">
-          <Icon className={`h-4 w-4 ${iconClassName}`} />
+          <Icon className={`h-4 w-4 ${iconClassName}`} aria-hidden="true" />
         </div>
       </div>
       <div className="mt-4">
@@ -67,8 +69,11 @@ const KpiCard: React.FC<KpiCardProps> = ({
             value={numericValue}
             prefix={valuePrefix}
             suffix={valueSuffix}
-            decimals={Number.isInteger(numericValue) ? 0 : 2}
-          ></AnimatedNumber>
+            decimals={
+              valueDecimals ?? (Number.isInteger(numericValue) ? 0 : 1)
+            }
+            locale={i18n.resolvedLanguage || i18n.language}
+          />
         ) : (
           <span className="text-[28px] font-semibold tracking-[-0.04em] text-text tabular-nums">
             {valuePrefix}
@@ -102,6 +107,7 @@ export const KpiSummaryCards: React.FC<KpiSummaryCardsProps> = ({ items }) => {
           iconClassName={item.iconClassName}
           valueSuffix={item.valueSuffix}
           valuePrefix={item.valuePrefix}
+          valueDecimals={item.valueDecimals}
           className={item.className}
           footer={item.footer}
         />

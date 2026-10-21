@@ -2,6 +2,8 @@ export interface DashboardKPIs {
   totalLoggedHours: number;
   activeLoggersCount: number;
   totalActiveMembers: number;
+  activeLoggerRatePct: number;
+  expectedCapacityHours: number;
   capacityUtilizationPct: number;
 }
 

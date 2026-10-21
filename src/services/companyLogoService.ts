@@ -1,5 +1,6 @@
 // src/services/companyLogoService.ts
 import { supabase } from "../lib/supabaseClient";
+import i18n from "../lib/i18n";
 
 const BUCKET_NAME = "company-logos";
 const ALLOWED_MIME_TYPES = [
@@ -8,6 +9,7 @@ const ALLOWED_MIME_TYPES = [
   "image/webp",
   "image/svg+xml",
 ];
+const MAX_LOGO_BYTES = 2 * 1024 * 1024;
 
 /**
  * Returns the public URL for a company logo based on its fixed path.
@@ -28,9 +30,11 @@ export async function uploadCompanyLogo(
   file: File,
 ): Promise<string> {
   if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-    throw new Error(
-      "Invalid file type. Please upload PNG, JPEG, WebP, or SVG.",
-    );
+    throw new Error(i18n.t("companySettings.logoInvalidFileType"));
+  }
+
+  if (file.size > MAX_LOGO_BYTES) {
+    throw new Error(i18n.t("companySettings.logoFileTooLarge"));
   }
 
   const filePath = `${companyId}/logo/current`;

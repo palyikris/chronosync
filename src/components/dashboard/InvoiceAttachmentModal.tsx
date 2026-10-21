@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { fetchActiveClients } from "../../services/clientProjectService";
 import type { Client } from "../../types/client-project";
 import { downloadSzamlamellekletReport } from "../../utils/downloadExcelReport";
+import { parseDashboardDate } from "../../utils/dashboardCalculations";
 import { Button } from "../shared/Button";
 import { Modal } from "../shared/Modal";
 
@@ -28,7 +29,7 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
   const [selectionMode, setSelectionMode] = useState<
     "defaults" | "all" | "manual"
   >("defaults");
-  const [manualSelectedClientCodes, setManualSelectedClientCodes] = useState<
+  const [manualSelectedClientIds, setManualSelectedClientIds] = useState<
     string[]
   >([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -45,27 +46,41 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
     enabled: open && Boolean(companyId),
   });
 
-  const selectedClientCodes = useMemo(() => {
+  const selectedClientIds = useMemo(() => {
     if (selectionMode === "all") {
-      return clients.map((client) => client.client_code);
+      return clients.map((client) => client.id);
     }
 
     if (selectionMode === "defaults") {
       return clients
         .filter((client) => client.is_default)
-        .map((client) => client.client_code);
+        .map((client) => client.id);
     }
 
-    return manualSelectedClientCodes;
-  }, [clients, manualSelectedClientCodes, selectionMode]);
+    return manualSelectedClientIds;
+  }, [clients, manualSelectedClientIds, selectionMode]);
 
   const selectedClients = useMemo(
-    () =>
-      clients.filter((client) =>
-        selectedClientCodes.includes(client.client_code),
-      ),
-    [clients, selectedClientCodes],
+    () => clients.filter((client) => selectedClientIds.includes(client.id)),
+    [clients, selectedClientIds],
   );
+
+  const canUpdateRemainingHours = useMemo(() => {
+    const parsedStartDate = parseDashboardDate(startDate);
+    const parsedEndDate = parseDashboardDate(endDate);
+    if (!parsedStartDate || !parsedEndDate) return false;
+
+    const lastDayOfMonth = new Date(
+      parsedStartDate.getFullYear(),
+      parsedStartDate.getMonth() + 1,
+      0,
+      12,
+    );
+    return (
+      parsedStartDate.getDate() === 1 &&
+      parsedEndDate.getTime() === lastDayOfMonth.getTime()
+    );
+  }, [endDate, startDate]);
 
   const periodLocale = useMemo(() => {
     const selectedLanguage = selectedClients[0]?.invoice_attachment_language;
@@ -74,39 +89,56 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
   }, [selectedClients]);
 
   const periodText = useMemo(() => {
-    const date = new Date(startDate);
+    const parsedStartDate = parseDashboardDate(startDate);
+    const parsedEndDate = parseDashboardDate(endDate);
+    if (!parsedStartDate || !parsedEndDate) return "";
+
+    const isSingleMonth =
+      parsedStartDate.getFullYear() === parsedEndDate.getFullYear() &&
+      parsedStartDate.getMonth() === parsedEndDate.getMonth();
+
+    if (!isSingleMonth) {
+      const rangeFormatter = new Intl.DateTimeFormat(periodLocale, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+
+      return `${rangeFormatter.format(parsedStartDate)} – ${rangeFormatter.format(parsedEndDate)}`;
+    }
+
     const year = new Intl.DateTimeFormat(periodLocale, {
       year: "numeric",
-    }).format(date);
+    }).format(parsedStartDate);
     const month = new Intl.DateTimeFormat(periodLocale, {
       month: "long",
-    }).format(date);
+    }).format(parsedStartDate);
 
     return `${year} ${month}`;
-  }, [periodLocale, startDate]);
+  }, [endDate, periodLocale, startDate]);
 
   const handleClose = () => {
     setSelectionMode("defaults");
-    setManualSelectedClientCodes([]);
+    setManualSelectedClientIds([]);
     setSubmitError(null);
     setIsGenerating(false);
     setUpdateRemainingHours(false);
     onClose();
   };
 
-  const toggleClient = (clientCode: string) => {
+  const toggleClient = (clientId: string) => {
     setSubmitError(null);
     setSelectionMode("manual");
-    setManualSelectedClientCodes((current) =>
-      (selectionMode === "manual" ? current : selectedClientCodes).includes(
-        clientCode,
+    setManualSelectedClientIds((current) =>
+      (selectionMode === "manual" ? current : selectedClientIds).includes(
+        clientId,
       )
-        ? (selectionMode === "manual" ? current : selectedClientCodes).filter(
-            (code) => code !== clientCode,
+        ? (selectionMode === "manual" ? current : selectedClientIds).filter(
+            (id) => id !== clientId,
           )
         : [
-            ...(selectionMode === "manual" ? current : selectedClientCodes),
-            clientCode,
+            ...(selectionMode === "manual" ? current : selectedClientIds),
+            clientId,
           ],
     );
   };
@@ -119,7 +151,7 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
   const unselectAllClients = () => {
     setSubmitError(null);
     setSelectionMode("manual");
-    setManualSelectedClientCodes([]);
+    setManualSelectedClientIds([]);
   };
 
   const useDefaultCompanies = () => {
@@ -128,7 +160,7 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
   };
 
   const handleGenerate = async () => {
-    if (selectedClientCodes.length === 0 || isGenerating) {
+    if (selectedClientIds.length === 0 || isGenerating) {
       return;
     }
 
@@ -137,12 +169,13 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
 
     try {
       await downloadSzamlamellekletReport({
-        clientCodes: selectedClientCodes,
+        companyId,
+        clientIds: selectedClientIds,
         startDate,
         endDate,
         language,
         periodText,
-        updateRemainingHours,
+        updateRemainingHours: updateRemainingHours && canUpdateRemainingHours,
       });
       handleClose();
     } catch (error) {
@@ -156,7 +189,7 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
     }
   };
 
-  const hasSelection = selectedClientCodes.length > 0;
+  const hasSelection = selectedClientIds.length > 0;
 
   return (
     <Modal
@@ -227,6 +260,7 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
                   onChange={(event) =>
                     setUpdateRemainingHours(event.target.checked)
                   }
+                  disabled={!canUpdateRemainingHours}
                   className="mt-0.5 h-4 w-4 rounded border-border-strong text-primary focus:ring-primary"
                 />
                 <span>
@@ -234,14 +268,18 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
                     {t("dashboard.invoiceAttachmentUpdateRemainingHoursLabel")}
                   </span>
                   <span className="mt-1 block text-sm text-muted">
-                    {t("dashboard.invoiceAttachmentUpdateRemainingHoursHint")}
+                    {canUpdateRemainingHours
+                      ? t("dashboard.invoiceAttachmentUpdateRemainingHoursHint")
+                      : t(
+                          "dashboard.invoiceAttachmentUpdateRequiresFullMonth",
+                        )}
                   </span>
                 </span>
               </label>
               <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-strong">
                 <span className="rounded-full border border-border-strong bg-bg px-3 py-1">
                   {t("dashboard.invoiceAttachmentSelectedCount", {
-                    count: selectedClientCodes.length,
+                    count: selectedClientIds.length,
                   })}
                 </span>
                 <span className="rounded-full border border-border-strong bg-bg px-3 py-1">
@@ -267,9 +305,7 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
                 </thead>
                 <tbody className="divide-y divide-border-strong text-sm">
                   {clients.map((client) => {
-                    const isChecked = selectedClientCodes.includes(
-                      client.client_code,
-                    );
+                    const isChecked = selectedClientIds.includes(client.id);
 
                     return (
                       <tr
@@ -295,7 +331,7 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
                           <input
                             type="checkbox"
                             checked={isChecked}
-                            onChange={() => toggleClient(client.client_code)}
+                            onChange={() => toggleClient(client.id)}
                             className="h-4 w-4 rounded border-border-strong text-primary focus:ring-primary"
                             aria-label={t("dashboard.selectClientForInvoice", {
                               clientName: client.name,

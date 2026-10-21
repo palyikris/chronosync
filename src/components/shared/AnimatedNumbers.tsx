@@ -7,6 +7,7 @@ interface AnimatedNumberProps {
   decimals?: number;
   prefix?: string;
   suffix?: string;
+  locale?: Intl.LocalesArgument;
   className?: string;
 }
 
@@ -16,16 +17,27 @@ export const AnimatedNumber: React.FC<AnimatedNumberProps> = ({
   decimals = 0,
   prefix = "",
   suffix = "",
+  locale,
   className,
 }) => {
   const [displayValue, setDisplayValue] = useState(0);
-  // Track the previous value so it animates from old -> new on updates
-  const startValueRef = useRef(0);
+  const displayValueRef = useRef(0);
 
   useEffect(() => {
-    let startTime: number;
     let animationFrameId: number;
-    const startValue = startValueRef.current;
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    if (prefersReducedMotion || duration <= 0) {
+      animationFrameId = requestAnimationFrame(() => {
+        displayValueRef.current = value;
+        setDisplayValue(value);
+      });
+      return () => cancelAnimationFrame(animationFrameId);
+    }
+
+    let startTime: number;
+    const startValue = displayValueRef.current;
     const distance = value - startValue;
 
     // Easing function (ease-out exponential) for a natural slow-down effect
@@ -39,14 +51,15 @@ export const AnimatedNumber: React.FC<AnimatedNumberProps> = ({
       const easedProgress = easeOutExpo(progress);
 
       const currentValue = startValue + distance * easedProgress;
+      displayValueRef.current = currentValue;
       setDisplayValue(currentValue);
 
       if (progress < 1) {
         animationFrameId = requestAnimationFrame(updateCounter);
       } else {
         // Guarantee we end on the exact target value
+        displayValueRef.current = value;
         setDisplayValue(value);
-        startValueRef.current = value;
       }
     };
 
@@ -58,7 +71,7 @@ export const AnimatedNumber: React.FC<AnimatedNumberProps> = ({
   }, [value, duration]);
 
   // Format the number dynamically based on the user's locale (handles commas/decimals)
-  const formattedNumber = new Intl.NumberFormat(undefined, {
+  const formattedNumber = new Intl.NumberFormat(locale, {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   }).format(displayValue);

@@ -7,22 +7,73 @@ import type { ModalProps } from "../../types/ui";
 
 export const Modal: React.FC<ModalProps> = ({ open, title, onClose, children, className }) => {
   const { t } = useTranslation();
+  const dialogRef = React.useRef<HTMLDivElement>(null);
+  const onCloseRef = React.useRef(onClose);
+  const titleId = React.useId();
+
+  React.useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   React.useEffect(() => {
     if (!open) return;
 
     const previousOverflow = document.body.style.overflow;
+    const previouslyFocusedElement = document.activeElement;
+    const focusableSelector = [
+      "button:not([disabled])",
+      "[href]",
+      "input:not([disabled])",
+      "select:not([disabled])",
+      "textarea:not([disabled])",
+      '[tabindex]:not([tabindex="-1"])',
+    ].join(",");
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onCloseRef.current();
+        return;
+      }
+
+      if (event.key !== "Tab" || !dialogRef.current) return;
+
+      const focusableElements = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(focusableSelector),
+      );
+      if (focusableElements.length === 0) {
+        event.preventDefault();
+        dialogRef.current.focus();
+        return;
+      }
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+      } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+      }
     };
 
     document.body.style.overflow = "hidden";
     document.addEventListener("keydown", handleKeyDown);
+    const focusFrame = window.requestAnimationFrame(() => {
+      const firstFocusableElement =
+        dialogRef.current?.querySelector<HTMLElement>(focusableSelector);
+      (firstFocusableElement ?? dialogRef.current)?.focus();
+    });
+
     return () => {
+      window.cancelAnimationFrame(focusFrame);
       document.body.style.overflow = previousOverflow;
       document.removeEventListener("keydown", handleKeyDown);
+      if (previouslyFocusedElement instanceof HTMLElement) {
+        previouslyFocusedElement.focus();
+      }
     };
-  }, [onClose, open]);
+  }, [open]);
 
   if (!open) return null;
 
@@ -34,15 +85,18 @@ export const Modal: React.FC<ModalProps> = ({ open, title, onClose, children, cl
       }}
     >
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
         className={cn(
           "flex max-h-[92dvh] w-full flex-col overflow-visible rounded-t-[1.25rem] border border-border-strong bg-surface-strong/96 shadow-[0_24px_70px_rgba(75,87,57,0.2),0_2px_8px_rgba(75,87,57,0.09)] backdrop-blur-2xl animate-[modal-in_220ms_cubic-bezier(0.22,1,0.36,1)] sm:max-h-[calc(100dvh-3rem)] sm:rounded-[1.125rem]",
           className,
         )}
       >
         <div className="flex items-center justify-between border-b border-border bg-bg-accent/45 px-5 py-3.5">
-          <h2 className="text-[15px] font-semibold tracking-[-0.015em] text-text">{title}</h2>
+          <h2 id={titleId} className="text-[15px] font-semibold tracking-[-0.015em] text-text">{title}</h2>
           <Button
             variant="ghost"
             size="icon"

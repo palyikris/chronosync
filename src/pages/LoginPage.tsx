@@ -73,8 +73,14 @@ export const LoginPage: React.FC = () => {
               <span className="h-2.5 w-2.5 rounded-full bg-green-400 shadow-[inset_0_0_0_0.5px_rgba(91,104,66,0.12)]" />
             </div>
             <div className="flex items-center gap-2">
-              <img src="/logo.png" alt="" className="chronosync-logo h-7 w-7 object-contain" />
-              <p className="text-[13px] font-semibold tracking-[-0.015em]">ChronoSync</p>
+              <img
+                src="/logo.png"
+                alt=""
+                className="chronosync-logo h-7 w-7 object-contain"
+              />
+              <p className="text-[13px] font-semibold tracking-[-0.015em]">
+                ChronoSync
+              </p>
             </div>
           </div>
 
@@ -100,9 +106,15 @@ export const LoginPage: React.FC = () => {
           <div className="mb-8 md:hidden">
             <div className="mb-4 flex items-center gap-2.5">
               <div className="auth-brand-badge">
-                <img src="/logo.png" alt="" className="chronosync-logo h-9 w-9 object-contain" />
+                <img
+                  src="/logo.png"
+                  alt=""
+                  className="chronosync-logo h-9 w-9 object-contain"
+                />
               </div>
-              <h1 className="text-base font-semibold tracking-tight">ChronoSync</h1>
+              <h1 className="text-base font-semibold tracking-tight">
+                ChronoSync
+              </h1>
             </div>
           </div>
 
@@ -113,16 +125,16 @@ export const LoginPage: React.FC = () => {
             <h1 className="auth-title text-2xl font-semibold leading-tight tracking-[-0.035em] text-text">
               {t("auth.signInTitle")}
             </h1>
-            <p className="auth-subtitle mt-2 text-[13px] leading-5 text-muted">
-              {t("auth.signInSubtitle")}
-            </p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
             {errorMsg && <div className="auth-error">{errorMsg}</div>}
 
             <div className={`auth-field ${email ? "has-value" : ""}`}>
-              <Mail className="auth-field-icon h-[18px] w-[18px]" aria-hidden="true" />
+              <Mail
+                className="auth-field-icon h-[18px] w-[18px]"
+                aria-hidden="true"
+              />
               <input
                 id="email"
                 type="email"
@@ -137,7 +149,10 @@ export const LoginPage: React.FC = () => {
             </div>
 
             <div className={`auth-field ${password ? "has-value" : ""}`}>
-              <LockKeyhole className="auth-field-icon h-[18px] w-[18px]" aria-hidden="true" />
+              <LockKeyhole
+                className="auth-field-icon h-[18px] w-[18px]"
+                aria-hidden="true"
+              />
               <input
                 id="password"
                 type={showPassword ? "text" : "password"}
@@ -157,7 +172,11 @@ export const LoginPage: React.FC = () => {
                   showPassword ? t("auth.hidePassword") : t("auth.showPassword")
                 }
               >
-                {showPassword ? <EyeOff className="h-[18px] w-[18px]" /> : <Eye className="h-[18px] w-[18px]" />}
+                {showPassword ? (
+                  <EyeOff className="h-[18px] w-[18px]" />
+                ) : (
+                  <Eye className="h-[18px] w-[18px]" />
+                )}
               </button>
             </div>
 

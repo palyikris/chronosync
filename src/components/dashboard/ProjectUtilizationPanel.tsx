@@ -36,6 +36,13 @@ const getUtilizationStatus = (
     };
   }
 
+  if (utilizationPct === 100) {
+    return {
+      tone: "watch",
+      labelKey: "dashboard.projectUtilizationAtEstimate",
+    };
+  }
+
   if (utilizationPct >= 75) {
     return {
       tone: "watch",
@@ -177,9 +184,20 @@ export const ProjectUtilizationPanel: React.FC<
                   {formatHours(project.estimatedHours)} {t("dashboard.projectUtilizationEstimate").toLowerCase()}
                 </span>
               </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+              <div
+                role="progressbar"
+                aria-label={project.projectName}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={getProgressWidth(
+                  project.utilizationPct,
+                  project.estimatedHours,
+                )}
+                aria-valuetext={`${project.utilizationPct}%`}
+                className="h-1.5 overflow-hidden rounded-full bg-slate-100"
+              >
                 <div
-                  className={`h-full rounded-full transition-[width] duration-500 ${barClasses[status.tone]}`}
+                  className={`h-full rounded-full transition-[width] duration-500 motion-reduce:transition-none ${barClasses[status.tone]}`}
                   style={{
                     width: `${getProgressWidth(project.utilizationPct, project.estimatedHours)}%`,
                   }}
@@ -282,9 +300,20 @@ export const ProjectUtilizationPanel: React.FC<
                 </div>
               </div>
 
-              <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/70 shadow-[inset_0_0_0_1px_rgba(91,104,66,0.06)]">
+              <div
+                role="progressbar"
+                aria-label={t("dashboard.projectUtilizationPortfolio")}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={getProgressWidth(
+                  totalUtilizationPct,
+                  totals.estimatedHours,
+                )}
+                aria-valuetext={`${totalUtilizationPct}%`}
+                className="mt-4 h-2 overflow-hidden rounded-full bg-white/70 shadow-[inset_0_0_0_1px_rgba(91,104,66,0.06)]"
+              >
                 <div
-                  className={`h-full rounded-full transition-[width] duration-500 ${barClasses[totalStatus.tone]}`}
+                  className={`h-full rounded-full transition-[width] duration-500 motion-reduce:transition-none ${barClasses[totalStatus.tone]}`}
                   style={{
                     width: `${getProgressWidth(totalUtilizationPct, totals.estimatedHours)}%`,
                   }}
@@ -402,9 +431,20 @@ export const ProjectUtilizationPanel: React.FC<
                       </div>
 
                       {group.estimatedHours > 0 ? (
-                        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100">
+                        <div
+                          role="progressbar"
+                          aria-label={group.clientName}
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-valuenow={getProgressWidth(
+                            group.utilizationPct,
+                            group.estimatedHours,
+                          )}
+                          aria-valuetext={`${group.utilizationPct}%`}
+                          className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100"
+                        >
                           <div
-                            className={`h-full rounded-full transition-[width] duration-500 ${barClasses[status.tone]}`}
+                            className={`h-full rounded-full transition-[width] duration-500 motion-reduce:transition-none ${barClasses[status.tone]}`}
                             style={{
                               width: `${getProgressWidth(group.utilizationPct, group.estimatedHours)}%`,
                             }}

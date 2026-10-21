@@ -135,7 +135,9 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-button, input, select, textarea { font: inherit; }
+@layer base {
+  button, input, select, textarea { font: inherit; }
+}
 
 .chronosync-logo {
   filter: saturate(0.72) brightness(0.96);
