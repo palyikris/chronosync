@@ -22,6 +22,8 @@ type StyledSelectProps = SelectProps & {
   menuPlacement?: "top" | "bottom";
 };
 
+type DropdownPlacement = "top" | "bottom";
+
 const extractOptions = (children: React.ReactNode): SelectOption[] => {
   const options: SelectOption[] = [];
 
@@ -100,6 +102,7 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
     const searchInputRef = useRef<HTMLInputElement | null>(null);
     const wrapperRef = useRef<HTMLDivElement | null>(null);
     const triggerRef = useRef<HTMLButtonElement | null>(null);
+    const resolvedPlacementRef = useRef<DropdownPlacement | null>(null);
     const lockButtonRef = useRef<HTMLButtonElement | null>(null);
     const disabledTooltipRef = useRef<HTMLDivElement | null>(null);
     const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -127,7 +130,29 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
       });
     }, [options, searchQuery]);
 
-    const getMenuPosition = (): React.CSSProperties | null => {
+    const shouldShowSearch = options.length > 5;
+    const listMaxHeight = useMemo(() => {
+      const optionHeight = 36;
+      const searchHeight = shouldShowSearch ? 56 : 0;
+      const estimatedContentHeight =
+        filteredOptions.length * optionHeight + searchHeight + 8;
+
+      return Math.min(Math.max(estimatedContentHeight, 120), 320);
+    }, [filteredOptions.length, shouldShowSearch]);
+
+    const panelMaxHeight =
+      typeof menuStyles?.maxHeight === "number"
+        ? menuStyles.maxHeight
+        : Math.min(listMaxHeight, window.innerHeight - 40);
+    const searchSectionHeight = shouldShowSearch ? 56 : 0;
+    const listViewportMaxHeight = Math.max(
+      96,
+      panelMaxHeight - searchSectionHeight - 8,
+    );
+
+    const getMenuPosition = (
+      lockedPlacement?: DropdownPlacement | null,
+    ): { styles: React.CSSProperties; placement: DropdownPlacement } | null => {
       const trigger = triggerRef.current;
 
       if (!trigger) {
@@ -136,33 +161,42 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
 
       const spacing = 6;
       const viewportPadding = 12;
-      const maxPanelHeight = 240;
       const rect = trigger.getBoundingClientRect();
       const spaceAbove = rect.top - viewportPadding;
       const spaceBelow = window.innerHeight - rect.bottom - viewportPadding;
       const prefersTop = menuPlacement === "top";
-      const canOpenTop = spaceAbove >= maxPanelHeight;
-      const canOpenBottom = spaceBelow >= maxPanelHeight;
+      const canOpenTop = spaceAbove >= listMaxHeight;
+      const canOpenBottom = spaceBelow >= listMaxHeight;
 
-      const placeTop = prefersTop
+      const adaptivePlacement: DropdownPlacement = prefersTop
         ? canOpenTop || (!canOpenBottom && spaceAbove > spaceBelow)
-        : !canOpenBottom && spaceAbove > spaceBelow;
+          ? "top"
+          : "bottom"
+        : !canOpenBottom && spaceAbove > spaceBelow
+          ? "top"
+          : "bottom";
+
+      const placement = lockedPlacement ?? adaptivePlacement;
+      const placeTop = placement === "top";
 
       const availableHeight = placeTop ? spaceAbove : spaceBelow;
-      const panelMaxHeight = Math.max(
-        120,
-        Math.min(maxPanelHeight, availableHeight),
+      const panelMaxHeight = Math.min(
+        listMaxHeight,
+        Math.max(96, availableHeight),
       );
 
       return {
-        position: "fixed",
-        left: rect.left,
-        top: placeTop ? rect.top - spacing : rect.bottom + spacing,
-        width: rect.width,
-        maxHeight: panelMaxHeight,
-        zIndex: 1000,
-        transformOrigin: placeTop ? "bottom" : "top",
-        transform: placeTop ? "translateY(-100%)" : undefined,
+        placement,
+        styles: {
+          position: "fixed",
+          left: rect.left,
+          top: placeTop ? rect.top - spacing : rect.bottom + spacing,
+          width: rect.width,
+          maxHeight: panelMaxHeight,
+          zIndex: 1000,
+          transformOrigin: placeTop ? "bottom" : "top",
+          transform: placeTop ? "translateY(-100%)" : undefined,
+        },
       };
     };
 
@@ -196,17 +230,22 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
     useLayoutEffect(() => {
       if (!isOpen) {
         setMenuStyles(null);
+        resolvedPlacementRef.current = null;
         return;
       }
 
       const updateMenuPosition = () => {
-        const nextPosition = getMenuPosition();
+        const nextPosition = getMenuPosition(resolvedPlacementRef.current);
 
         if (!nextPosition) {
           return;
         }
 
-        setMenuStyles(nextPosition);
+        if (!resolvedPlacementRef.current) {
+          resolvedPlacementRef.current = nextPosition.placement;
+        }
+
+        setMenuStyles(nextPosition.styles);
       };
 
       const handleClickOutside = (event: MouseEvent) => {
@@ -227,14 +266,13 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
       window.addEventListener("resize", updateMenuPosition);
       window.addEventListener("scroll", updateMenuPosition, true);
       searchInputRef.current?.focus();
-      setSearchQuery("");
 
       return () => {
         document.removeEventListener("mousedown", handleClickOutside);
         window.removeEventListener("resize", updateMenuPosition);
         window.removeEventListener("scroll", updateMenuPosition, true);
       };
-    }, [isOpen, menuPlacement]);
+    }, [isOpen, listMaxHeight, menuPlacement]);
 
     const handleSelect = (nextValue: string) => {
       setIsOpen(false);
@@ -267,7 +305,6 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
     const defaultPlaceholder = placeholder ?? label ?? " ";
     const accessibleLabel = props["aria-label"] ?? label ?? placeholder;
     const displayLabel = hasValue ? selectedLabel : defaultPlaceholder;
-    const shouldShowSearch = options.length > 5;
     const resolvedDisabledReason =
       disabledReason ?? t("common.disabled", "Disabled");
 
@@ -358,7 +395,14 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
 
             setIsOpen((open) => {
               if (!open) {
-                setMenuStyles(getMenuPosition());
+                const nextPosition = getMenuPosition();
+
+                if (nextPosition) {
+                  resolvedPlacementRef.current = nextPosition.placement;
+                  setMenuStyles(nextPosition.styles);
+                }
+
+                setSearchQuery("");
               }
 
               return !open;
@@ -472,8 +516,10 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
                 <div
                   id={`${controlId}-options`}
                   role="listbox"
-                  className="max-h-60 overflow-y-auto py-1"
-                  style={{ maxHeight: "min(240px, calc(100vh - 24px))" }}
+                  className="overflow-y-auto overscroll-contain py-1"
+                  style={{
+                    maxHeight: listViewportMaxHeight,
+                  }}
                 >
                   {filteredOptions.length > 0 ? (
                     filteredOptions.map((option) => {

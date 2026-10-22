@@ -17,6 +17,7 @@ import AuditLogPage from "./pages/LogsPage";
 import LeaveRequestsPage from "./pages/LeaveRequestsPage";
 import { DashboardHeader } from "./components/dashboard/DashboardHeader";
 import { InvoiceAttachmentsPage } from "./pages/InvoiceAttachmentsPage";
+import { ClientBillingPage } from "./pages/ClientBillingPage";
 
 const DashboardHeaderPreview: React.FC = () => {
   const [startDate, setStartDate] = React.useState("2026-10-01");
@@ -61,10 +62,16 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           {import.meta.env.DEV ? (
-            <Route
-              path="/dashboard-header-preview"
-              element={<DashboardHeaderPreview />}
-            />
+            <>
+              <Route
+                path="/dashboard-header-preview"
+                element={<DashboardHeaderPreview />}
+              />
+              <Route
+                path="/client-billing-preview"
+                element={<ClientBillingPage preview />}
+              />
+            </>
           ) : null}
           {/* Public Auth Route */}
           <Route path="/login" element={<LoginPage />} />
@@ -95,6 +102,10 @@ export default function App() {
                 <Route
                   path="/admin/invoice-attachments"
                   element={<InvoiceAttachmentsPage />}
+                />
+                <Route
+                  path="/admin/billing"
+                  element={<ClientBillingPage />}
                 />
               </Route>
               <Route

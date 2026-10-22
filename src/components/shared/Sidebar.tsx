@@ -10,6 +10,7 @@ import {
   FileSpreadsheet,
   LayoutDashboard,
   LogOut,
+  ReceiptText,
   ScanEye,
   ScrollText,
   Settings,
@@ -63,6 +64,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       roleRequired: "company_admin",
     },
     {
+      to: "/admin/billing",
+      label: t("navigation.automaticInvoicing"),
+      icon: ReceiptText,
+      roleRequired: "company_admin",
+    },
+    {
       to: "/admin/review",
       label: t("navigation.timesheetReview"),
       icon: ScanEye,
@@ -98,7 +105,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const filteredNavItems = mainNavItems.filter((item) => {
     if (!item.roleRequired) return true;
     if (
-      ["/admin/settings", "/admin/review", "/admin/dashboard", "/leaves"].includes(item.to) &&
+      [
+        "/admin/settings",
+        "/admin/review",
+        "/admin/dashboard",
+        "/admin/invoice-attachments",
+        "/admin/billing",
+        "/leaves",
+      ].includes(item.to) &&
       profile?.role === "super_admin"
     ) return false;
     if (item.roleRequired === "super_admin") return profile?.role === "super_admin";

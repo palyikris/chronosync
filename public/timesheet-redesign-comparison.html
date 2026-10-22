@@ -1,0 +1,2136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="A faithful HTML reconstruction of the ChronoSync timesheet before and after the October 2026 redesign."
+    />
+    <title>ChronoSync — Timesheet redesign comparison</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: Inter, "SF Pro Text", -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+        --comparison-ink: #272b23;
+        --comparison-muted: #73786a;
+        --comparison-line: rgba(70, 79, 57, 0.14);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        min-width: 320px;
+        background: #edf0e5;
+      }
+
+      body {
+        min-width: 320px;
+        min-height: 100vh;
+        margin: 0;
+        color: var(--comparison-ink);
+        background:
+          radial-gradient(circle at 90% 3%, rgba(201, 221, 145, 0.35), transparent 30rem),
+          radial-gradient(circle at 5% 95%, rgba(220, 230, 192, 0.55), transparent 34rem),
+          #f4f5ef;
+      }
+
+      button,
+      select {
+        font: inherit;
+      }
+
+      button:not(:disabled),
+      select:not(:disabled) {
+        cursor: pointer;
+      }
+
+      button:focus-visible,
+      select:focus-visible {
+        outline: 3px solid rgba(96, 120, 42, 0.28);
+        outline-offset: 2px;
+      }
+
+      .icon {
+        width: 20px;
+        height: 20px;
+        fill: none;
+        stroke: currentColor;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 1.8;
+      }
+
+      .comparison-page {
+        width: min(100%, 1960px);
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      .comparison-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 24px;
+        margin-bottom: 18px;
+        padding: 0 4px;
+      }
+
+      .comparison-eyebrow {
+        margin: 0 0 7px;
+        color: #60782a;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .comparison-title {
+        margin: 0;
+        font-size: clamp(25px, 3vw, 42px);
+        font-weight: 650;
+        letter-spacing: -0.045em;
+        line-height: 1;
+      }
+
+      .comparison-subtitle {
+        max-width: 680px;
+        margin: 9px 0 0;
+        color: var(--comparison-muted);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .comparison-controls {
+        display: inline-flex;
+        flex: 0 0 auto;
+        gap: 3px;
+        padding: 4px;
+        border: 1px solid var(--comparison-line);
+        border-radius: 12px;
+        background: rgba(252, 253, 247, 0.76);
+        box-shadow: 0 4px 20px rgba(68, 77, 55, 0.06);
+      }
+
+      .comparison-controls button {
+        height: 34px;
+        border: 0;
+        border-radius: 8px;
+        padding: 0 14px;
+        color: #69705e;
+        background: transparent;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .comparison-controls button[aria-pressed="true"] {
+        color: #2e3525;
+        background: #dbe9b4;
+        box-shadow: inset 0 0 0 1px rgba(96, 120, 42, 0.08);
+      }
+
+      .comparison-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 16px;
+      }
+
+      .comparison-panel {
+        min-width: 0;
+        overflow: hidden;
+        border: 1px solid rgba(70, 79, 57, 0.14);
+        border-radius: 22px;
+        background: rgba(252, 253, 247, 0.78);
+        box-shadow:
+          0 1px 2px rgba(75, 87, 57, 0.05),
+          0 18px 48px rgba(75, 87, 57, 0.09);
+      }
+
+      .panel-caption {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 52px;
+        gap: 16px;
+        padding: 0 18px;
+        border-bottom: 1px solid rgba(70, 79, 57, 0.1);
+      }
+
+      .panel-caption strong {
+        font-size: 12px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .panel-caption span {
+        color: #818778;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 10px;
+      }
+
+      .before-panel .panel-caption strong {
+        color: #587300;
+      }
+
+      .after-panel .panel-caption strong {
+        color: #60782a;
+      }
+
+      .render-shell {
+        position: relative;
+        width: 100%;
+        overflow: hidden;
+        background: #f7f8f2;
+      }
+
+      .app-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 1440px;
+        height: 900px;
+        overflow: hidden;
+        transform-origin: left top;
+      }
+
+      body[data-view="before"] .comparison-grid,
+      body[data-view="after"] .comparison-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      body[data-view="before"] .after-panel,
+      body[data-view="after"] .before-panel {
+        display: none;
+      }
+
+      /* ------------------------------------------------------------------ */
+      /* Before: e38070b (parent of the redesign commit)                     */
+      /* ------------------------------------------------------------------ */
+
+      .old-app {
+        --old-bg: #f8f9fa;
+        --old-bg-accent: #fdfefe;
+        --old-surface: #ffffff;
+        --old-text: #191c1d;
+        --old-muted: #5e5e62;
+        --old-muted-strong: #646468;
+        --old-border: #e1e3e4;
+        --old-border-strong: #c4c7c5;
+        --old-primary: #abdb11;
+        --old-primary-foreground: #151f00;
+        --old-primary-strong: #4e6700;
+        --old-danger: #ba1a1a;
+        color: var(--old-text);
+        background:
+          radial-gradient(circle at top, rgba(171, 219, 17, 0.12), transparent 32%),
+          linear-gradient(180deg, var(--old-bg-accent) 0%, var(--old-bg) 100%);
+        font-family: "Open Sans", Arial, Helvetica, sans-serif;
+      }
+
+      .old-sidebar {
+        position: absolute;
+        z-index: 8;
+        inset: 0 auto 0 0;
+        display: flex;
+        width: 80px;
+        flex-direction: column;
+        padding: 24px 12px;
+        overflow: hidden;
+        border-right: 1px solid var(--old-border-strong);
+        background: var(--old-bg);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: width 0.3s ease-in-out;
+      }
+
+      .old-sidebar:hover,
+      .old-sidebar:focus-within {
+        width: 256px;
+      }
+
+      .old-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 4px;
+      }
+
+      .old-brand img {
+        width: 40px;
+        height: 40px;
+        flex: 0 0 auto;
+        object-fit: contain;
+      }
+
+      .old-brand-copy,
+      .old-nav-label,
+      .old-profile-copy {
+        width: 0;
+        overflow: hidden;
+        white-space: nowrap;
+        opacity: 0;
+        transform: translateX(-12px);
+        transition: 0.3s ease;
+      }
+
+      .old-sidebar:hover .old-brand-copy,
+      .old-sidebar:hover .old-nav-label,
+      .old-sidebar:hover .old-profile-copy,
+      .old-sidebar:focus-within .old-brand-copy,
+      .old-sidebar:focus-within .old-nav-label,
+      .old-sidebar:focus-within .old-profile-copy {
+        width: auto;
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+      .old-brand-copy strong {
+        display: block;
+        font-size: 18px;
+        line-height: 1.1;
+      }
+
+      .old-brand-copy small {
+        display: block;
+        margin-top: 3px;
+        color: #777b7b;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .old-brand-copy em {
+        color: var(--old-primary-strong);
+        font-style: normal;
+      }
+
+      .old-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 32px;
+      }
+
+      .old-nav-item {
+        display: flex;
+        width: 100%;
+        height: 48px;
+        align-items: center;
+        overflow: hidden;
+        border: 0;
+        border-radius: 999px;
+        color: var(--old-muted);
+        background: transparent;
+        text-decoration: none;
+      }
+
+      .old-nav-item .icon-wrap {
+        display: grid;
+        width: 56px;
+        height: 48px;
+        flex: 0 0 auto;
+        place-items: center;
+      }
+
+      .old-nav-item.active {
+        color: var(--old-primary-foreground);
+        background: var(--old-primary);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        font-weight: 700;
+      }
+
+      .old-nav-label {
+        font-size: 14px;
+        letter-spacing: 0.02em;
+      }
+
+      .old-sidebar-footer {
+        margin-top: auto;
+        padding-top: 16px;
+        border-top: 1px solid var(--old-border-strong);
+      }
+
+      .old-profile {
+        display: flex;
+        height: 52px;
+        align-items: center;
+        gap: 12px;
+        padding: 0 8px;
+      }
+
+      .old-avatar {
+        display: grid;
+        width: 40px;
+        height: 40px;
+        flex: 0 0 auto;
+        place-items: center;
+        border-radius: 50%;
+        color: white;
+        background: var(--old-primary-strong);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .old-profile-copy b,
+      .old-profile-copy small {
+        display: block;
+      }
+
+      .old-profile-copy b {
+        font-size: 13px;
+      }
+
+      .old-profile-copy small {
+        margin-top: 2px;
+        color: #8b8e8f;
+        font-size: 11px;
+      }
+
+      .old-main {
+        height: 900px;
+        margin-left: 80px;
+        padding: 32px;
+        overflow: hidden;
+      }
+
+      .old-page {
+        display: flex;
+        width: 100%;
+        max-width: 1280px;
+        margin: 0 auto;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .old-card {
+        overflow: hidden;
+        border: 1px solid var(--old-border-strong);
+        border-radius: 16px;
+        background: var(--old-surface);
+        box-shadow:
+          0 1px 3px rgba(0, 0, 0, 0.12),
+          0 1px 2px rgba(0, 0, 0, 0.14);
+      }
+
+      .old-filter-card {
+        padding: 16px;
+      }
+
+      .old-filter-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+      }
+
+      .old-kicker {
+        margin: 0;
+        color: var(--old-muted);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+      }
+
+      .old-hint {
+        margin: 4px 0 0;
+        color: var(--old-muted-strong);
+        font-size: 14px;
+      }
+
+      .old-actions,
+      .old-toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .old-button {
+        display: inline-flex;
+        height: 36px;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: 1px solid var(--old-border-strong);
+        border-radius: 999px;
+        padding: 0 12px;
+        color: var(--old-text);
+        background: transparent;
+        font-size: 14px;
+        font-weight: 600;
+        transition: 0.2s ease;
+      }
+
+      .old-button.primary {
+        border-color: transparent;
+        color: var(--old-primary-foreground);
+        background: var(--old-primary);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.09);
+      }
+
+      .old-button.ghost {
+        border-color: transparent;
+      }
+
+      .old-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+      }
+
+      .old-filter-fields {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .old-field,
+      .new-field {
+        position: relative;
+      }
+
+      .old-field label {
+        position: absolute;
+        z-index: 1;
+        top: -7px;
+        left: 12px;
+        padding: 0 5px;
+        color: var(--old-primary-strong);
+        background: white;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .old-field select {
+        width: 100%;
+        height: 56px;
+        border: 1px solid var(--old-border-strong);
+        border-radius: 4px;
+        padding: 0 42px 0 16px;
+        color: var(--old-text);
+        background: white;
+        font-size: 15px;
+      }
+
+      .old-filter-state {
+        margin: 12px 0 0;
+        color: var(--old-muted-strong);
+        font-size: 12px;
+      }
+
+      .old-view-card {
+        padding: 12px 16px;
+      }
+
+      .old-toggle {
+        width: max-content;
+        padding: 4px;
+        border: 1px solid var(--old-border-strong);
+        border-radius: 999px;
+        background: var(--old-bg-accent);
+      }
+
+      .old-toggle .old-button {
+        min-width: 150px;
+      }
+
+      .old-columns,
+      .new-columns {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) minmax(340px, 0.75fr);
+        align-items: stretch;
+        gap: 20px;
+      }
+
+      .old-card-header {
+        display: flex;
+        min-height: 78px;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 16px;
+        border-bottom: 1px solid var(--old-border-strong);
+        background: var(--old-bg-accent);
+      }
+
+      .old-card-header .month-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 5px;
+      }
+
+      .old-month {
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      .old-total {
+        border: 1px solid var(--old-border-strong);
+        border-radius: 999px;
+        padding: 5px 12px;
+        color: var(--old-muted-strong);
+        background: var(--old-bg-accent);
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .month-nav {
+        display: flex;
+        gap: 4px;
+      }
+
+      .month-nav button {
+        display: grid;
+        width: 36px;
+        height: 36px;
+        place-items: center;
+        border: 0;
+        border-radius: 50%;
+        color: var(--old-muted);
+        background: transparent;
+      }
+
+      .calendar-weekdays,
+      .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+      }
+
+      .old-calendar .calendar-weekdays {
+        height: 34px;
+        align-items: center;
+        border-bottom: 1px solid var(--old-border-strong);
+        color: var(--old-muted);
+        background: var(--old-surface);
+        font-size: 12px;
+        font-weight: 600;
+        text-align: center;
+      }
+
+      .calendar-grid {
+        min-height: 420px;
+        grid-auto-rows: 1fr;
+      }
+
+      .calendar-cell {
+        position: relative;
+        display: flex;
+        min-width: 0;
+        min-height: 70px;
+        flex-direction: column;
+        justify-content: space-between;
+        border: 0;
+        border-right: 1px solid;
+        border-bottom: 1px solid;
+        padding: 8px;
+        text-align: left;
+      }
+
+      .calendar-cell:nth-child(7n) {
+        border-right: 0;
+      }
+
+      .calendar-cell.empty {
+        opacity: 0.45;
+      }
+
+      .calendar-cell .day-number {
+        font-size: 12px;
+      }
+
+      .calendar-cell .hours-chip {
+        width: 100%;
+        overflow: hidden;
+        border-radius: 4px;
+        padding: 2px 4px;
+        font-size: 10px;
+        font-weight: 700;
+        text-align: center;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .old-calendar .calendar-cell {
+        border-color: var(--old-border-strong);
+        color: var(--old-text);
+        background: white;
+      }
+
+      .old-calendar .calendar-cell:hover {
+        background: var(--old-bg-accent);
+      }
+
+      .old-calendar .calendar-cell.empty {
+        background: var(--old-bg-accent);
+      }
+
+      .old-calendar .calendar-cell.selected {
+        z-index: 1;
+        background: rgba(171, 219, 17, 0.2);
+        box-shadow: inset 0 0 0 2px var(--old-primary-strong);
+        font-weight: 700;
+      }
+
+      .old-calendar .hours-chip {
+        color: #3d4e20;
+        background: #d9e8b2;
+      }
+
+      .old-day-card,
+      .new-day-card {
+        display: flex;
+        min-height: 535px;
+        flex-direction: column;
+      }
+
+      .old-day-card .old-card-header {
+        align-items: flex-start;
+      }
+
+      .selected-label {
+        margin: 0;
+        color: var(--old-muted);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+      }
+
+      .selected-date {
+        margin: 6px 0 0;
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      .old-entry-list,
+      .new-entry-list {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 12px;
+        padding: 16px;
+      }
+
+      .old-entry {
+        border: 1px solid var(--old-border-strong);
+        border-radius: 12px;
+        padding: 12px;
+        background: white;
+      }
+
+      .entry-topline {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .client-chip {
+        border-radius: 4px;
+        padding: 3px 8px;
+        color: #646468;
+        background: #e3e2e6;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .entry-hours {
+        color: var(--old-primary-strong);
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .entry-description {
+        margin: 9px 0;
+        font-size: 14px;
+      }
+
+      .entry-bottom {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: var(--old-muted);
+        font-size: 12px;
+      }
+
+      .status-chip {
+        border-radius: 4px;
+        padding: 3px 8px;
+        color: #384236;
+        background: #e1e6d7;
+        font-size: 11px;
+      }
+
+      .status-chip.approved {
+        color: #46603c;
+        background: #dce9b1;
+      }
+
+      .old-card-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px;
+        border-top: 1px solid var(--old-border-strong);
+      }
+
+      .old-submit-group {
+        display: flex;
+        gap: 10px;
+      }
+
+      /* ------------------------------------------------------------------ */
+      /* After: de3ffd8                                                       */
+      /* ------------------------------------------------------------------ */
+
+      .new-app {
+        --new-white: #fcfdf7;
+        --new-black: #34392c;
+        --new-bg: #f2f4ea;
+        --new-bg-accent: #fafbf5;
+        --new-surface: rgba(252, 253, 247, 0.84);
+        --new-surface-strong: #fcfdf7;
+        --new-text: #353a2f;
+        --new-muted: #747b69;
+        --new-muted-strong: #59614f;
+        --new-border: rgba(91, 104, 66, 0.12);
+        --new-border-strong: rgba(91, 104, 66, 0.22);
+        --new-primary: #cfe78f;
+        --new-primary-foreground: #28350d;
+        --new-primary-strong: #60782a;
+        --new-danger: #a25952;
+        color: var(--new-text);
+        background:
+          radial-gradient(circle at 92% 0%, rgba(207, 231, 143, 0.24), transparent 24rem),
+          radial-gradient(circle at 12% 88%, rgba(218, 230, 183, 0.3), transparent 30rem),
+          linear-gradient(180deg, #fafbf5 0%, var(--new-bg) 100%);
+        font-family: Inter, "SF Pro Text", -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+      }
+
+      .new-sidebar {
+        position: absolute;
+        z-index: 8;
+        inset: 12px auto 12px 12px;
+        display: flex;
+        width: 256px;
+        flex-direction: column;
+        border: 1px solid var(--new-border);
+        border-radius: 20px;
+        background: rgba(252, 253, 247, 0.94);
+        box-shadow: 12px 0 36px rgba(75, 87, 57, 0.08);
+        transition: width 0.3s ease-out;
+      }
+
+      .new-sidebar.collapsed {
+        width: 68px;
+      }
+
+      .new-brand {
+        display: flex;
+        height: 64px;
+        align-items: center;
+        gap: 12px;
+        padding: 0 16px;
+        white-space: nowrap;
+      }
+
+      .new-logo-box {
+        display: grid;
+        width: 36px;
+        height: 36px;
+        flex: 0 0 auto;
+        place-items: center;
+        border-radius: 11px;
+        background: rgba(207, 231, 143, 0.35);
+        box-shadow: inset 0 0 0 1px rgba(96, 120, 42, 0.09);
+      }
+
+      .new-logo-box img {
+        width: 32px;
+        height: 32px;
+        object-fit: contain;
+        filter: saturate(0.72) brightness(0.96);
+      }
+
+      .new-brand-copy {
+        min-width: 0;
+      }
+
+      .new-brand-copy strong,
+      .new-brand-copy small {
+        display: block;
+      }
+
+      .new-brand-copy strong {
+        font-size: 14px;
+        font-weight: 650;
+        letter-spacing: -0.02em;
+      }
+
+      .new-brand-copy strong em {
+        color: var(--new-primary-strong);
+        font-style: normal;
+      }
+
+      .new-brand-copy small {
+        margin-top: 3px;
+        color: var(--new-muted);
+        font-size: 9px;
+        font-weight: 600;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+      }
+
+      .new-sidebar-divider {
+        height: 1px;
+        margin: 0 14px;
+        background: var(--new-border);
+      }
+
+      .new-nav {
+        display: flex;
+        min-height: 0;
+        flex: 1;
+        flex-direction: column;
+        gap: 2px;
+        padding: 14px 10px;
+        overflow: hidden;
+      }
+
+      .new-nav-title {
+        margin: 0 0 6px;
+        padding: 0 10px;
+        color: rgba(116, 123, 105, 0.75);
+        font-size: 10px;
+        font-weight: 500;
+      }
+
+      .new-nav-item {
+        display: flex;
+        height: 36px;
+        flex: 0 0 auto;
+        align-items: center;
+        gap: 10px;
+        border: 0;
+        border-radius: 9px;
+        padding: 0 10px;
+        color: var(--new-muted-strong);
+        background: transparent;
+        font-size: 12.5px;
+        font-weight: 500;
+        text-decoration: none;
+        white-space: nowrap;
+      }
+
+      .new-nav-item .icon {
+        width: 16px;
+        height: 16px;
+        flex: 0 0 auto;
+      }
+
+      .new-nav-item.active {
+        color: var(--new-text);
+        background: rgba(0, 0, 0, 0.06);
+        box-shadow: inset 0 0 0 1px rgba(75, 87, 57, 0.035);
+      }
+
+      .new-nav-item.active .icon {
+        color: var(--new-primary-strong);
+        stroke-width: 2.2;
+      }
+
+      .active-dot {
+        width: 6px;
+        height: 6px;
+        margin-left: auto;
+        border-radius: 50%;
+        background: rgba(96, 120, 42, 0.65);
+      }
+
+      .new-sidebar-footer {
+        padding: 10px;
+        border-top: 1px solid var(--new-border);
+      }
+
+      .new-profile {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        border: 1px solid var(--new-border);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.35);
+      }
+
+      .new-avatar {
+        display: grid;
+        width: 32px;
+        height: 32px;
+        flex: 0 0 auto;
+        place-items: center;
+        border-radius: 50%;
+        background: rgba(207, 231, 143, 0.45);
+        box-shadow: inset 0 0 0 1px rgba(75, 87, 57, 0.07);
+        font-size: 11px;
+        font-weight: 650;
+      }
+
+      .new-profile-copy {
+        min-width: 0;
+      }
+
+      .new-profile-copy b,
+      .new-profile-copy small {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .new-profile-copy b {
+        font-size: 12px;
+        font-weight: 550;
+      }
+
+      .new-profile-copy small {
+        margin-top: 2px;
+        color: var(--new-muted);
+        font-size: 10px;
+      }
+
+      .new-signout {
+        display: flex;
+        width: 100%;
+        height: 32px;
+        align-items: center;
+        gap: 10px;
+        margin-top: 4px;
+        border: 0;
+        border-radius: 9px;
+        padding: 0 10px;
+        color: var(--new-danger);
+        background: transparent;
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .new-collapse {
+        position: absolute;
+        top: 20px;
+        right: -11px;
+        display: grid;
+        width: 20px;
+        height: 20px;
+        place-items: center;
+        border: 1px solid var(--new-border-strong);
+        border-radius: 50%;
+        color: var(--new-muted);
+        background: var(--new-surface-strong);
+        box-shadow: 0 1px 3px rgba(75, 87, 57, 0.1);
+      }
+
+      .new-collapse .icon {
+        width: 12px;
+        height: 12px;
+      }
+
+      .new-sidebar.collapsed .new-brand {
+        justify-content: center;
+        padding: 0 8px;
+      }
+
+      .new-sidebar.collapsed .new-brand-copy,
+      .new-sidebar.collapsed .new-nav-title,
+      .new-sidebar.collapsed .new-nav-label,
+      .new-sidebar.collapsed .active-dot,
+      .new-sidebar.collapsed .new-profile-copy,
+      .new-sidebar.collapsed .new-signout span {
+        display: none;
+      }
+
+      .new-sidebar.collapsed .new-nav-item,
+      .new-sidebar.collapsed .new-profile,
+      .new-sidebar.collapsed .new-signout {
+        justify-content: center;
+        padding-inline: 0;
+      }
+
+      .new-main {
+        height: 900px;
+        margin-left: 268px;
+        overflow: hidden;
+        transition: margin-left 0.3s ease-out;
+      }
+
+      .new-app.sidebar-is-collapsed .new-main {
+        margin-left: 84px;
+      }
+
+      .new-page {
+        display: flex;
+        width: 100%;
+        max-width: 1440px;
+        margin: 0 auto;
+        flex-direction: column;
+        gap: 20px;
+        padding: 28px 32px 40px;
+      }
+
+      .new-page-title {
+        margin: 0;
+        color: var(--new-text);
+        font-size: 28px;
+        font-weight: 650;
+        letter-spacing: -0.03em;
+        line-height: 1.15;
+      }
+
+      .new-page-subtitle {
+        margin: 7px 0 0;
+        color: var(--new-muted);
+        font-size: 14px;
+      }
+
+      .new-card {
+        overflow: hidden;
+        border: 1px solid var(--new-border);
+        border-radius: 16px;
+        background: rgba(252, 253, 247, 0.88);
+        box-shadow:
+          0 1px 2px rgba(75, 87, 57, 0.04),
+          0 5px 18px rgba(75, 87, 57, 0.045);
+        backdrop-filter: blur(16px);
+      }
+
+      .new-toolbar {
+        position: relative;
+        z-index: 2;
+        padding: 12px;
+        overflow: visible;
+      }
+
+      .new-toolbar-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .new-segmented {
+        display: inline-flex;
+        min-width: 0;
+        align-items: center;
+        gap: 2px;
+        padding: 2px;
+        border: 1px solid var(--new-border);
+        border-radius: 9px;
+        background: rgba(0, 0, 0, 0.035);
+      }
+
+      .new-button {
+        display: inline-flex;
+        height: 32px;
+        flex: 0 0 auto;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        border: 1px solid var(--new-border-strong);
+        border-radius: 8px;
+        padding: 0 12px;
+        color: var(--new-text);
+        background: rgba(255, 255, 255, 0.45);
+        box-shadow: 0 1px 1px rgba(75, 87, 57, 0.035);
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: -0.012em;
+      }
+
+      .new-button.small {
+        height: 28px;
+        padding-inline: 10px;
+        font-size: 11.5px;
+      }
+
+      .new-button.icon-only {
+        width: 28px;
+        padding: 0;
+      }
+
+      .new-button.secondary {
+        background: rgba(252, 253, 247, 0.8);
+      }
+
+      .new-button.primary {
+        border-color: rgba(96, 120, 42, 0.2);
+        color: var(--new-primary-foreground);
+        background: var(--new-primary);
+        box-shadow: 0 1px 2px rgba(96, 120, 42, 0.2);
+      }
+
+      .new-button.ghost {
+        border-color: transparent;
+        color: var(--new-muted-strong);
+        background: transparent;
+        box-shadow: none;
+      }
+
+      .new-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.45;
+      }
+
+      .new-toolbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .new-filter-fields {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .new-field label {
+        position: absolute;
+        z-index: 1;
+        top: -6px;
+        left: 12px;
+        padding: 0 5px;
+        color: var(--new-primary-strong);
+        background: var(--new-surface-strong);
+        font-size: 10px;
+        font-weight: 600;
+      }
+
+      .new-field select {
+        width: 100%;
+        height: 44px;
+        border: 1px solid var(--new-border-strong);
+        border-radius: 10px;
+        padding: 0 40px 0 14px;
+        color: var(--new-text);
+        background: rgba(252, 253, 247, 0.78);
+        font-size: 12px;
+      }
+
+      .new-filter-state {
+        margin: 11px 0 0;
+        color: var(--new-muted-strong);
+        font-size: 11px;
+      }
+
+      .new-toolbar.filters-collapsed .new-filter-fields,
+      .new-toolbar.filters-collapsed .new-filter-state {
+        display: none;
+      }
+
+      .new-card-header {
+        display: flex;
+        min-height: 72px;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--new-border);
+        background: rgba(250, 251, 245, 0.45);
+      }
+
+      .new-card-header .month-view-label {
+        color: var(--new-muted);
+        font-size: 11px;
+        font-weight: 500;
+      }
+
+      .new-card-header .month-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 6px;
+      }
+
+      .new-month {
+        color: var(--new-text);
+        font-size: 14px;
+        font-weight: 650;
+        letter-spacing: -0.015em;
+      }
+
+      .new-total {
+        border: 1px solid var(--new-border);
+        border-radius: 999px;
+        padding: 5px 10px;
+        color: var(--new-muted-strong);
+        background: rgba(255, 255, 255, 0.4);
+        font-size: 11px;
+        font-weight: 500;
+      }
+
+      .new-calendar .calendar-weekdays {
+        height: 34px;
+        align-items: center;
+        border-bottom: 1px solid var(--new-border);
+        color: var(--new-muted);
+        background: transparent;
+        font-size: 11px;
+        font-weight: 500;
+        text-align: center;
+      }
+
+      .new-calendar .calendar-cell {
+        border-color: var(--new-border);
+        color: var(--new-text);
+        background: rgba(252, 253, 247, 0.54);
+      }
+
+      .new-calendar .calendar-cell:hover {
+        background: rgba(0, 0, 0, 0.025);
+      }
+
+      .new-calendar .calendar-cell.empty {
+        background: rgba(250, 251, 245, 0.35);
+      }
+
+      .new-calendar .calendar-cell.selected {
+        z-index: 1;
+        background: rgba(0, 0, 0, 0.055);
+        box-shadow: inset 0 0 0 1px rgba(96, 120, 42, 0.25);
+        font-weight: 650;
+      }
+
+      .new-calendar .hours-chip {
+        color: #465a27;
+        background: #dce9b1;
+        font-weight: 500;
+      }
+
+      .new-day-card .new-card-header {
+        align-items: flex-start;
+      }
+
+      .new-day-card .selected-label {
+        color: var(--new-muted);
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .new-day-card .selected-date {
+        color: var(--new-text);
+        font-weight: 650;
+      }
+
+      .submission-strip {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--new-border);
+        background: rgba(250, 251, 245, 0.25);
+      }
+
+      .submission-copy {
+        display: flex;
+        min-width: 0;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .submission-icon {
+        display: grid;
+        width: 28px;
+        height: 28px;
+        flex: 0 0 auto;
+        place-items: center;
+        border-radius: 8px;
+        color: var(--new-primary-strong);
+        background: rgba(207, 231, 143, 0.3);
+      }
+
+      .submission-icon .icon {
+        width: 15px;
+        height: 15px;
+      }
+
+      .submission-copy b,
+      .submission-copy small {
+        display: block;
+        white-space: nowrap;
+      }
+
+      .submission-copy b {
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      .submission-copy small {
+        margin-top: 2px;
+        color: var(--new-muted);
+        font-size: 10px;
+      }
+
+      .submission-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .submission-actions select {
+        width: 108px;
+        height: 32px;
+        border: 1px solid var(--new-border-strong);
+        border-radius: 8px;
+        padding: 0 8px;
+        color: var(--new-text);
+        background: rgba(252, 253, 247, 0.8);
+        font-size: 11px;
+      }
+
+      .new-entry {
+        border: 1px solid var(--new-border-strong);
+        border-radius: 12px;
+        padding: 12px;
+        background: var(--new-surface-strong);
+      }
+
+      .new-entry .client-chip {
+        color: var(--new-muted-strong);
+        background: #e1e6d7;
+      }
+
+      .new-entry .entry-hours {
+        color: var(--new-primary-strong);
+      }
+
+      .new-entry .entry-bottom {
+        color: var(--new-muted);
+      }
+
+      .new-card-footer {
+        padding: 10px 16px;
+        border-top: 1px solid var(--new-border);
+      }
+
+      .list-view {
+        display: none;
+      }
+
+      .old-page.show-list .calendar-view,
+      .new-page.show-list .calendar-view {
+        display: none;
+      }
+
+      .old-page.show-list .list-view,
+      .new-page.show-list .list-view {
+        display: block;
+      }
+
+      .full-list-card {
+        min-height: 500px;
+      }
+
+      .full-list-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        padding: 16px;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      @media (max-width: 900px) {
+        .comparison-page {
+          padding: 14px;
+        }
+
+        .comparison-header {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .comparison-grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .comparison-controls {
+          width: 100%;
+        }
+
+        .comparison-controls button {
+          flex: 1;
+        }
+      }
+    </style>
+  </head>
+  <body data-view="split">
+    <svg class="sr-only" aria-hidden="true">
+      <defs>
+        <symbol id="i-clock" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 7v5l3 2" />
+        </symbol>
+        <symbol id="i-calendar" viewBox="0 0 24 24">
+          <rect x="3" y="5" width="18" height="16" rx="2" />
+          <path d="M8 3v4M16 3v4M3 10h18" />
+        </symbol>
+        <symbol id="i-layout" viewBox="0 0 24 24">
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <path d="M3 9h18M9 21V9" />
+        </symbol>
+        <symbol id="i-eye" viewBox="0 0 24 24">
+          <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
+          <circle cx="12" cy="12" r="2.5" />
+        </symbol>
+        <symbol id="i-users" viewBox="0 0 24 24">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+        </symbol>
+        <symbol id="i-settings" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21h-4v-.09A1.7 1.7 0 0 0 9 19.36a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1H3v-4h.09A1.7 1.7 0 0 0 4.64 9a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.56V3h4v.09A1.7 1.7 0 0 0 15 4.64a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.16.61.72 1.03 1.36 1.03H21v4h-.09A1.7 1.7 0 0 0 19.4 15Z" />
+        </symbol>
+        <symbol id="i-building" viewBox="0 0 24 24">
+          <path d="M4 21V5l8-3 8 3v16M9 9h1M14 9h1M9 13h1M14 13h1M9 17h1M14 17h1M2 21h20" />
+        </symbol>
+        <symbol id="i-file" viewBox="0 0 24 24">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
+          <path d="M14 2v6h6M8 13h8M8 17h6" />
+        </symbol>
+        <symbol id="i-logout" viewBox="0 0 24 24">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+        </symbol>
+        <symbol id="i-left" viewBox="0 0 24 24">
+          <path d="m15 18-6-6 6-6" />
+        </symbol>
+        <symbol id="i-right" viewBox="0 0 24 24">
+          <path d="m9 18 6-6-6-6" />
+        </symbol>
+        <symbol id="i-up" viewBox="0 0 24 24">
+          <path d="m18 15-6-6-6 6" />
+        </symbol>
+        <symbol id="i-down" viewBox="0 0 24 24">
+          <path d="m6 9 6 6 6-6" />
+        </symbol>
+        <symbol id="i-x" viewBox="0 0 24 24">
+          <path d="M18 6 6 18M6 6l12 12" />
+        </symbol>
+        <symbol id="i-plus" viewBox="0 0 24 24">
+          <path d="M12 5v14M5 12h14" />
+        </symbol>
+        <symbol id="i-list" viewBox="0 0 24 24">
+          <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
+        </symbol>
+        <symbol id="i-check-calendar" viewBox="0 0 24 24">
+          <rect x="3" y="5" width="18" height="16" rx="2" />
+          <path d="M8 3v4M16 3v4M3 10h18M8 15l2 2 4-4" />
+        </symbol>
+      </defs>
+    </svg>
+
+    <div class="comparison-page">
+      <header class="comparison-header">
+        <div>
+          <p class="comparison-eyebrow">ChronoSync · October 2026</p>
+          <h1 class="comparison-title">Timesheet, before and after</h1>
+          <p class="comparison-subtitle">
+            HTML reconstructions from the source immediately before
+            <code>de3ffd8</code> and from the redesign commit itself.
+          </p>
+        </div>
+
+        <div class="comparison-controls" aria-label="Comparison view">
+          <button type="button" data-comparison-view="split" aria-pressed="true">
+            Side by side
+          </button>
+          <button type="button" data-comparison-view="before" aria-pressed="false">
+            Before
+          </button>
+          <button type="button" data-comparison-view="after" aria-pressed="false">
+            After
+          </button>
+        </div>
+      </header>
+
+      <main class="comparison-grid">
+        <section class="comparison-panel before-panel" aria-labelledby="before-title">
+          <div class="panel-caption">
+            <strong id="before-title">Before</strong>
+            <span>e38070b · pre-redesign</span>
+          </div>
+          <div class="render-shell">
+            <div class="app-canvas old-app">
+              <aside class="old-sidebar" aria-label="Before navigation">
+                <div class="old-brand">
+                  <img src="/logo.png" alt="" />
+                  <div class="old-brand-copy">
+                    <strong>Chrono<em>Sync</em></strong>
+                    <small>Company admin</small>
+                  </div>
+                </div>
+
+                <nav class="old-nav">
+                  <a class="old-nav-item active" href="#before-timesheet">
+                    <span class="icon-wrap"><svg class="icon"><use href="#i-clock" /></svg></span>
+                    <span class="old-nav-label">Timesheets</span>
+                  </a>
+                  <a class="old-nav-item" href="#before-leave">
+                    <span class="icon-wrap"><svg class="icon"><use href="#i-calendar" /></svg></span>
+                    <span class="old-nav-label">Leave requests</span>
+                  </a>
+                  <a class="old-nav-item" href="#before-dashboard">
+                    <span class="icon-wrap"><svg class="icon"><use href="#i-layout" /></svg></span>
+                    <span class="old-nav-label">Dashboard</span>
+                  </a>
+                  <a class="old-nav-item" href="#before-review">
+                    <span class="icon-wrap"><svg class="icon"><use href="#i-eye" /></svg></span>
+                    <span class="old-nav-label">Timesheet review</span>
+                  </a>
+                  <a class="old-nav-item" href="#before-team">
+                    <span class="icon-wrap"><svg class="icon"><use href="#i-users" /></svg></span>
+                    <span class="old-nav-label">Team members</span>
+                  </a>
+                  <a class="old-nav-item" href="#before-settings">
+                    <span class="icon-wrap"><svg class="icon"><use href="#i-settings" /></svg></span>
+                    <span class="old-nav-label">Company settings</span>
+                  </a>
+                </nav>
+
+                <div class="old-sidebar-footer">
+                  <div class="old-profile">
+                    <span class="old-avatar">JS</span>
+                    <span class="old-profile-copy">
+                      <b>Jamie Smith</b>
+                      <small>Company admin</small>
+                    </span>
+                  </div>
+                </div>
+              </aside>
+
+              <main class="old-main">
+                <div class="old-page" data-page="before">
+                  <section class="old-card old-filter-card">
+                    <div class="old-filter-head">
+                      <div>
+                        <p class="old-kicker">Filter entries</p>
+                        <p class="old-hint">Narrow your timesheet by client and project.</p>
+                      </div>
+                      <div class="old-actions">
+                        <button class="old-button" type="button" data-filter-toggle="before">
+                          <svg class="icon"><use href="#i-up" /></svg>
+                          Collapse filters
+                        </button>
+                        <button class="old-button" type="button" data-filter-reset="before" disabled>
+                          <svg class="icon" style="color: #ba1a1a"><use href="#i-x" /></svg>
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                    <div class="old-filter-fields" data-filter-fields="before">
+                      <div class="old-field">
+                        <label for="before-client">Client</label>
+                        <select id="before-client">
+                          <option value="">All clients</option>
+                          <option value="acme">Acme Studio</option>
+                          <option value="northwind">Northwind Labs</option>
+                        </select>
+                      </div>
+                      <div class="old-field">
+                        <label for="before-project">Project</label>
+                        <select id="before-project" disabled>
+                          <option>Select a client first</option>
+                        </select>
+                      </div>
+                    </div>
+                    <p class="old-filter-state" data-filter-state="before">
+                      Showing entries for all clients and projects.
+                    </p>
+                  </section>
+
+                  <section class="old-card old-view-card">
+                    <div class="old-toggle" aria-label="Before timesheet view">
+                      <button class="old-button primary" type="button" data-view-toggle="before-calendar">
+                        <svg class="icon"><use href="#i-calendar" /></svg>
+                        Calendar View
+                      </button>
+                      <button class="old-button ghost" type="button" data-view-toggle="before-list">
+                        <svg class="icon"><use href="#i-list" /></svg>
+                        List View
+                      </button>
+                    </div>
+                  </section>
+
+                  <div class="calendar-view old-columns">
+                    <section class="old-card old-calendar">
+                      <header class="old-card-header">
+                        <div>
+                          <p class="old-kicker">Month view</p>
+                          <div class="month-row">
+                            <span class="old-month">October 2026</span>
+                            <span class="old-total">Total logged: 128 hrs</span>
+                          </div>
+                        </div>
+                        <div class="month-nav">
+                          <button type="button" aria-label="Previous month"><svg class="icon"><use href="#i-left" /></svg></button>
+                          <button type="button" aria-label="Next month"><svg class="icon"><use href="#i-right" /></svg></button>
+                        </div>
+                      </header>
+                      <div class="calendar-weekdays" aria-hidden="true">
+                        <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                      </div>
+                      <div class="calendar-grid" data-calendar="before"></div>
+                    </section>
+
+                    <aside class="old-card old-day-card">
+                      <header class="old-card-header">
+                        <div>
+                          <p class="selected-label">Selected day</p>
+                          <h2 class="selected-date" data-selected-date="before">Thu, Oct 22</h2>
+                        </div>
+                      </header>
+                      <div class="old-entry-list" data-selected-entries="before"></div>
+                      <footer class="old-card-footer">
+                        <button class="old-button primary" type="button">
+                          <svg class="icon"><use href="#i-plus" /></svg>
+                          Add entry
+                        </button>
+                        <div class="old-submit-group">
+                          <button class="old-button" type="button">Day</button>
+                          <button class="old-button" type="button">Week</button>
+                          <button class="old-button" type="button">Month</button>
+                        </div>
+                      </footer>
+                    </aside>
+                  </div>
+
+                  <section class="list-view old-card full-list-card">
+                    <header class="old-card-header">
+                      <div><p class="old-kicker">Entries</p><div class="old-month" style="margin-top: 6px">October 2026</div></div>
+                    </header>
+                    <div class="full-list-grid" data-full-list="before"></div>
+                  </section>
+                </div>
+              </main>
+            </div>
+          </div>
+        </section>
+
+        <section class="comparison-panel after-panel" aria-labelledby="after-title">
+          <div class="panel-caption">
+            <strong id="after-title">After</strong>
+            <span>de3ffd8 · redesign</span>
+          </div>
+          <div class="render-shell">
+            <div class="app-canvas new-app">
+              <aside class="new-sidebar" aria-label="After navigation">
+                <div class="new-brand">
+                  <span class="new-logo-box"><img src="/logo.png" alt="" /></span>
+                  <span class="new-brand-copy">
+                    <strong>Chrono<em>Sync</em></strong>
+                    <small>Company admin</small>
+                  </span>
+                </div>
+                <div class="new-sidebar-divider"></div>
+
+                <nav class="new-nav">
+                  <p class="new-nav-title">Portal</p>
+                  <a class="new-nav-item active" href="#after-timesheet">
+                    <svg class="icon"><use href="#i-clock" /></svg><span class="new-nav-label">Timesheets</span><span class="active-dot"></span>
+                  </a>
+                  <a class="new-nav-item" href="#after-leave">
+                    <svg class="icon"><use href="#i-calendar" /></svg><span class="new-nav-label">Leave requests</span>
+                  </a>
+                  <a class="new-nav-item" href="#after-dashboard">
+                    <svg class="icon"><use href="#i-layout" /></svg><span class="new-nav-label">Dashboard</span>
+                  </a>
+                  <a class="new-nav-item" href="#after-review">
+                    <svg class="icon"><use href="#i-eye" /></svg><span class="new-nav-label">Timesheet review</span>
+                  </a>
+                  <a class="new-nav-item" href="#after-team">
+                    <svg class="icon"><use href="#i-users" /></svg><span class="new-nav-label">Team members</span>
+                  </a>
+                  <a class="new-nav-item" href="#after-company">
+                    <svg class="icon"><use href="#i-building" /></svg><span class="new-nav-label">Company settings</span>
+                  </a>
+                  <a class="new-nav-item" href="#after-settings">
+                    <svg class="icon"><use href="#i-settings" /></svg><span class="new-nav-label">User settings</span>
+                  </a>
+                </nav>
+
+                <div class="new-sidebar-footer">
+                  <div class="new-profile">
+                    <span class="new-avatar">JS</span>
+                    <span class="new-profile-copy">
+                      <b>Jamie Smith</b>
+                      <small>Company admin</small>
+                    </span>
+                  </div>
+                  <button class="new-signout" type="button">
+                    <svg class="icon" style="width: 16px; height: 16px"><use href="#i-logout" /></svg>
+                    <span>Sign out</span>
+                  </button>
+                </div>
+
+                <button class="new-collapse" type="button" aria-label="Collapse sidebar" data-sidebar-toggle>
+                  <svg class="icon"><use href="#i-left" /></svg>
+                </button>
+              </aside>
+
+              <main class="new-main">
+                <div class="new-page" data-page="after">
+                  <header>
+                    <h1 class="new-page-title">Timesheet</h1>
+                    <p class="new-page-subtitle">Track time, review your month, and submit completed work.</p>
+                  </header>
+
+                  <section class="new-card new-toolbar">
+                    <div class="new-toolbar-top">
+                      <div class="new-segmented" aria-label="After timesheet view">
+                        <button class="new-button small secondary" type="button" data-view-toggle="after-calendar">
+                          <svg class="icon"><use href="#i-calendar" /></svg>
+                          Calendar View
+                        </button>
+                        <button class="new-button small ghost" type="button" data-view-toggle="after-list">
+                          <svg class="icon"><use href="#i-list" /></svg>
+                          List View
+                        </button>
+                      </div>
+                      <div class="new-toolbar-actions">
+                        <button class="new-button small" type="button" data-filter-toggle="after">
+                          <svg class="icon"><use href="#i-up" /></svg>
+                          Collapse filters
+                        </button>
+                        <button class="new-button small" type="button" data-filter-reset="after" disabled>
+                          <svg class="icon" style="color: #a25952"><use href="#i-x" /></svg>
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                    <div class="new-filter-fields" data-filter-fields="after">
+                      <div class="new-field">
+                        <label for="after-client">Client</label>
+                        <select id="after-client">
+                          <option value="">All clients</option>
+                          <option value="acme">Acme Studio</option>
+                          <option value="northwind">Northwind Labs</option>
+                        </select>
+                      </div>
+                      <div class="new-field">
+                        <label for="after-project">Project</label>
+                        <select id="after-project" disabled>
+                          <option>Select a client first</option>
+                        </select>
+                      </div>
+                    </div>
+                    <p class="new-filter-state" data-filter-state="after">
+                      Showing entries for all clients and projects.
+                    </p>
+                  </section>
+
+                  <div class="calendar-view new-columns">
+                    <section class="new-card new-calendar">
+                      <header class="new-card-header">
+                        <div>
+                          <div class="month-view-label">Month view</div>
+                          <div class="month-row">
+                            <span class="new-month">October 2026</span>
+                            <span class="new-total">Total logged: 128 hrs</span>
+                          </div>
+                        </div>
+                        <div class="month-nav">
+                          <button class="new-button icon-only ghost" type="button" aria-label="Previous month"><svg class="icon"><use href="#i-left" /></svg></button>
+                          <button class="new-button icon-only ghost" type="button" aria-label="Next month"><svg class="icon"><use href="#i-right" /></svg></button>
+                        </div>
+                      </header>
+                      <div class="calendar-weekdays" aria-hidden="true">
+                        <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                      </div>
+                      <div class="calendar-grid" data-calendar="after"></div>
+                    </section>
+
+                    <aside class="new-card new-day-card">
+                      <header class="new-card-header">
+                        <div>
+                          <p class="selected-label">Selected day</p>
+                          <h2 class="selected-date" data-selected-date="after">Thu, Oct 22</h2>
+                        </div>
+                      </header>
+                      <div class="submission-strip">
+                        <div class="submission-copy">
+                          <span class="submission-icon"><svg class="icon"><use href="#i-check-calendar" /></svg></span>
+                          <span><b>Submit draft entries</b><small>Submission period</small></span>
+                        </div>
+                        <div class="submission-actions">
+                          <select aria-label="Submission period"><option>Day (1)</option><option>Week (3)</option><option>Month (12)</option></select>
+                          <button class="new-button small primary" type="button">Submit drafts <span class="status-chip">1</span></button>
+                        </div>
+                      </div>
+                      <div class="new-entry-list" data-selected-entries="after"></div>
+                      <footer class="new-card-footer">
+                        <button class="new-button small primary" type="button">
+                          <svg class="icon"><use href="#i-plus" /></svg>
+                          Add entry
+                        </button>
+                      </footer>
+                    </aside>
+                  </div>
+
+                  <section class="list-view new-card full-list-card">
+                    <header class="new-card-header">
+                      <div><div class="month-view-label">Entries</div><div class="new-month" style="margin-top: 6px">October 2026</div></div>
+                    </header>
+                    <div class="full-list-grid" data-full-list="after"></div>
+                  </section>
+                </div>
+              </main>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      (() => {
+        const entries = {
+          1: [{ client: "Acme Studio", description: "Design system audit", hours: 8, status: "approved" }],
+          2: [{ client: "Northwind Labs", description: "Reporting API", hours: 8, status: "submitted" }],
+          5: [{ client: "Acme Studio", description: "Research workshop", hours: 8, status: "approved" }],
+          6: [{ client: "Acme Studio", description: "Wireframe review", hours: 6, status: "approved" }],
+          7: [{ client: "Northwind Labs", description: "API integration", hours: 8, status: "submitted" }],
+          8: [{ client: "Northwind Labs", description: "API integration", hours: 8, status: "submitted" }],
+          9: [{ client: "Acme Studio", description: "Component library", hours: 6, status: "approved" }],
+          12: [{ client: "Acme Studio", description: "Prototype testing", hours: 8, status: "approved" }],
+          13: [{ client: "Acme Studio", description: "UX revisions", hours: 8, status: "approved" }],
+          14: [{ client: "Northwind Labs", description: "Data mapping", hours: 6, status: "submitted" }],
+          15: [{ client: "Northwind Labs", description: "QA fixes", hours: 8, status: "submitted" }],
+          16: [{ client: "Acme Studio", description: "Client review", hours: 4, status: "draft" }],
+          19: [{ client: "Acme Studio", description: "Visual polish", hours: 8, status: "approved" }],
+          20: [{ client: "Acme Studio", description: "Responsive layouts", hours: 8, status: "approved" }],
+          21: [{ client: "Northwind Labs", description: "Export workflow", hours: 6, status: "submitted" }],
+          22: [{ client: "Acme Studio", description: "Website redesign", hours: 8, status: "draft" }],
+          23: [{ client: "Acme Studio", description: "Design handoff", hours: 8, status: "draft" }],
+          26: [{ client: "Northwind Labs", description: "Invoice templates", hours: 6, status: "submitted" }],
+          27: [{ client: "Northwind Labs", description: "PDF rendering", hours: 8, status: "submitted" }],
+          28: [{ client: "Acme Studio", description: "Accessibility pass", hours: 4, status: "draft" }]
+        };
+
+        const state = { before: 22, after: 22 };
+        const startOffset = 3;
+
+        const formatSelectedDate = (day) => {
+          const value = new Date(2026, 9, day, 12);
+          return new Intl.DateTimeFormat("en-US", {
+            weekday: "short",
+            month: "short",
+            day: "numeric"
+          }).format(value);
+        };
+
+        const entryMarkup = (entry, version) => {
+          const rootClass = version === "before" ? "old-entry" : "new-entry";
+          return `
+            <article class="${rootClass}">
+              <div class="entry-topline">
+                <span class="client-chip">${entry.client}</span>
+                <span class="entry-hours">${entry.hours} hrs</span>
+              </div>
+              <p class="entry-description">${entry.description}</p>
+              <div class="entry-bottom">
+                <span class="status-chip ${entry.status}">${entry.status}</span>
+                <span>${version === "before" ? "•••" : ""}</span>
+              </div>
+            </article>`;
+        };
+
+        const renderSelected = (version) => {
+          const day = state[version];
+          const selectedEntries = entries[day] || [];
+          document.querySelector(`[data-selected-date="${version}"]`).textContent = formatSelectedDate(day);
+          const target = document.querySelector(`[data-selected-entries="${version}"]`);
+          target.innerHTML = selectedEntries.length
+            ? selectedEntries.map((entry) => entryMarkup(entry, version)).join("")
+            : `<div style="padding: 34px 10px; text-align:center; color:${version === "before" ? "#5e5e62" : "#747b69"}; font-size:13px">No entries for this day.<br><span style="display:block; margin-top:8px">Add your first entry.</span></div>`;
+        };
+
+        const renderCalendar = (version) => {
+          const target = document.querySelector(`[data-calendar="${version}"]`);
+          target.innerHTML = "";
+
+          for (let index = 0; index < startOffset; index += 1) {
+            const filler = document.createElement("span");
+            filler.className = "calendar-cell empty";
+            target.appendChild(filler);
+          }
+
+          for (let day = 1; day <= 31; day += 1) {
+            const dayEntries = entries[day] || [];
+            const hours = dayEntries.reduce((sum, entry) => sum + entry.hours, 0);
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = `calendar-cell${state[version] === day ? " selected" : ""}`;
+            button.setAttribute("aria-label", `October ${day}, 2026${hours ? `, ${hours} hours logged` : ""}`);
+            button.innerHTML = `<span class="day-number">${day}</span>${hours ? `<span class="hours-chip">${hours}h</span>` : ""}`;
+            button.addEventListener("click", () => {
+              state[version] = day;
+              renderCalendar(version);
+              renderSelected(version);
+            });
+            target.appendChild(button);
+          }
+        };
+
+        const renderFullList = (version) => {
+          const target = document.querySelector(`[data-full-list="${version}"]`);
+          target.innerHTML = Object.entries(entries)
+            .slice(0, 9)
+            .map(([day, dayEntries]) => {
+              const entry = dayEntries[0];
+              return entryMarkup({ ...entry, description: `Oct ${day} · ${entry.description}` }, version);
+            })
+            .join("");
+        };
+
+        const fitCanvases = () => {
+          document.querySelectorAll(".render-shell").forEach((shell) => {
+            const canvas = shell.querySelector(".app-canvas");
+            const scale = shell.clientWidth / 1440;
+            shell.style.height = `${Math.round(900 * scale)}px`;
+            canvas.style.transform = `scale(${scale})`;
+          });
+        };
+
+        const setComparisonView = (view) => {
+          document.body.dataset.view = view;
+          document.querySelectorAll("[data-comparison-view]").forEach((button) => {
+            button.setAttribute("aria-pressed", String(button.dataset.comparisonView === view));
+          });
+          requestAnimationFrame(fitCanvases);
+        };
+
+        document.querySelectorAll("[data-comparison-view]").forEach((button) => {
+          button.addEventListener("click", () => setComparisonView(button.dataset.comparisonView));
+        });
+
+        document.querySelectorAll("[data-filter-toggle]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const version = button.dataset.filterToggle;
+            const isBefore = version === "before";
+            const card = isBefore ? button.closest(".old-filter-card") : button.closest(".new-toolbar");
+            const collapsed = card.classList.toggle(isBefore ? "old-filter-collapsed" : "filters-collapsed");
+            const icon = button.querySelector("use");
+            icon.setAttribute("href", collapsed ? "#i-down" : "#i-up");
+            button.lastChild.textContent = collapsed ? " Expand filters" : " Collapse filters";
+            if (isBefore) {
+              card.querySelector("[data-filter-fields]").style.display = collapsed ? "none" : "grid";
+              card.querySelector("[data-filter-state]").style.display = collapsed ? "none" : "block";
+              card.querySelector(".old-hint").style.display = collapsed ? "none" : "block";
+            }
+            requestAnimationFrame(fitCanvases);
+          });
+        });
+
+        ["before", "after"].forEach((version) => {
+          const clientSelect = document.getElementById(`${version}-client`);
+          const projectSelect = document.getElementById(`${version}-project`);
+          const resetButton = document.querySelector(`[data-filter-reset="${version}"]`);
+          const filterState = document.querySelector(`[data-filter-state="${version}"]`);
+
+          const resetFilters = () => {
+            clientSelect.value = "";
+            projectSelect.innerHTML = '<option value="">Select a client first</option>';
+            projectSelect.disabled = true;
+            resetButton.disabled = true;
+            filterState.textContent = "Showing entries for all clients and projects.";
+          };
+
+          clientSelect.addEventListener("change", () => {
+            const selectedClient = clientSelect.options[clientSelect.selectedIndex].text;
+            if (!clientSelect.value) {
+              resetFilters();
+              return;
+            }
+
+            const projectOptions = clientSelect.value === "acme"
+              ? [["website", "Website redesign"], ["design-system", "Design system"]]
+              : [["reporting", "Reporting platform"], ["api", "API integration"]];
+            projectSelect.innerHTML = [
+              '<option value="">All projects</option>',
+              ...projectOptions.map(([value, label]) => `<option value="${value}">${label}</option>`)
+            ].join("");
+            projectSelect.disabled = false;
+            resetButton.disabled = false;
+            filterState.textContent = `Filtering entries for ${selectedClient}.`;
+          });
+
+          projectSelect.addEventListener("change", () => {
+            const selectedClient = clientSelect.options[clientSelect.selectedIndex].text;
+            const selectedProject = projectSelect.options[projectSelect.selectedIndex].text;
+            filterState.textContent = projectSelect.value
+              ? `Filtering entries for ${selectedClient} · ${selectedProject}.`
+              : `Filtering entries for ${selectedClient}.`;
+          });
+
+          resetButton.addEventListener("click", resetFilters);
+        });
+
+        document.querySelectorAll("[data-view-toggle]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const [version, mode] = button.dataset.viewToggle.split("-");
+            const page = document.querySelector(`[data-page="${version}"]`);
+            page.classList.toggle("show-list", mode === "list");
+
+            const calendarButton = document.querySelector(`[data-view-toggle="${version}-calendar"]`);
+            const listButton = document.querySelector(`[data-view-toggle="${version}-list"]`);
+            if (version === "before") {
+              calendarButton.className = `old-button ${mode === "calendar" ? "primary" : "ghost"}`;
+              listButton.className = `old-button ${mode === "list" ? "primary" : "ghost"}`;
+            } else {
+              calendarButton.className = `new-button small ${mode === "calendar" ? "secondary" : "ghost"}`;
+              listButton.className = `new-button small ${mode === "list" ? "secondary" : "ghost"}`;
+            }
+          });
+        });
+
+        const sidebarToggle = document.querySelector("[data-sidebar-toggle]");
+        sidebarToggle.addEventListener("click", () => {
+          const sidebar = document.querySelector(".new-sidebar");
+          const app = document.querySelector(".new-app");
+          const collapsed = sidebar.classList.toggle("collapsed");
+          app.classList.toggle("sidebar-is-collapsed", collapsed);
+          sidebarToggle.setAttribute("aria-label", collapsed ? "Expand sidebar" : "Collapse sidebar");
+          sidebarToggle.querySelector("use").setAttribute("href", collapsed ? "#i-right" : "#i-left");
+        });
+
+        ["before", "after"].forEach((version) => {
+          renderCalendar(version);
+          renderSelected(version);
+          renderFullList(version);
+        });
+
+        const resizeObserver = new ResizeObserver(fitCanvases);
+        document.querySelectorAll(".render-shell").forEach((shell) => resizeObserver.observe(shell));
+        window.addEventListener("load", fitCanvases);
+      })();
+    </script>
+  </body>
+</html>
