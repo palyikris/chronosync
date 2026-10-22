@@ -16,6 +16,7 @@ import TimesheetReviewPage from "./pages/TimesheetReviewPage";
 import AuditLogPage from "./pages/LogsPage";
 import LeaveRequestsPage from "./pages/LeaveRequestsPage";
 import { DashboardHeader } from "./components/dashboard/DashboardHeader";
+import { InvoiceAttachmentsPage } from "./pages/InvoiceAttachmentsPage";
 
 const DashboardHeaderPreview: React.FC = () => {
   const [startDate, setStartDate] = React.useState("2026-10-01");
@@ -30,7 +31,6 @@ const DashboardHeaderPreview: React.FC = () => {
         isRefreshing={false}
         onStartDateChange={setStartDate}
         onEndDateChange={setEndDate}
-        companyId="preview"
       />
     </main>
   );
@@ -61,7 +61,10 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           {import.meta.env.DEV ? (
-            <Route path="/dashboard-header-preview" element={<DashboardHeaderPreview />} />
+            <Route
+              path="/dashboard-header-preview"
+              element={<DashboardHeaderPreview />}
+            />
           ) : null}
           {/* Public Auth Route */}
           <Route path="/login" element={<LoginPage />} />
@@ -86,13 +89,12 @@ export default function App() {
                 element={<CompanyManagementPage />}
               />
               <Route
-                element={
-                  <ProtectedRoute allowedRoles={["company_admin"]} />
-                }
+                element={<ProtectedRoute allowedRoles={["company_admin"]} />}
               >
+                <Route path="/admin/review" element={<TimesheetReviewPage />} />
                 <Route
-                  path="/admin/review"
-                  element={<TimesheetReviewPage />}
+                  path="/admin/invoice-attachments"
+                  element={<InvoiceAttachmentsPage />}
                 />
               </Route>
               <Route

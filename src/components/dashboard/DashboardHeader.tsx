@@ -1,9 +1,7 @@
 import React from "react";
-import { ArrowRight, Download } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Button } from "../shared/Button";
 import { DatePicker } from "../shared/DatePicker";
-import { InvoiceAttachmentModal } from "./InvoiceAttachmentModal";
 
 interface DashboardHeaderProps {
   startDate: string;
@@ -12,7 +10,6 @@ interface DashboardHeaderProps {
   isRefreshing: boolean;
   onStartDateChange: (value: string) => void;
   onEndDateChange: (value: string) => void;
-  companyId: string;
 }
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -22,11 +19,8 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   isRefreshing,
   onStartDateChange,
   onEndDateChange,
-  companyId,
 }) => {
-  const { t, i18n } = useTranslation();
-  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = React.useState(false);
-  const language = i18n.resolvedLanguage || i18n.language || "en";
+  const { t } = useTranslation();
 
   return (
     <header className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
@@ -34,7 +28,9 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         <h1 className="text-2xl font-semibold tracking-[-0.03em] text-text sm:text-[28px]">
           {t("dashboard.pageTitle")}
         </h1>
-        <p className="mt-1.5 text-sm text-muted">{t("dashboard.pageSubtitle")}</p>
+        <p className="mt-1.5 text-sm text-muted">
+          {t("dashboard.pageSubtitle")}
+        </p>
       </div>
 
       <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-end xl:w-auto">
@@ -75,14 +71,6 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             buttonClassName="bg-white/55"
           />
         </div>
-        <Button
-          onClick={() => setIsInvoiceModalOpen(true)}
-          icon={<Download className="h-4 w-4" />}
-          className="h-11 w-full px-4 sm:w-auto"
-          disabled={!isDateRangeValid}
-        >
-          {t("dashboard.downloadReport")}
-        </Button>
         {isRefreshing ? (
           <span
             role="status"
@@ -93,15 +81,6 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           </span>
         ) : null}
       </div>
-
-      <InvoiceAttachmentModal
-        open={isInvoiceModalOpen}
-        companyId={companyId}
-        startDate={startDate}
-        endDate={endDate}
-        language={language}
-        onClose={() => setIsInvoiceModalOpen(false)}
-      />
     </header>
   );
 };

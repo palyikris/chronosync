@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Clock,
   Columns3Cog,
+  FileSpreadsheet,
   LayoutDashboard,
   LogOut,
   ScanEye,
@@ -44,13 +45,53 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const mainNavItems: NavItem[] = [
     { to: "/timesheet", label: t("navigation.timesheets"), icon: Clock },
-    { to: "/leaves", label: t("navigation.leaveRequests"), icon: CalendarRange },
-    { to: "/admin/dashboard", label: t("navigation.dashboard"), icon: LayoutDashboard, roleRequired: "company_admin" },
-    { to: "/admin/review", label: t("navigation.timesheetReview"), icon: ScanEye, roleRequired: "company_admin" },
-    { to: "/admin/users", label: t("navigation.teamMembers"), icon: Users, roleRequired: "company_admin" },
-    { to: "/admin/settings", label: t("navigation.companySettings"), icon: Columns3Cog, roleRequired: "company_admin" },
-    { to: "/super-admin/companies", label: t("navigation.companies"), icon: Building2, roleRequired: "super_admin" },
-    { to: "/super-admin/logs", label: t("navigation.logs"), icon: ScrollText, roleRequired: "super_admin" },
+    {
+      to: "/leaves",
+      label: t("navigation.leaveRequests"),
+      icon: CalendarRange,
+    },
+    {
+      to: "/admin/dashboard",
+      label: t("navigation.dashboard"),
+      icon: LayoutDashboard,
+      roleRequired: "company_admin",
+    },
+    {
+      to: "/admin/invoice-attachments",
+      label: t("navigation.invoiceAttachments"),
+      icon: FileSpreadsheet,
+      roleRequired: "company_admin",
+    },
+    {
+      to: "/admin/review",
+      label: t("navigation.timesheetReview"),
+      icon: ScanEye,
+      roleRequired: "company_admin",
+    },
+    {
+      to: "/admin/users",
+      label: t("navigation.teamMembers"),
+      icon: Users,
+      roleRequired: "company_admin",
+    },
+    {
+      to: "/admin/settings",
+      label: t("navigation.companySettings"),
+      icon: Columns3Cog,
+      roleRequired: "company_admin",
+    },
+    {
+      to: "/super-admin/companies",
+      label: t("navigation.companies"),
+      icon: Building2,
+      roleRequired: "super_admin",
+    },
+    {
+      to: "/super-admin/logs",
+      label: t("navigation.logs"),
+      icon: ScrollText,
+      roleRequired: "super_admin",
+    },
     { to: "/settings", label: t("navigation.userSettings"), icon: Settings },
   ];
 

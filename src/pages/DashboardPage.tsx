@@ -225,7 +225,6 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ companyId }) => {
         isRefreshing={isFetching && !isLoading}
         onStartDateChange={handleStartDateChange}
         onEndDateChange={handleEndDateChange}
-        companyId={companyId}
       />
 
       {!isDateRangeValid ? (
