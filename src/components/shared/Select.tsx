@@ -96,6 +96,8 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
     const [isOpen, setIsOpen] = useState(false);
     const [isDisabledHintOpen, setIsDisabledHintOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
+    const [openPlacement, setOpenPlacement] =
+      useState<DropdownPlacement>("bottom");
     const [menuStyles, setMenuStyles] = useState<React.CSSProperties | null>(
       null,
     );
@@ -140,16 +142,6 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
       return Math.min(Math.max(estimatedContentHeight, 120), 320);
     }, [filteredOptions.length, shouldShowSearch]);
 
-    const panelMaxHeight =
-      typeof menuStyles?.maxHeight === "number"
-        ? menuStyles.maxHeight
-        : Math.min(listMaxHeight, window.innerHeight - 40);
-    const searchSectionHeight = shouldShowSearch ? 56 : 0;
-    const listViewportMaxHeight = Math.max(
-      96,
-      panelMaxHeight - searchSectionHeight - 8,
-    );
-
     const getMenuPosition = (
       lockedPlacement?: DropdownPlacement | null,
     ): { styles: React.CSSProperties; placement: DropdownPlacement } | null => {
@@ -179,11 +171,11 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
       const placement = lockedPlacement ?? adaptivePlacement;
       const placeTop = placement === "top";
 
-      const availableHeight = placeTop ? spaceAbove : spaceBelow;
-      const panelMaxHeight = Math.min(
-        listMaxHeight,
-        Math.max(96, availableHeight),
+      const availableHeight = Math.max(
+        96,
+        (placeTop ? spaceAbove : spaceBelow) - spacing,
       );
+      const panelMaxHeight = Math.min(listMaxHeight, availableHeight);
 
       return {
         placement,
@@ -307,6 +299,10 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
     const displayLabel = hasValue ? selectedLabel : defaultPlaceholder;
     const resolvedDisabledReason =
       disabledReason ?? t("common.disabled", "Disabled");
+    const openAnimationClass =
+      openPlacement === "top"
+        ? "animate-[select-popover-in-from-top_180ms_cubic-bezier(0.22,1,0.36,1)]"
+        : "animate-[select-popover-in-from-bottom_180ms_cubic-bezier(0.22,1,0.36,1)]";
 
     useEffect(() => {
       if (!disabled) {
@@ -399,6 +395,7 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
 
                 if (nextPosition) {
                   resolvedPlacementRef.current = nextPosition.placement;
+                  setOpenPlacement(nextPosition.placement);
                   setMenuStyles(nextPosition.styles);
                 }
 
@@ -489,74 +486,76 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
                 ref={dropdownRef}
                 style={menuStyles ?? undefined}
                 className={cn(
-                  "overflow-hidden rounded-xl border border-border-strong bg-surface-strong/95 shadow-[0_12px_32px_rgba(75,87,57,0.14)] backdrop-blur-2xl animate-[popover-in_160ms_cubic-bezier(0.22,1,0.36,1)]",
+                  "flex flex-col overflow-hidden rounded-xl border border-border-strong bg-surface-strong/95 shadow-[0_12px_32px_rgba(75,87,57,0.14)] backdrop-blur-2xl",
                   !menuStyles && "invisible",
                 )}
                 aria-hidden={!menuStyles}
               >
-                {shouldShowSearch ? (
-                  <div className="border-b border-border bg-bg-accent/60 px-3 py-3">
-                    <div className="auth-field">
-                      <Search
-                        className="auth-field-icon h-4 w-4"
-                        aria-hidden="true"
-                      />
-                      <input
-                        ref={searchInputRef}
-                        value={searchQuery}
-                        onChange={(event) => setSearchQuery(event.target.value)}
-                        className="auth-input placeholder:text-muted"
-                        placeholder={t("common.searchOptions")}
-                        aria-label={t("common.searchOptions")}
-                      />
+                <div className={openAnimationClass}>
+                  {shouldShowSearch ? (
+                    <div className="border-b border-border bg-bg-accent/60 px-3 py-3">
+                      <div className="auth-field">
+                        <Search
+                          className="auth-field-icon h-4 w-4"
+                          aria-hidden="true"
+                        />
+                        <input
+                          ref={searchInputRef}
+                          value={searchQuery}
+                          onChange={(event) =>
+                            setSearchQuery(event.target.value)
+                          }
+                          className="auth-input placeholder:text-muted"
+                          placeholder={t("common.searchOptions")}
+                          aria-label={t("common.searchOptions")}
+                        />
+                      </div>
                     </div>
+                  ) : null}
+
+                  <div
+                    id={`${controlId}-options`}
+                    role="listbox"
+                    className="min-h-0 flex-1 overflow-y-auto overscroll-contain py-1"
+                  >
+                    {filteredOptions.length > 0 ? (
+                      filteredOptions.map((option) => {
+                        const isSelected = option.value === String(value ?? "");
+
+                        return (
+                          <button
+                            key={option.value}
+                            type="button"
+                            role="option"
+                            aria-selected={isSelected}
+                            disabled={option.disabled}
+                            className={cn(
+                              "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-[13px] transition-colors duration-150",
+                              isSelected
+                                ? "bg-black/6 text-text"
+                                : "text-text hover:bg-black/[0.035]",
+                              option.disabled &&
+                                "cursor-not-allowed opacity-50",
+                            )}
+                            onClick={() => {
+                              if (!option.disabled) {
+                                handleSelect(option.value);
+                              }
+                            }}
+                          >
+                            <span className="truncate">{option.label}</span>
+                            {isSelected ? (
+                              <Check className="h-4 w-4 shrink-0 text-primary-strong" />
+                            ) : null}
+                          </button>
+                        );
+                      })
+                    ) : (
+                      <div className="px-3 py-2 text-sm text-muted">
+                        No options found
+                      </div>
+                    )}
                   </div>
-                ) : null}
-
-                <div
-                  id={`${controlId}-options`}
-                  role="listbox"
-                  className="overflow-y-auto overscroll-contain py-1"
-                  style={{
-                    maxHeight: listViewportMaxHeight,
-                  }}
-                >
-                  {filteredOptions.length > 0 ? (
-                    filteredOptions.map((option) => {
-                      const isSelected = option.value === String(value ?? "");
-
-                      return (
-                        <button
-                          key={option.value}
-                          type="button"
-                          role="option"
-                          aria-selected={isSelected}
-                          disabled={option.disabled}
-                          className={cn(
-                            "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-[13px] transition-colors duration-150",
-                            isSelected
-                              ? "bg-black/6 text-text"
-                              : "text-text hover:bg-black/[0.035]",
-                            option.disabled && "cursor-not-allowed opacity-50",
-                          )}
-                          onClick={() => {
-                            if (!option.disabled) {
-                              handleSelect(option.value);
-                            }
-                          }}
-                        >
-                          <span className="truncate">{option.label}</span>
-                          {isSelected ? (
-                            <Check className="h-4 w-4 shrink-0 text-primary-strong" />
-                          ) : null}
-                        </button>
-                      );
-                    })
-                  ) : (
-                    <div className="px-3 py-2 text-sm text-muted">
-                      No options found
-                    </div>
-                  )}
                 </div>
               </div>,
               document.body,
