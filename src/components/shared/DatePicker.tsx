@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import {
   CalendarDays,
   ChevronDown,
@@ -25,6 +26,7 @@ interface DatePickerProps {
   align?: "start" | "end";
   placement?: "top" | "bottom";
   showIcon?: boolean;
+  portal?: boolean;
 }
 
 const pad = (value: number) => String(value).padStart(2, "0");
@@ -66,10 +68,12 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   align = "start",
   placement = "bottom",
   showIcon = true,
+  portal = false,
 }) => {
   const { t, i18n } = useTranslation();
   const rootRef = React.useRef<HTMLDivElement>(null);
   const triggerRef = React.useRef<HTMLButtonElement>(null);
+  const calendarRef = React.useRef<HTMLDivElement>(null);
   const calendarId = React.useId();
   const generatedInputId = React.useId();
   const inputId = id ?? generatedInputId;
@@ -77,6 +81,11 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   const today = React.useMemo(() => new Date(), []);
   const todayValue = toDateValue(today);
   const [isOpen, setIsOpen] = React.useState(false);
+  const [restoreFocusOnClose, setRestoreFocusOnClose] = React.useState(false);
+  const [calendarPosition, setCalendarPosition] = React.useState({
+    top: 0,
+    left: 0,
+  });
   const [visibleMonth, setVisibleMonth] = React.useState(() =>
     startOfMonth(selectedDate ?? today),
   );
@@ -162,17 +171,61 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   };
 
   const closeCalendar = (restoreFocus = false) => {
+    setRestoreFocusOnClose(restoreFocus);
     setIsOpen(false);
-    if (restoreFocus) {
-      window.requestAnimationFrame(() => triggerRef.current?.focus());
-    }
   };
+
+  React.useEffect(() => {
+    if (isOpen || !restoreFocusOnClose) return;
+
+    window.requestAnimationFrame(() => {
+      setRestoreFocusOnClose(false);
+      triggerRef.current?.focus();
+    });
+  }, [isOpen, restoreFocusOnClose]);
+
+  const updateCalendarPosition = React.useCallback(() => {
+    if (!portal || !isOpen || !triggerRef.current) return;
+
+    const triggerRect = triggerRef.current.getBoundingClientRect();
+    const calendarWidth = Math.min(328, window.innerWidth - 32);
+    const calendarHeight = calendarRef.current?.offsetHeight ?? 420;
+    const left =
+      align === "end"
+        ? triggerRect.right - calendarWidth
+        : triggerRect.left;
+    const top =
+      placement === "top"
+        ? triggerRect.top - calendarHeight - 9
+        : triggerRect.bottom + 9;
+
+    setCalendarPosition({
+      top: Math.max(16, Math.min(top, window.innerHeight - calendarHeight - 16)),
+      left: Math.max(16, Math.min(left, window.innerWidth - calendarWidth - 16)),
+    });
+  }, [align, isOpen, placement, portal]);
+
+  React.useLayoutEffect(() => {
+    if (!portal || !isOpen) return;
+
+    updateCalendarPosition();
+    const handleViewportChange = () => updateCalendarPosition();
+    window.addEventListener("resize", handleViewportChange);
+    window.addEventListener("scroll", handleViewportChange, true);
+    return () => {
+      window.removeEventListener("resize", handleViewportChange);
+      window.removeEventListener("scroll", handleViewportChange, true);
+    };
+  }, [isOpen, portal, updateCalendarPosition]);
 
   React.useEffect(() => {
     if (!isOpen) return;
 
     const closeOnOutsidePointer = (event: MouseEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) {
+      if (
+        !rootRef.current?.contains(event.target as Node) &&
+        !calendarRef.current?.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -244,7 +297,10 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         }
       }}
       onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+        if (
+          !event.currentTarget.contains(event.relatedTarget as Node | null) &&
+          !calendarRef.current?.contains(event.relatedTarget as Node | null)
+        ) {
           setIsOpen(false);
         }
       }}
@@ -301,8 +357,11 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       {name ? <input type="hidden" name={name} value={value} /> : null}
 
       {isOpen ? (
-        <div
-          id={calendarId}
+        (() => {
+          const calendar = (
+          <div
+            ref={calendarRef}
+            id={calendarId}
           role="dialog"
           aria-modal="false"
           aria-label={t("common.calendar")}
@@ -313,6 +372,15 @@ export const DatePicker: React.FC<DatePickerProps> = ({
               ? "bottom-[calc(100%+0.55rem)] origin-bottom"
               : "top-[calc(100%+0.55rem)] origin-top",
           )}
+          style={
+            portal
+              ? {
+                  position: "fixed",
+                  top: calendarPosition.top,
+                  left: calendarPosition.left,
+                }
+              : undefined
+          }
         >
           <div className="border-b border-border bg-[radial-gradient(circle_at_top_right,rgba(207,231,143,0.34),transparent_12rem)] p-3.5 pb-3">
             <div className="flex items-center gap-2">
@@ -470,6 +538,10 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             </button>
           </div>
         </div>
+          );
+
+          return portal ? createPortal(calendar, document.body) : calendar;
+        })()
       ) : null}
     </div>
   );

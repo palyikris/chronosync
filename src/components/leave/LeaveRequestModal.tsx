@@ -38,6 +38,7 @@ export const LeaveRequestModal: React.FC<LeaveRequestModalProps> = ({
           <DatePicker
             label={t("leave.startDate")}
             value={formState.start_date}
+            portal
             onChange={(value) =>
               onFormStateChange((current) => ({
                 ...current,
@@ -49,6 +50,7 @@ export const LeaveRequestModal: React.FC<LeaveRequestModalProps> = ({
             label={t("leave.endDate")}
             value={formState.end_date}
             min={formState.start_date || undefined}
+            portal
             onChange={(value) =>
               onFormStateChange((current) => ({
                 ...current,

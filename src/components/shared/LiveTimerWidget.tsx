@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Clock3, Play, Square } from "lucide-react";
+import { Play, Square } from "lucide-react";
 import { useAuth } from "../../context/useAuth";
 import { Button } from "./Button";
 import { Card, CardContent } from "./Card";
@@ -210,45 +210,15 @@ export const LiveTimerWidget: React.FC = () => {
 
       <CardContent className="p-3 sm:p-4">
         <div className="grid gap-3 xl:grid-cols-[minmax(15rem,0.75fr)_minmax(0,2.75fr)_auto] xl:items-end">
-          <section className="relative h-full min-h-[82px] overflow-hidden rounded-xl border border-primary-strong/12 bg-linear-to-br from-primary/25 via-bg-accent/85 to-white/70 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
+          <section className="relative h-11 min-h-11 overflow-hidden rounded-xl border border-primary-strong/12 bg-linear-to-br from-primary/25 via-bg-accent/85 to-white/70 px-4 py-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
             <div
               className="pointer-events-none absolute -top-12 -right-10 h-28 w-28 rounded-full border border-primary-strong/10 bg-primary/15"
               aria-hidden="true"
             />
 
-            <div className="relative flex items-center justify-between gap-2">
-              <div className="flex min-w-0 items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.13em] text-muted-strong">
-                <Clock3 className="h-3.5 w-3.5" aria-hidden="true" />
-                <span className="truncate">
-                  {t("timesheet.liveTimerTitle")}
-                </span>
-              </div>
-              <div className="flex shrink-0 items-center gap-1.5 rounded-full border border-white/65 bg-white/55 px-2 py-1 text-[9px] font-semibold text-muted-strong shadow-[0_1px_2px_rgba(75,87,57,0.06)] backdrop-blur-sm">
-                <span
-                  className={`h-1.5 w-1.5 rounded-full ${
-                    isRunning
-                      ? "animate-pulse bg-primary-strong"
-                      : "bg-muted/45"
-                  }`}
-                  aria-hidden="true"
-                />
-                {isRunning
-                  ? t("timesheet.activeTimer")
-                  : t("timesheet.readyToStart")}
-              </div>
-            </div>
-
-            <div className="relative mt-2 font-mono text-[27px] leading-none font-semibold tracking-[0.09em] tabular-nums text-text">
+            <div className="relative flex h-full items-center justify-center font-mono text-[27px] leading-none font-semibold tracking-[0.09em] tabular-nums text-text">
               {timerDisplay}
             </div>
-            <p
-              className="relative mt-1 truncate text-[10.5px] text-muted"
-              aria-live="polite"
-            >
-              {isRunning
-                ? t("timesheet.timerRunning")
-                : t("timesheet.timerIdle")}
-            </p>
           </section>
 
           <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)_minmax(12rem,1.25fr)]">
