@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/useAuth";
@@ -135,15 +135,21 @@ export const LeaveRequestsPage: React.FC = () => {
     [formState.end_date, formState.start_date],
   );
 
-  const openCreateModal = () => {
+  const openCreateModal = useCallback(() => {
+    const currentDateValue = getLocalDateValue(new Date());
     setEditingRequest(null);
     setFormState({
-      start_date: getLocalDateValue(today),
-      end_date: getLocalDateValue(today),
+      start_date: currentDateValue,
+      end_date: currentDateValue,
       weekly_work_hours: profile?.weekly_work_hours ?? 40,
     });
     setIsModalOpen(true);
-  };
+  }, [
+    profile?.weekly_work_hours,
+    setEditingRequest,
+    setFormState,
+    setIsModalOpen,
+  ]);
 
   const openEditModal = (request: LeaveRequest) => {
     setEditingRequest(request);
@@ -160,6 +166,24 @@ export const LeaveRequestsPage: React.FC = () => {
     setIsModalOpen(false);
     setEditingRequest(null);
   };
+
+  useEffect(() => {
+    const handleNewRequestShortcut = (event: KeyboardEvent) => {
+      if (
+        event.ctrlKey &&
+        event.shiftKey &&
+        event.key.toLowerCase() === "n"
+      ) {
+        event.preventDefault();
+        openCreateModal();
+      }
+    };
+
+    window.addEventListener("keydown", handleNewRequestShortcut, true);
+    return () => {
+      window.removeEventListener("keydown", handleNewRequestShortcut, true);
+    };
+  }, [openCreateModal]);
 
   const selectedDates = useMemo(
     () => getLeaveDateRange(formState.start_date, formState.end_date),

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Calendar, ChevronLeft, ChevronRight, List, Plus } from "lucide-react";
@@ -328,7 +328,7 @@ export const TimesheetPage: React.FC = () => {
     setFeedback({ type: "error", message });
   };
 
-  const resetForm = (date = selectedDate) => {
+  const resetForm = useCallback((date = selectedDate) => {
     setFormData({
       work_date: date,
       hours_logged: 8.0,
@@ -337,19 +337,43 @@ export const TimesheetPage: React.FC = () => {
       client_id: "",
       project_id: "",
     });
-  };
+  }, [selectedDate, targetCompanyId]);
 
   const applyMonthChange = (nextDate: Date) => {
     setCurrentDate(nextDate);
     setSelectedDate(getLocalDateValue(nextDate));
   };
 
-  const openCreateModal = () => {
-    if (!canEditEntries) return;
+  const openCreateModal = useCallback(() => {
+    if (!canEditEntries || isSelectedDateLocked) return;
     setEditEntryId(null);
     resetForm();
     setIsModalOpen(true);
-  };
+  }, [
+    canEditEntries,
+    isSelectedDateLocked,
+    resetForm,
+    setEditEntryId,
+    setIsModalOpen,
+  ]);
+
+  useEffect(() => {
+    const handleNewEntryShortcut = (event: KeyboardEvent) => {
+      if (
+        event.ctrlKey &&
+        event.shiftKey &&
+        event.key.toLowerCase() === "n"
+      ) {
+        event.preventDefault();
+        openCreateModal();
+      }
+    };
+
+    window.addEventListener("keydown", handleNewEntryShortcut, true);
+    return () => {
+      window.removeEventListener("keydown", handleNewEntryShortcut, true);
+    };
+  }, [openCreateModal]);
 
   const openEditModal = (entry: TimesheetEntry) => {
     if (!canEditEntries) return;
