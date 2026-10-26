@@ -31,6 +31,7 @@ export interface ModalProps {
   onClose: () => void;
   children: React.ReactNode;
   className?: string;
+  footer?: React.ReactNode;
 }
 
 export type CardProps = React.HTMLAttributes<HTMLDivElement>;

@@ -146,7 +146,10 @@ export interface TimesheetEntryListProps {
   canManageTarget: boolean;
   onFeedback: (feedback: { type: "error" | "success"; message: string }) => void;
   isSelectedDateLocked?: boolean;
-  viewMode: "grid" | "calendar" | "list";
+  lockedDates?: string[];
+  hasEntryFilter?: boolean;
+  loadFailed?: boolean;
+  viewMode: TimesheetViewMode;
 }
 
 export interface TimesheetEntryModalProps {
@@ -156,16 +159,41 @@ export interface TimesheetEntryModalProps {
   clients: Client[];
   projects: Project[];
   onClose: () => void;
-  onSubmit: (event: React.FormEvent) => void;
+  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
   onChange: React.Dispatch<React.SetStateAction<TimesheetFormData>>;
   isSaving: boolean;
+  recentProjects: TimesheetProjectShortcut[];
+  shortcutProjects: Project[];
+  favoriteProjects: TimesheetFavoriteProject[];
+  favoritesLoading: boolean;
+  favoritesError: boolean;
+  isSavingFavorite: boolean;
+  onRetryFavorites: () => void;
+  onToggleFavorite: (task: TimesheetFavoriteProject) => void;
+  feedback: { type: "error" | "success"; message: string } | null;
+}
+
+export interface TimesheetProjectShortcut {
+  client_id: string;
+  project_id: string;
+  hours_logged: number;
+}
+
+export interface TimesheetFavoriteProject {
+  id?: string;
+  client_id: string;
+  project_id: string;
+}
+
+export interface TimesheetEntryPreferences {
+  recentProjects: TimesheetProjectShortcut[];
 }
 
 export interface TimesheetSummaryProps {
   totalMonthlyHours: number;
 }
 
-export type TimesheetViewMode = "grid" | "calendar" | "list";
+export type TimesheetViewMode = "grid" | "calendar" | "list" | "attention";
 
 export interface TimesheetGridRow {
   id: string;

@@ -26,6 +26,15 @@ export const UserManagementPage: React.FC = () => {
   const { t } = useTranslation();
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const pageSize = 25;
+  const refreshMembers = () => {
+    for (const key of ["companyMembers", "review-employees", "timesheet-users", "adminDashboard"]) {
+      void queryClient.invalidateQueries({ queryKey: [key] });
+    }
+  };
+  const onActionError = (error: unknown) => setActionError(error instanceof Error ? error.message : t("users.actionFailed"));
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [sendingResetEmail, setSendingResetEmail] = useState<string | null>(null);
 
@@ -52,24 +61,28 @@ export const UserManagementPage: React.FC = () => {
         company_id: profile!.company_id,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["companyMembers"] });
+      refreshMembers();
     },
   });
 
   const deleteUserMutation = useMutation({
+    onMutate: () => setActionError(null),
+    onError: onActionError,
     mutationFn: (userId: string) => deleteCompanyUser(userId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["companyMembers"] });
+      refreshMembers();
     },
   });
 
   const handleDeleteUser = async (userId: string, fullName: string) => {
+    if (isActionPending) return;
     if (window.confirm(t("users.confirmDeleteUser", { fullName }))) {
       deleteUserMutation.mutate(userId);
     }
   };
 
   const handleSendPasswordReset = async (email: string) => {
+    if (sendingResetEmail) return;
     try {
       setSendingResetEmail(email);
       await sendUserPasswordReset(email);
@@ -84,6 +97,8 @@ export const UserManagementPage: React.FC = () => {
   };
 
   const updateRoleMutation = useMutation({
+    onMutate: () => setActionError(null),
+    onError: onActionError,
     mutationFn: ({
       userId,
       role,
@@ -92,17 +107,21 @@ export const UserManagementPage: React.FC = () => {
       role: "company_admin" | "regular";
     }) => updateUserRole(userId, role),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["companyMembers"] });
+      refreshMembers();
     },
   });
 
   const toggleStatusMutation = useMutation({
+    onMutate: () => setActionError(null),
+    onError: onActionError,
     mutationFn: ({ userId, isActive }: { userId: string; isActive: boolean }) =>
       toggleUserActiveStatus(userId, isActive),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["companyMembers"] });
+      refreshMembers();
     },
   });
+
+  const isActionPending = deleteUserMutation.isPending || updateRoleMutation.isPending || toggleStatusMutation.isPending;
 
   const filteredMembers = members.filter((member) => {
     const matchesSearch =
@@ -115,16 +134,21 @@ export const UserManagementPage: React.FC = () => {
       (filters.status === "active" && member.is_active) ||
       (filters.status === "inactive" && !member.is_active);
 
-    return matchesSearch && matchesRole && matchesStatus;
+    const matchesCompany = !filters.company?.trim() ||
+      (member.companies?.name ?? "").toLowerCase().includes(filters.company.trim().toLowerCase());
+    return matchesSearch && matchesRole && matchesStatus && matchesCompany;
   });
 
   const handleUpdateRole = (member: UserProfile, role: "company_admin" | "regular") => {
-    updateRoleMutation.mutate({ userId: member.id, role });
+    if (!isActionPending && member.role !== role) updateRoleMutation.mutate({ userId: member.id, role });
   };
 
   const handleToggleStatus = (member: UserProfile) => {
-    toggleStatusMutation.mutate({ userId: member.id, isActive: !member.is_active });
+    if (!isActionPending) toggleStatusMutation.mutate({ userId: member.id, isActive: !member.is_active });
   };
+
+  const activePage = Math.min(currentPage, Math.max(1, Math.ceil(filteredMembers.length / pageSize)));
+  const pageMembers = filteredMembers.slice((activePage - 1) * pageSize, activePage * pageSize);
 
   return (
     <div className="mx-auto w-full space-y-6 pb-10">
@@ -134,12 +158,12 @@ export const UserManagementPage: React.FC = () => {
 
       <UserManagementToolbar
         searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
+        onSearchChange={value => { setSearchTerm(value); setCurrentPage(1); }}
         filters={filters}
-        onFiltersChange={setFilters}
+        onFiltersChange={value => { setFilters(value); setCurrentPage(1); }}
         isFilterPopoverOpen={isFilterPopoverOpen}
         onFilterPopoverToggle={() => setIsFilterPopoverOpen((open) => !open)}
-        onFiltersReset={() => setFilters({ role: "all", status: "all" })}
+        onFiltersReset={() => { setFilters({ role: "all", status: "all", company: "" }); setCurrentPage(1); }}
         exportDisabled={isLoading || isError || filteredMembers.length === 0}
         onExport={() => downloadCsv("team-members.csv", [
           [t("users.member"), t("users.emailAddress"), t("users.role"), t("users.status")],
@@ -149,8 +173,15 @@ export const UserManagementPage: React.FC = () => {
 
       {isError ? <LoadError onRetry={() => { void refetch(); }} retrying={isFetching} /> : null}
 
+      {actionError ? <div role="alert" className="rounded-xl border border-danger-border bg-danger-bg px-4 py-3 text-sm text-danger">{actionError}</div> : null}
+
       <UserTable
-        members={filteredMembers}
+        members={pageMembers}
+        currentPage={activePage}
+        pageSize={pageSize}
+        totalCount={filteredMembers.length}
+        onPageChange={setCurrentPage}
+        actionsPending={isActionPending}
         isLoading={isLoading}
         sendingResetEmail={sendingResetEmail}
         onSendPasswordReset={handleSendPasswordReset}

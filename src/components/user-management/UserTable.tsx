@@ -23,6 +23,11 @@ interface UserTableProps {
     role: "company_admin" | "regular",
   ) => void;
   isSuperAdmin: boolean;
+  currentPage: number;
+  pageSize: number;
+  totalCount: number;
+  onPageChange: (page: number) => void;
+  actionsPending: boolean;
 }
 
 export const UserTable: React.FC<UserTableProps> = ({
@@ -34,8 +39,10 @@ export const UserTable: React.FC<UserTableProps> = ({
   onDeleteUser,
   onUpdateRole,
   isSuperAdmin,
+  currentPage, pageSize, totalCount, onPageChange, actionsPending,
 }) => {
   const { t } = useTranslation();
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-surface-strong/84 shadow-card backdrop-blur-xl">
@@ -107,6 +114,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                       >
                         <button
                           type="button"
+                          disabled={actionsPending}
                           onClick={() => onUpdateRole(member, "company_admin")}
                           aria-pressed={member.role === "company_admin"}
                           className={`flex h-7 items-center justify-center rounded-[7px] px-2 text-[10px] font-semibold tracking-[0.045em] transition-[color,background-color,box-shadow] duration-150 ${
@@ -119,6 +127,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                         </button>
                         <button
                           type="button"
+                          disabled={actionsPending}
                           onClick={() => onUpdateRole(member, "regular")}
                           aria-pressed={member.role === "regular"}
                           className={`flex h-7 items-center justify-center rounded-[7px] px-2 text-[10px] font-semibold tracking-[0.045em] transition-[color,background-color,box-shadow] duration-150 ${
@@ -161,7 +170,8 @@ export const UserTable: React.FC<UserTableProps> = ({
                           <button
                             type="button"
                             onClick={() => onSendPasswordReset(member.email)}
-                            disabled={sendingResetEmail === member.email}
+                            aria-label={t("users.sendPasswordReset")}
+                            disabled={Boolean(sendingResetEmail) || actionsPending}
                             className={`p-1.5 rounded-full transition ${
                               sendingResetEmail === member.email
                                 ? "bg-gray-100"
@@ -188,6 +198,8 @@ export const UserTable: React.FC<UserTableProps> = ({
                         <button
                           type="button"
                           onClick={() => onToggleStatus(member)}
+                          disabled={actionsPending}
+                          aria-label={t(member.is_active ? "users.deactivateUser" : "users.reactivateUser")}
                           className={`p-1.5 rounded-full transition ${
                             member.is_active
                               ? "hover:bg-red-50 text-red-600"
@@ -205,6 +217,8 @@ export const UserTable: React.FC<UserTableProps> = ({
                         <button
                           type="button"
                           onClick={() => onDeleteUser(member)}
+                          disabled={actionsPending}
+                          aria-label={t("users.permanentlyDeleteUser")}
                           className="p-1.5 hover:bg-red-50 rounded-full transition text-red-600"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -220,23 +234,24 @@ export const UserTable: React.FC<UserTableProps> = ({
       </div>
 
       <div className="flex items-center justify-between border-t border-border bg-bg-accent/40 px-4 py-3 text-[11px] text-muted">
-        <span>{t("users.showingMembers", { count: members.length })}</span>
+        <span>{t("users.showingMemberRange", { from: totalCount ? (currentPage - 1) * pageSize + 1 : 0, to: Math.min(currentPage * pageSize, totalCount), count: totalCount })}</span>
         <div className="flex items-center gap-2">
           <button
             type="button"
-            className="p-1.5 border border-border-strong rounded-lg text-gray-400 cursor-not-allowed"
+            aria-label={t("users.previousPage")}
+            disabled={isLoading || currentPage <= 1}
+            onClick={() => onPageChange(currentPage - 1)}
+            className="rounded-lg border border-border-strong p-1.5 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
+          <span aria-current="page" className="rounded-lg bg-primary px-3 py-1 font-bold text-primary-foreground">{currentPage} / {totalPages}</span>
           <button
             type="button"
-            className="px-3 py-1 bg-primary text-primary-foreground font-bold rounded-lg"
-          >
-            1
-          </button>
-          <button
-            type="button"
-            className="p-1.5 border border-border-strong rounded-lg hover:bg-gray-200 text-muted"
+            aria-label={t("users.nextPage")}
+            disabled={isLoading || currentPage >= totalPages}
+            onClick={() => onPageChange(currentPage + 1)}
+            className="rounded-lg border border-border-strong p-1.5 text-muted hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <ChevronRight className="w-4 h-4" />
           </button>

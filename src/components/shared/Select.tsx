@@ -480,6 +480,7 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
                   <div
                     id={`${controlId}-disabled-tooltip`}
                     role="tooltip"
+                    data-popover-owner={controlId}
                     style={{
                       ...disabledHintStyles,
                       transform: "translate(-50%, -100%)",
@@ -513,6 +514,7 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
           ? createPortal(
               <div
                 ref={dropdownRef}
+                data-popover-owner={controlId}
                 style={menuStyles ?? undefined}
                 className={cn(
                   "flex flex-col overflow-hidden rounded-xl border border-border-strong bg-surface-strong/95 shadow-[0_12px_32px_rgba(75,87,57,0.14)] backdrop-blur-2xl",

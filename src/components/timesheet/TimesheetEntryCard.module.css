@@ -1,0 +1,42 @@
+.card {
+  container-type: inline-size;
+}
+
+.footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.secondary {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.primary {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  width: 100%;
+  min-width: 0;
+}
+
+/* Calendar columns can stay narrow on a wide screen. Use the card's width. */
+@container (min-width: 26rem) {
+  .footer {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+
+  .primary {
+    grid-column: 2;
+    grid-row: 1;
+    width: auto;
+  }
+
+  .secondary {
+    grid-column: 3;
+  }
+}

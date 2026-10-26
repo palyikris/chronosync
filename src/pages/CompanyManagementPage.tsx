@@ -6,6 +6,7 @@ import { CompanyManagementHeader } from "../components/company-management/Compan
 import { CompanyModal } from "../components/company-management/CompanyModal";
 import { CompanyTable } from "../components/company-management/CompanyTable";
 import { companyService } from "../services/companyService";
+import { LoadError } from "../components/shared/LoadError";
 import type { Company } from "../types/company";
 import type { CompanyFormData } from "../components/company-management/CompanyModal";
 
@@ -26,7 +27,7 @@ export const CompanyManagementPage: React.FC = () => {
     is_active: true,
   });
 
-  const { data: companies = [], isLoading: loading } = useQuery({
+  const { data: companies = [], isLoading: loading, isError, isFetching, refetch } = useQuery({
     queryKey: companyQueryKey,
     queryFn: companyService.getCompanies,
   });
@@ -210,6 +211,8 @@ export const CompanyManagementPage: React.FC = () => {
         onFilterToggle={() => setFilterActiveOnly((prev) => !prev)}
         onAddClick={handleOpenCreateModal}
       />
+
+      {isError ? <LoadError onRetry={() => { void refetch(); }} retrying={isFetching} /> : null}
 
       <CompanyTable
         loading={loading}

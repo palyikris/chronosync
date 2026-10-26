@@ -31,6 +31,7 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading) return;
     setErrorMsg(null);
     try {
       await onSubmit({ email, full_name: fullName, role });
@@ -48,13 +49,13 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
   return (
     <Modal
       open={isOpen}
-      onClose={onClose}
+      onClose={() => { if (!isLoading) onClose(); }}
       title={t("users.inviteNewTeamMember")}
       className="max-w-lg w-full"
     >
       <form onSubmit={handleSubmit} className="space-y-4 pt-2 p-4">
         {errorMsg && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-200">
+          <div role="alert" className="bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-200">
             {errorMsg}
           </div>
         )}
@@ -96,6 +97,7 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
             type="button"
             variant="outline"
             onClick={onClose}
+            disabled={isLoading}
             className="flex-1"
           >
             {t("common.cancel")}

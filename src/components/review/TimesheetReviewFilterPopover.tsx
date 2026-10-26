@@ -1,6 +1,8 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Filter, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { PopoverPanel } from "../shared/PopoverPanel";
+import { usePopoverDismiss } from "../../hooks/usePopoverDismiss";
 import { Button } from "../shared/Button";
 import { DatePicker } from "../shared/DatePicker";
 import { Select } from "../shared/Select";
@@ -42,21 +44,10 @@ export const TimesheetReviewFilterPopover: React.FC<
 }) => {
   const { t } = useTranslation();
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onToggle();
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isOpen, onToggle]);
+  const root = React.useRef<HTMLDivElement>(null);
+  const trigger = React.useRef<HTMLButtonElement>(null);
+  const popoverId = React.useId();
+  usePopoverDismiss(isOpen, root, trigger, onToggle);
 
   const selectedClient = filters.clientId
     ? (clients.find((client) => client.id === filters.clientId) ?? null)
@@ -76,8 +67,12 @@ export const TimesheetReviewFilterPopover: React.FC<
     Boolean(filters.clientId);
 
   return (
-    <div className="relative inline-block text-left">
+    <div ref={root} className="relative inline-block text-left">
       <Button
+        ref={trigger}
+        id={`${popoverId}-trigger`}
+        aria-expanded={isOpen}
+        aria-controls={isOpen ? popoverId : undefined}
         type="button"
         variant={hasActiveFilters ? "outline" : "secondary"}
         onClick={onToggle}
@@ -92,7 +87,7 @@ export const TimesheetReviewFilterPopover: React.FC<
       </Button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-120 max-w-[calc(100vw-1.5rem)] bg-white rounded-2xl border border-border-strong shadow-xl p-4 z-50 animate-in fade-in zoom-in-95 duration-150">
+        <PopoverPanel id={popoverId} trigger={trigger} title={t("timesheetReview.filterReview")} width={480}>
           <div className="flex justify-between items-center mb-3 pb-2 border-b border-border">
             <span className="font-bold text-sm text-text">
               {t("timesheetReview.filterReview")}
@@ -249,7 +244,7 @@ export const TimesheetReviewFilterPopover: React.FC<
             />
             {/* </div> */}
           </div>
-        </div>
+        </PopoverPanel>
       )}
     </div>
   );

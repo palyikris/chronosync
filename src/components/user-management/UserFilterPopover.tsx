@@ -2,6 +2,8 @@ import React from "react";
 import { Filter, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/useAuth";
+import { PopoverPanel } from "../shared/PopoverPanel";
+import { usePopoverDismiss } from "../../hooks/usePopoverDismiss";
 
 export interface UserFilterState {
   role: "all" | "company_admin" | "regular";
@@ -25,12 +27,21 @@ export const UserFilterPopover: React.FC<UserFilterPopoverProps> = ({
   onReset,
 }) => {
   const { t } = useTranslation();
-  const hasActiveFilters = filters.role !== "all" || filters.status !== "all";
+  const root = React.useRef<HTMLDivElement>(null);
+  const trigger = React.useRef<HTMLButtonElement>(null);
+  const popoverId = React.useId();
+  usePopoverDismiss(isOpen, root, trigger, onToggle);
+  const hasActiveFilters = filters.role !== "all" || filters.status !== "all" || Boolean(filters.company?.trim());
   const { profile } = useAuth();
 
   return (
-    <div className="relative inline-block text-left">
+    <div ref={root} className="relative inline-block text-left">
       <button
+        ref={trigger}
+        id={`${popoverId}-trigger`}
+        type="button"
+        aria-expanded={isOpen}
+        aria-controls={isOpen ? popoverId : undefined}
         onClick={onToggle}
         className={`flex items-center gap-2 px-4 py-2.5 border rounded-xl transition text-sm font-medium ${
           hasActiveFilters
@@ -46,7 +57,7 @@ export const UserFilterPopover: React.FC<UserFilterPopoverProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 z-50 mt-2 w-64 rounded-2xl border border-border-strong bg-white p-4 shadow-xl animate-in fade-in zoom-in-95 duration-150">
+        <PopoverPanel id={popoverId} trigger={trigger} title={t("users.filterMembers")} width={256}>
           <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-100">
             <span className="text-sm font-bold text-text">
               {t("users.filterMembers")}
@@ -56,7 +67,7 @@ export const UserFilterPopover: React.FC<UserFilterPopoverProps> = ({
                 onClick={onReset}
                 className="text-xs text-red-600 font-semibold hover:underline flex items-center gap-1"
               >
-                <X className="w-3 h-3" /> {t("common.cancel")}
+                <X className="w-3 h-3" /> {t("users.resetFilters")}
               </button>
             )}
           </div>
@@ -68,6 +79,7 @@ export const UserFilterPopover: React.FC<UserFilterPopoverProps> = ({
                 {t("users.role")}
               </label>
               <select
+                aria-label={t("users.role")}
                 value={filters.role}
                 onChange={(e) =>
                   onChange({
@@ -79,7 +91,7 @@ export const UserFilterPopover: React.FC<UserFilterPopoverProps> = ({
               >
                 <option value="all">{t("users.allRoles")}</option>
                 <option value="regular">{t("users.regularUsers")}</option>
-                <option value="admin">{t("users.companyAdmins")}</option>
+                <option value="company_admin">{t("users.companyAdmins")}</option>
               </select>
             </div>
 
@@ -89,6 +101,7 @@ export const UserFilterPopover: React.FC<UserFilterPopoverProps> = ({
                 {t("users.status")}
               </label>
               <select
+                aria-label={t("users.status")}
                 value={filters.status}
                 onChange={(e) =>
                   onChange({
@@ -112,7 +125,8 @@ export const UserFilterPopover: React.FC<UserFilterPopoverProps> = ({
                 </label>
                 <input
                   type="text"
-                  value={filters.company}
+                  aria-label={t("users.company")}
+                  value={filters.company ?? ""}
                   onChange={(e) =>
                     onChange({
                       ...filters,
@@ -125,7 +139,7 @@ export const UserFilterPopover: React.FC<UserFilterPopoverProps> = ({
               </div>
             )}
           </div>
-        </div>
+        </PopoverPanel>
       )}
     </div>
   );

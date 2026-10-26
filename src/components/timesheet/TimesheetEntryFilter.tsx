@@ -1,5 +1,5 @@
 import React from "react";
-import { ChevronRight, X } from "lucide-react";
+import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../shared/Button";
 import { Card } from "../shared/Card";
@@ -43,6 +43,7 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
   onReset,
 }) => {
   const { t } = useTranslation();
+  const filterPanelId = React.useId();
   const [isCollapsed, setIsCollapsed] = React.useState(
     getInitialCollapsedState,
   );
@@ -106,27 +107,47 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
   }, [isCollapsed]);
 
   return (
-    <Card className="relative z-10 min-w-0 overflow-visible p-2.5 sm:p-3">
-      <div className="flex min-w-0 flex-col gap-2.5 xl:flex-row xl:items-center xl:justify-between">
-        <div className="flex w-full min-w-0 items-center xl:w-auto">
+    <Card role="region" aria-label={t("timesheet.filterEntries")} className="relative z-10 min-w-0 p-3 sm:p-4">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
+        <div className="w-full min-w-0 sm:w-auto">
           {viewModeSwitcher}
         </div>
-
-        <div className="flex min-w-0 items-center gap-3 transition-all duration-300 ease-out">
-          <div
-            inert={isCollapsed}
-            className={cn(
-              "grid min-w-0 flex-1 gap-2 overflow-hidden transition-all duration-300 ease-out sm:grid-cols-2 sm:items-end xl:flex xl:items-center",
-              isCollapsed
-                ? "pointer-events-none max-w-0 translate-x-[-10px] opacity-0"
-                : "max-w-[600px] translate-x-0 opacity-100",
-            )}
+        <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto">
+          <Button
+            type="button"
+            variant={isCollapsed ? "outline" : "secondary"}
+            size="sm"
+            className="min-w-0 flex-auto [&>span]:whitespace-normal [&>span]:leading-5 sm:flex-none"
+            aria-expanded={!isCollapsed}
+            aria-controls={filterPanelId}
+            onClick={() => setIsCollapsed((collapsed) => !collapsed)}
+            icon={<SlidersHorizontal className="h-4 w-4" />}
           >
+            {isCollapsed ? t("timesheet.filtersExpand") : t("timesheet.filtersCollapse")}
+            <ChevronDown className={cn("shrink-0 transition-transform", !isCollapsed && "rotate-180")} aria-hidden="true" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onReset}
+            disabled={!selectedClientId && !selectedProjectId}
+            icon={<X className="h-4 w-4" />}
+            className="min-w-0 flex-auto [&>span]:whitespace-normal [&>span]:leading-5 sm:flex-none"
+          >
+            {t("common.clearFilters")}
+          </Button>
+        </div>
+      </div>
+
+      <div id={filterPanelId} hidden={isCollapsed}>
+        {!isCollapsed ? (
+          <div className="mt-4 grid min-w-0 gap-3 border-t border-border pt-4 sm:grid-cols-2">
             <Select
               value={selectedClientId}
               onChange={(event) => onClientChange(event.target.value)}
               label={t("timesheet.client")}
-              className="w-full min-w-0 [&_.auth-input]:min-h-11 [&_.auth-input]:py-2 xl:w-[280px] xl:shrink-0"
+              className="w-full min-w-0 [&_.auth-input]:min-h-11 [&_.auth-input]:py-2"
             >
               <option value="">{t("timesheet.allClients")}</option>
               {availableClients.map((client) => (
@@ -140,7 +161,7 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
               value={selectedProjectId}
               onChange={(event) => onProjectChange(event.target.value)}
               label={t("timesheet.project")}
-              className="w-full min-w-0 [&_.auth-input]:min-h-11 [&_.auth-input]:py-2 xl:w-[280px] xl:shrink-0"
+              className="w-full min-w-0 [&_.auth-input]:min-h-11 [&_.auth-input]:py-2"
               disabled={!selectedClientId}
               disabledReason={t("common.selectClientFirst")}
             >
@@ -156,45 +177,7 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
               ))}
             </Select>
           </div>
-
-          <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className={cn(
-                "min-w-0 flex-1 px-2.5 transition-[transform,background-color,border-color,box-shadow] duration-300 ease-out [&>span]:min-w-0 [&>span]:whitespace-normal [&>span]:text-center [&>span]:leading-tight sm:flex-none sm:px-4",
-                !isCollapsed && "translate-x-1",
-              )}
-              aria-expanded={!isCollapsed}
-              onClick={() => setIsCollapsed((open) => !open)}
-              icon={
-                <ChevronRight
-                  className={cn(
-                    "h-4 w-4 transition-transform duration-300 ease-out",
-                    !isCollapsed && "rotate-180",
-                  )}
-                />
-              }
-            >
-              {isCollapsed
-                ? t("timesheet.filtersExpand")
-                : t("timesheet.filtersCollapse")}
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={onReset}
-              disabled={!selectedClientId && !selectedProjectId}
-              icon={<X className="text-danger" />}
-              className="min-w-0 flex-1 border-danger/30 px-2.5 [&>span]:min-w-0 [&>span]:whitespace-normal [&>span]:text-center [&>span]:leading-tight sm:flex-none sm:px-4"
-            >
-              {t("common.clearFilters")}
-            </Button>
-          </div>
-        </div>
+        ) : null}
       </div>
     </Card>
   );

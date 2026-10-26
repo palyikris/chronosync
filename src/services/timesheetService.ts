@@ -1,5 +1,6 @@
 import { supabase } from "../lib/supabaseClient";
 import i18n from "../lib/i18n";
+import { fetchAllRows } from "../utils/fetchAllRows";
 import { assertTimesheetDateIsUnlocked } from "./leaveService";
 import {
   newTimesheetPayloadSchema,
@@ -129,6 +130,25 @@ export async function fetchUserTimesheets(
 
   if (error) throw error;
   return data as TimesheetEntry[];
+}
+
+/** Fetch unresolved entries across every date, with rejections first. */
+export async function fetchUserAttentionTimesheets(
+  targetUserId?: string,
+): Promise<TimesheetEntry[]> {
+  const user = await getCurrentUser();
+
+  return fetchAllRows<TimesheetEntry>((from, to) =>
+    supabase
+      .from("timesheets")
+      .select("*")
+      .eq("user_id", targetUserId ?? user.id)
+      .in("status", ["draft", "rejected"])
+      .order("status", { ascending: false })
+      .order("work_date", { ascending: true })
+      .order("id", { ascending: true })
+      .range(from, to),
+  );
 }
 
 export async function fetchSelectableCompanyUsers(
@@ -356,6 +376,7 @@ export async function deleteTimesheetEntry(id: string): Promise<void> {
 export async function updateTimesheetEntry(
   id: string,
   payload: TimesheetEntryUpdatePayload,
+  { resubmit = false }: { resubmit?: boolean } = {},
 ): Promise<TimesheetEntry> {
   const validatedPayload = timesheetEntryUpdatePayloadSchema.parse(payload);
 
@@ -397,13 +418,14 @@ export async function updateTimesheetEntry(
       ...(validatedPayload.project_id !== undefined && {
         project_id: validatedPayload.project_id,
       }),
-      status: "draft",
-      submitted_at: null,
+      status: resubmit ? "submitted" : "draft",
+      submitted_at: resubmit ? new Date().toISOString() : null,
       approved_by: null,
       approved_at: null,
       rejection_reason: null,
     })
     .eq("id", id)
+    .in("status", resubmit ? ["rejected"] : ["draft", "rejected"])
     .select()
     .single();
 

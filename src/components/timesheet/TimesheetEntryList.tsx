@@ -1,16 +1,11 @@
 import React, { useMemo, useState } from "react";
-import {
-  CalendarCheck2,
-  Copy,
-  Edit,
-  History,
-  Trash2,
-  Undo2,
-} from "lucide-react";
+import { CalendarCheck2, CircleAlert, FileText } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../shared/Button";
 import { Card, CardContent, CardHeader } from "../shared/Card";
 import { Select } from "../shared/Select";
+import { TimesheetEntryCard } from "./TimesheetEntryCard";
+import styles from "./TimesheetEntryList.module.css";
 import type { TimesheetEntryListProps } from "../../types/timesheet";
 import {
   revertSubmittedTimesheetEntries,
@@ -39,8 +34,13 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
   canManageTarget,
   onFeedback,
   isSelectedDateLocked = false,
+  lockedDates = [],
+  hasEntryFilter = false,
+  loadFailed = false,
+  viewMode,
 }) => {
   const { t, i18n } = useTranslation();
+  const isAttentionView = viewMode === "attention";
   const selectedDayLabel = new Date(
     `${selectedDate}T12:00:00`,
   ).toLocaleDateString(i18n.language, {
@@ -146,31 +146,57 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
   );
 
   return (
-    <Card className="flex h-full flex-col">
+    <Card className="flex h-full min-w-0 flex-col">
       <CardHeader className="bg-primary/15 px-4 py-3.5 sm:px-5 sm:py-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
-              {t("timesheet.selectedDay")}
-            </p>
-            <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-              <h3 className="text-lg font-bold text-text">{selectedDayLabel}</h3>
-              <span className="text-xs font-semibold tabular-nums text-primary-strong">
-                {totalDailyHours.toFixed(2)} h
+        {isAttentionView ? (
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-white/75 text-primary-strong">
+                <CircleAlert className="h-4 w-4" aria-hidden="true" />
               </span>
+              <div className="min-w-0">
+                <h2 className="text-base font-semibold text-text">{t("timesheet.needsAttention")}</h2>
+                <p className="mt-1 text-[13px] leading-5 text-muted">{t("timesheet.needsAttentionDescription")}</p>
+              </div>
             </div>
-            {isSelectedDateLocked ? (
-              <p className="mt-1 text-xs font-semibold text-amber-700">
-                {t("leave.dateLockedForLeave")}
-              </p>
+            {!loading && !loadFailed ? (
+              <div className="flex flex-wrap gap-2 text-xs font-medium">
+                <span className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-rose-700">
+                  {t("timesheet.rejected")}
+                  <span className="font-semibold tabular-nums">{entries.filter(entry => entry.status === "rejected").length}</span>
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/75 px-2.5 py-1 text-slate-700">
+                  {t("timesheet.draft")}
+                  <span className="font-semibold tabular-nums">{entries.filter(entry => entry.status === "draft").length}</span>
+                </span>
+              </div>
             ) : null}
           </div>
-        </div>
+        ) : (
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
+                {t("timesheet.selectedDay")}
+              </p>
+              <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                <h3 className="text-lg font-bold text-text">{selectedDayLabel}</h3>
+                <span className="text-xs font-semibold tabular-nums text-primary-strong">
+                  {totalDailyHours.toFixed(2)} h
+                </span>
+              </div>
+              {isSelectedDateLocked ? (
+                <p className="mt-1 text-xs font-semibold text-amber-700">
+                  {t("leave.dateLockedForLeave")}
+                </p>
+              ) : null}
+            </div>
+          </div>
+        )}
       </CardHeader>
 
-      {canManageTarget ? (
-        <div className="flex flex-col gap-2 border-b border-border bg-primary/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-          <div className="flex min-w-0 items-center gap-2">
+      {canManageTarget && !isAttentionView ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-primary/5 px-4 py-3">
+          <div className="flex min-w-0 flex-[1_1_10rem] items-center gap-2">
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] bg-primary/15 text-primary-strong">
               <CalendarCheck2 className="h-3.5 w-3.5" aria-hidden="true" />
             </span>
@@ -187,151 +213,48 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
         </div>
       ) : null}
 
-      <CardContent className="flex-1 space-y-3 overflow-y-auto p-3 sm:p-4">
+      <CardContent className={`min-w-0 flex-1 p-3 sm:p-4 ${isAttentionView ? styles.attentionEntries : "space-y-3"}`}>
         {loading ? (
-          <div className="py-8 text-center text-sm text-muted">
+          <div className="col-span-full py-8 text-center text-sm text-muted">
             {t("timesheet.loadingEntries")}
           </div>
-        ) : entries.length === 0 ? (
-          <div className="space-y-3 py-10 text-center text-sm text-muted">
-            <p>{t("timesheet.noEntries")}</p>
-            <p>{t("timesheet.addFirstEntry")}</p>
+        ) : loadFailed ? null : entries.length === 0 ? (
+          <div className="col-span-full space-y-3 py-10 text-center text-sm text-muted">
+            {isAttentionView ? (
+              <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-bg-accent text-primary-strong">
+                {hasEntryFilter ? <FileText className="h-5 w-5" aria-hidden="true" /> : <CalendarCheck2 className="h-5 w-5" aria-hidden="true" />}
+              </span>
+            ) : null}
+            <p className={isAttentionView ? "font-semibold text-text" : undefined}>
+              {t(isAttentionView
+                ? hasEntryFilter ? "timesheet.noAttentionMatches" : "timesheet.allCaughtUp"
+                : "timesheet.noEntries")}
+            </p>
+            <p>{t(isAttentionView
+              ? hasEntryFilter ? "timesheet.clearAttentionFilters" : "timesheet.noAttentionEntries"
+              : "timesheet.addFirstEntry")}</p>
           </div>
         ) : (
-          entries.map((entry) => {
-            const status = entry.status
-              ? t(`timesheet.${entry.status}`)
-              : t("timesheet.draft");
-
-            const statusColorClass = (() => {
-              switch (entry.status) {
-                case "draft":
-                  return "border-slate-300 bg-slate-100 text-slate-800";
-                case "submitted":
-                  return "border-blue-200 bg-blue-50 text-blue-800";
-                case "approved":
-                  return "border-green-200 bg-green-100 text-green-800";
-                case "rejected":
-                  return "border-red-300 bg-red-50 text-red-800";
-                case "invoiced":
-                  return "border-purple-200 bg-purple-50 text-purple-800";
-                default:
-                  return "border-slate-300 bg-slate-100 text-slate-800";
-              }
-            })();
-
-            return (
-              <div
-                key={entry.id}
-                className="group relative rounded-xl border border-border-strong bg-surface-strong p-3 shadow-[0_1px_2px_rgba(75,87,57,0.035)] transition-[border-color,box-shadow,transform] duration-300 ease-out hover:-translate-y-0.5 hover:border-primary-strong/30 hover:shadow-card-hover sm:p-4"
-              >
-                <div className="mb-2 flex items-start justify-between gap-3">
-                  <div className="flex min-w-0 flex-col gap-0.5">
-                    <span className="truncate text-xs font-bold uppercase tracking-[0.08em] text-muted-strong">
-                      {clients.find((client) => client.id === entry.client_id)?.name ??
-                        t("timesheet.unknownClient")}
-                    </span>
-                    <span className="truncate text-[13px] text-muted">
-                      {projects.find((project) => project.id === entry.project_id)?.name ??
-                        t("timesheet.unknownProject")}
-                    </span>
-                  </div>
-                  <span className="shrink-0 text-sm font-bold text-primary-strong">
-                    {entry.hours_logged} hrs
-                  </span>
-                </div>
-
-                <p className="mb-3 break-words text-sm font-normal leading-5 text-text">
-                  {entry.description || t("timesheet.noDescription")}
-                </p>
-
-                <div className="flex flex-col items-stretch gap-2 text-[13px] text-muted sm:flex-row sm:items-center sm:justify-between">
-                  <span className="flex items-center gap-1">
-                    <History className="h-3.5 w-3.5" />
-                    <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${statusColorClass}`}>
-                      {status}
-                    </span>
-                  </span>
-
-                  {canManageTarget ? (
-                    <div className="flex flex-wrap items-center justify-end gap-1 rounded-lg border border-border bg-bg-accent/45 p-0.5">
-                      {entry.status === "draft" ||
-                      entry.status === "rejected" ? (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onEditEntry(entry)}
-                          disabled={isUpdating}
-                          className="text-primary-strong hover:bg-green-100"
-                          tooltip={t("timesheet.editEntry")}
-                          aria-label={t("timesheet.editEntry")}
-                          icon={<Edit className="h-4 w-4" />}
-                        ></Button>
-                      ) : null}
-
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onDuplicateEntry(entry)}
-                        disabled={isDuplicating || isSelectedDateLocked}
-                        className="text-indigo-600 hover:bg-indigo-50"
-                        tooltip={t("timesheet.copyEntry")}
-                        aria-label={t("timesheet.copyEntry")}
-                        icon={<Copy className="h-4 w-4" />}
-                      ></Button>
-
-                      {entry.status === "submitted" ? (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleRevertToDraft([entry.id])}
-                          disabled={isStatusUpdating}
-                          className="text-indigo-600 hover:bg-indigo-50"
-                          tooltip={t("timesheet.revertToDraft")}
-                          aria-label={t("timesheet.revertToDraft")}
-                          icon={<Undo2 className="w-4 h-4" />}
-                        ></Button>
-                      ) : null}
-
-                      {entry.status === "draft" ||
-                      entry.status === "rejected" ? (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onDeleteEntry(entry.id)}
-                          disabled={isDeleting}
-                          className="text-danger hover:bg-red-50"
-                          tooltip={t("timesheet.deleteEntry")}
-                          aria-label={t("timesheet.deleteEntry")}
-                          icon={<Trash2 className="h-4 w-4" />}
-                        ></Button>
-                      ) : null}
-
-                      {entry.status === "draft" ? (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleSubmitSingleEntry(entry.id)}
-                          disabled={isUpdating || isStatusUpdating}
-                          className="text-green-600 hover:bg-green-50"
-                          tooltip={t("timesheet.submitEntry")}
-                          aria-label={t("timesheet.submitEntry")}
-                          icon={<CalendarCheck2 className="h-4 w-4" />}
-                        ></Button>
-                      ) : null}
-                    </div>
-                  ) : (
-                    <>
-                      <span className="text-xs text-muted">Read only</span>
-                      <span className="text-xs text-muted">
-                        {t("timesheet.readOnly")}
-                      </span>
-                    </>
-                  )}
-                </div>
-              </div>
-            );
-          })
+          entries.map((entry) => (
+            <TimesheetEntryCard
+              key={entry.id}
+              entry={entry}
+              clientName={clients.find(client => client.id === entry.client_id)?.name ?? t("timesheet.unknownClient")}
+              projectName={projects.find(project => project.id === entry.project_id)?.name ?? t("timesheet.unknownProject")}
+              showDate={isAttentionView}
+              canManage={canManageTarget}
+              isDateLocked={isAttentionView ? lockedDates.includes(entry.work_date) : isSelectedDateLocked}
+              isUpdating={isUpdating}
+              isDuplicating={isDuplicating}
+              isDeleting={isDeleting}
+              isStatusUpdating={isStatusUpdating}
+              onEdit={() => onEditEntry(entry)}
+              onDuplicate={() => onDuplicateEntry(entry)}
+              onDelete={() => onDeleteEntry(entry.id)}
+              onSubmit={() => handleSubmitSingleEntry(entry.id)}
+              onRevert={() => handleRevertToDraft([entry.id])}
+            />
+          ))
         )}
       </CardContent>
 

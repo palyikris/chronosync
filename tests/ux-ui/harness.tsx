@@ -5,6 +5,7 @@ import i18n from "../../src/lib/i18n";
 import { Modal } from "../../src/components/shared/Modal";
 import { Select } from "../../src/components/shared/Select";
 import { Input } from "../../src/components/shared/Input";
+import { InviteUserModal } from "../../src/components/user-management/InviteUserModal";
 import { Button } from "../../src/components/shared/Button";
 void i18n.changeLanguage("en");
 
@@ -12,6 +13,16 @@ export function Harness() {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const [submits, setSubmits] = useState(0);
+  const [invitePending, setInvitePending] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(true);
+  if (new URLSearchParams(location.search).get("mode") === "invite") return <InviteUserModal
+    isOpen={inviteOpen} onClose={() => setInviteOpen(false)} isLoading={invitePending}
+    onSubmit={async () => {
+      setInvitePending(true);
+      await new Promise(resolve => window.setTimeout(resolve, 350));
+      setInvitePending(false);
+      throw new Error("Test invitation failure");
+    }} />;
   return <main className="p-5">
     <Button onClick={() => setOpen(true)}>Open form</Button>
     <output data-testid="submits">{submits}</output>

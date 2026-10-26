@@ -23,12 +23,26 @@ Reviewed the login, timesheet, leave, dashboard, review, team, company settings,
 | Login recovery/access controls had no useful result. | Show clear company-administrator instructions for password recovery and account access. |
 | Invoice attachments had no page heading. | Add a consistent page title. |
 
+## Follow-up admin pass
+
+| Issue | Fix |
+| --- | --- |
+| Selecting company administrators used `admin` instead of the stored `company_admin` role. | Correct the filter value and verify it against mixed-role member lists. |
+| The super-admin company filter never affected the table. | Match company names case-insensitively and include company filtering in reset/active-filter state. |
+| Team pagination controls were placeholders. | Paginate at 25 members, reset the page after filtering, clamp after list changes, and disable unavailable navigation. CSV export still includes every filtered member. |
+| Failed member role/status/delete actions had no feedback; repeated clicks could conflict. | Show action errors, disable conflicting actions while saving, skip unchanged roles, and serialize password-reset requests. |
+| Filter panels could open beyond the phone viewport and did not dismiss consistently. | Position shared panels within the viewport, support outside click/Escape and focus restoration, and preserve nested portaled dropdown interactions. |
+| Hiding company client/project filters cleared the user's search. | Preserve filter values while collapsing the controls. |
+| Company settings repeatedly fetched data already loaded by timesheets, while saves could leave other views stale. | Share company-scoped client/project queries and invalidate dependent selectors, reports, review data, and invoice selections. Refresh invoice provider settings after a save. |
+| Failed settings loads could appear as empty data or default provider settings. | Render loading/error states before editable controls and expose retry actions. Company-list failures now have retry controls too. |
+| Closing a dialog during an invitation or client/project write could hide the outcome. | Prevent dismissal during writes, disable client/project modal controls while saving, and retain invitation details on failure. |
+
 ## Verification
 
 - Production build and TypeScript checks pass.
 - ESLint passes.
-- The Node unit suite passes across 10 test files, including CSV and audit-query regressions.
-- 54 browser UX checks pass against an immutable production build with mocked API responses; shared-component checks run through the local Vite harness.
+- The Node unit suite passes across 11 test files, including CSV and audit-query regressions.
+- 77 browser UX checks pass against an immutable production build with mocked API responses; shared-component checks run through the local Vite harness.
 - 14 existing invoice UI checks pass on desktop and mobile.
 - Mobile dashboard and entry-dialog screenshots were inspected.
 

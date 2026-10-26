@@ -16,7 +16,6 @@ import {
   Search,
   Settings2,
   ShieldCheck,
-  Send,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -569,10 +568,6 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
       .includes(normalizedSearch),
   );
 
-  const readyCount = clientRows.filter(({ readiness }) => readiness.complete).length;
-  const issuedCount = (historyQuery.data ?? []).filter(
-    (invoice) => invoice.status === "issued",
-  ).length;
   const draftReadiness = draft ? getBillingProfileReadiness(draft) : null;
   const savedProfileReadiness = selectedStoredProfile
     ? getBillingProfileReadiness(selectedStoredProfile)
@@ -760,46 +755,6 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
           </Link>
         </div>
       </header>
-
-      <section className="grid gap-3 sm:grid-cols-3">
-        {[
-          {
-            label: t("clientBilling.totalClients"),
-            value: clientRows.length,
-            detail: t("clientBilling.totalClientsDetail"),
-            icon: <ReceiptText />,
-          },
-          {
-            label: t("clientBilling.readyProfiles"),
-            value: readyCount,
-            detail: t("clientBilling.readyProfilesDetail", {
-              total: clientRows.length,
-            }),
-            icon: <FileCheck2 />,
-          },
-          {
-            label: t("clientBilling.issuedInvoices"),
-            value: issuedCount,
-            detail: t("clientBilling.issuedInvoicesDetail"),
-            icon: <Send />,
-          },
-        ].map((metric) => (
-          <Card key={metric.label} className="p-4">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-[11px] font-medium text-muted">{metric.label}</p>
-                <p className="mt-1 text-[22px] font-semibold tracking-[-0.035em] text-text">
-                  {metric.value}
-                </p>
-                <p className="mt-0.5 text-[10.5px] text-muted">{metric.detail}</p>
-              </div>
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/12 text-primary-strong [&>svg]:h-4.5 [&>svg]:w-4.5">
-                {metric.icon}
-              </div>
-            </div>
-          </Card>
-        ))}
-      </section>
 
       {!integrationConfigured && !invoiceSettingsQuery.isLoading ? (
         <div className="flex flex-col gap-3 rounded-2xl border border-warning/20 bg-warning-bg/70 px-4 py-3.5 text-warning sm:flex-row sm:items-center sm:justify-between">

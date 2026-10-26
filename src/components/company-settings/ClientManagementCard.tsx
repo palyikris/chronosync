@@ -167,7 +167,7 @@ export const ClientManagementCard: React.FC<Props> = ({
   };
 
   const handleUpdate = async () => {
-    if (!editingClient) return;
+    if (!editingClient || loading) return;
 
     const clientName = editingClient.name.trim();
     const clientCode = normalizeClientCode(editingClient.client_code);
@@ -473,10 +473,6 @@ export const ClientManagementCard: React.FC<Props> = ({
                 !isClientFiltersCollapsed && "translate-x-1",
               )}
               onClick={() => {
-                if (!isClientFiltersCollapsed) {
-                  setClientSearchTerm("");
-                  setClientStatusFilter("all");
-                }
                 setIsClientFiltersCollapsed((value) => !value);
               }}
               icon={
@@ -661,11 +657,11 @@ export const ClientManagementCard: React.FC<Props> = ({
       {editingClient && (
         <Modal
           open={!!editingClient}
-          onClose={() => setEditingClient(null)}
+          onClose={() => { if (!loading) setEditingClient(null); }}
           title={t("companySettings.editClient")}
           className="w-xl max-w-full"
         >
-          <div className="space-y-4 p-4">
+          <fieldset disabled={loading} className="min-w-0 space-y-4 p-4">
             <Input
               id="edit-client-name"
               type="text"
@@ -794,7 +790,7 @@ export const ClientManagementCard: React.FC<Props> = ({
                 {t("companySettings.saveChanges")}
               </Button>
             </div>
-          </div>
+          </fieldset>
         </Modal>
       )}
 
@@ -802,10 +798,10 @@ export const ClientManagementCard: React.FC<Props> = ({
       {deletingClientId && (
         <Modal
           open={!!deletingClientId}
-          onClose={() => setDeletingClientId(null)}
+          onClose={() => { if (!loading) setDeletingClientId(null); }}
           title={t("companySettings.deleteClient")}
         >
-          <div className="space-y-4 p-4">
+          <fieldset disabled={loading} className="min-w-0 space-y-4 p-4">
             <p className="text-sm text-slate-600">
               {t("companySettings.confirmDeleteClient")}
             </p>
@@ -828,7 +824,7 @@ export const ClientManagementCard: React.FC<Props> = ({
                 {t("companySettings.confirmDelete")}
               </Button>
             </div>
-          </div>
+          </fieldset>
         </Modal>
       )}
 

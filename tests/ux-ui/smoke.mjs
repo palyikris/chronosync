@@ -45,7 +45,7 @@ async function app(role='regular', options={}) {
   const profile={...user,company_id:companyId,full_name:'Test Person',role,is_active:true,weekly_work_hours:40,show_timesheet_timer:false,company:{is_active:true},companies:{name:'Test company'}};
   const client={id:clientId,company_id:companyId,name:'Test client',client_code:'TEST',is_active:true,is_default:true,invoice_attachment_language:'en',available_hours_per_month:40,hours_from_previous_month:0};
   const project={id:projectId,client_id:clientId,company_id:companyId,name:'Test project',is_active:true,estimated_hours_per_month:40,clients:client};
-  const state={profile,fail:options.fail??null,requests:[],patches:[],session,profileReads:0};
+  const state={profile, members:options.members ?? [profile], client, project, fail:options.fail??null, requests:[],patches:[],session,profileReads:0,patchDelay:0,patchFailure:false};
   await context.addInitScript(({session,options})=>{
     localStorage.setItem('i18nextLng','en');
     if(!options.loggedOut)localStorage.setItem('sb-127-auth-token',JSON.stringify(session));
@@ -63,13 +63,22 @@ async function app(role='regular', options={}) {
     if(state.fail===table && (table!=='profiles'||!url.searchParams.get('select')?.includes('company:')))return json({message:'Test load failure'},400);
     if(req.method()==='PATCH'){
       state.patches.push({table,data:req.postDataJSON()});
-      if(table==='profiles')Object.assign(profile,req.postDataJSON());
+      if(state.patchDelay)await new Promise(resolve=>setTimeout(resolve,state.patchDelay));
+      if(state.patchFailure)return json({message:'Test action failure'},400);
+      if(table==='profiles'){
+        const id=url.searchParams.get('id')?.replace(/^eq\./,'');
+        if(id===profile.id)Object.assign(profile,req.postDataJSON());
+        const member=state.members.find(member=>member.id===id);
+        if(member)Object.assign(member,req.postDataJSON());
+      }
+      if(table==='clients')Object.assign(client,req.postDataJSON());
+      if(table==='projects')Object.assign(project,req.postDataJSON());
       return json(profile);
     }
     const offset=Number(url.searchParams.get('offset')??0);
     if(table==='profiles'){
       if(url.searchParams.get('select')?.includes('company:'))state.profileReads++;
-      return json(req.headers().accept?.includes('object')?profile:offset?[]:[profile]);
+      return json(req.headers().accept?.includes('object')?profile:offset?[]:state.members);
     }
     if(table==='clients')return json(offset?[]:[client]);
     if(table==='projects')return json(offset?[]:[project]);
@@ -114,12 +123,12 @@ try{
 
   const regular=await app('regular',{view:'grid'});
   await regular.page.goto(base+'/');await regular.page.waitForURL('**/timesheet');
-  await regular.page.getByRole('button',{name:labels.timesheet.addEntry,exact:true}).waitFor();
-  verify(await regular.page.getByRole('button',{name:labels.timesheet.calendarView,exact:true}).isVisible(),'Legacy grid preference recovers to calendar');
+  await regular.page.getByRole('button',{name:labels.timesheet.addEntry,exact:true}).first().waitFor();
+  verify(await regular.page.getByRole('tab',{name:labels.timesheet.calendarView,exact:true}).isVisible(),'Legacy grid preference recovers to calendar');
   verify(regular.state.profileReads===1,'Initial session loads the profile once');
   verify(regular.state.requests.filter(r=>r.path.endsWith('/clients')).length===1,'Timesheet clients load once');
   verify(regular.state.requests.filter(r=>r.path.endsWith('/projects')).length===1,'Timesheet projects load once');
-  await regular.page.getByRole('button',{name:labels.timesheet.addEntry,exact:true}).click();
+  await regular.page.getByRole('button',{name:labels.timesheet.addEntry,exact:true}).first().click();
   const entry=regular.page.getByRole('dialog');
   await entry.waitFor();
   verify(!(await entry.getByRole('button',{name:labels.timesheet.saveEntry,exact:true}).isEnabled()),'Entry cannot silently submit without client and project');
@@ -127,7 +136,9 @@ try{
   await regular.page.getByRole('option',{name:'Test client',exact:true}).click();
   await entry.getByRole('button',{name:labels.timesheet.project,exact:true}).click();
   await regular.page.getByRole('option',{name:'Test project',exact:true}).click();
-  verify(await entry.getByRole('button',{name:labels.timesheet.saveEntry,exact:true}).isEnabled(),'Selecting client/project enables save');
+  await entry.getByLabel(labels.timesheet.totalHours,{exact:true}).fill('8');
+  await entry.getByLabel(labels.timesheet.taskDescription,{exact:true}).fill('UX regression check');
+  verify(await entry.getByRole('button',{name:labels.timesheet.saveEntry,exact:true}).isEnabled(),'A complete valid entry enables save');
   verify(regular.state.requests.filter(r=>r.path.endsWith('/projects')).length===1,'Changing client reuses loaded projects');
   await regular.page.setViewportSize({width:390,height:660});
   await expect.poll(()=>regular.page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
@@ -174,6 +185,16 @@ try{
   for(const path of ['/admin/dashboard','/admin/review','/admin/users','/admin/settings','/admin/invoice-attachments','/admin/billing','/leaves']){
     const test=await app('company_admin');console.log('Checking',path);await test.page.goto(base+path);await test.page.locator('main').getByRole('heading',{level:1}).waitFor().catch(async error=>{console.log('Page diagnostics',test.page.url(),(await test.page.locator('body').innerText()).slice(0,1500),errors);throw error;});
     verify(!test.page.url().endsWith('/login'),'Admin flow renders '+path);
+    if(path==='/admin/review'){
+      const statusSelector=test.page.getByRole('tablist',{name:labels.timesheetReview.statusLabel,exact:true});
+      await statusSelector.getByRole('tab',{selected:true}).focus();
+      await test.page.keyboard.press('ArrowRight');
+      await expect(statusSelector.getByRole('tab',{name:labels.timesheetReview.statusApproved,exact:true})).toHaveAttribute('aria-selected','true');checks++;
+      const periodSelector=test.page.getByRole('tablist',{name:labels.timesheetReview.periodLabel,exact:true});
+      await periodSelector.getByRole('tab',{selected:true}).focus();
+      await test.page.keyboard.press('Home');
+      await expect(periodSelector.getByRole('tab').first()).toHaveAttribute('aria-selected','true');checks++;
+    }
     await test.page.setViewportSize({width:390,height:844});
     await expect.poll(() => test.page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true).catch(async error=>{
       console.log(path,await test.page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth,overflow:[...document.querySelectorAll('*')].map(el=>({tag:el.tagName,cls:el.className,right:el.getBoundingClientRect().right,width:el.getBoundingClientRect().width})).filter(x=>x.right>innerWidth+1).slice(0,25)})));
@@ -192,6 +213,86 @@ try{
   await admin.page.getByRole('button',{name:labels.users.export,exact:true}).click();
   verify((await downloadEvent).suggestedFilename()==='team-members.csv','Member export downloads the filtered rows');
   await admin.context.close();
+  const manyMembers=Array.from({length:31},(_,i)=>({id:`00000000-0000-4000-8000-${String(i+100).padStart(12,'0')}`,company_id:companyId,full_name:`Member ${String(i+1).padStart(2,'0')}`,email:`member${i+1}@example.invalid`,role:i===0?'company_admin':'regular',is_active:true,weekly_work_hours:40,show_timesheet_timer:false,companies:{name:i<20?'Northstar':'Lumen'}}));
+  const team=await app('super_admin',{members:manyMembers});
+  await team.page.goto(base+'/admin/users');
+  await expect(team.page.locator('tbody tr')).toHaveCount(25);checks++;
+  await team.page.getByRole('button',{name:labels.users.nextPage,exact:true}).click();
+  await expect(team.page.locator('tbody tr')).toHaveCount(6);checks++;
+  verify(!(await team.page.getByRole('button',{name:labels.users.nextPage,exact:true}).isEnabled()),'Pagination disables the last next button');
+  await team.page.getByRole('button',{name:labels.users.filters,exact:true}).click();
+  const memberFilters=team.page.getByRole('dialog',{name:labels.users.filterMembers,exact:true});
+  await memberFilters.getByLabel(labels.users.role,{exact:true}).selectOption('company_admin');
+  await expect(team.page.locator('tbody tr')).toHaveCount(1);checks++;
+  await expect(team.page.locator('tbody')).toContainText('Member 01');checks++;
+  await memberFilters.getByRole('button',{name:labels.users.resetFilters,exact:true}).click();
+  await memberFilters.getByLabel(labels.users.company,{exact:true}).fill('Lumen');
+  await expect(team.page.locator('tbody tr')).toHaveCount(11);checks++;
+  await team.page.keyboard.press('Escape');
+  await expect(team.page.getByRole('button',{name:labels.users.filters,exact:true})).toBeFocused();checks++;
+  await team.page.setViewportSize({width:390,height:844});
+  await team.page.getByRole('button',{name:labels.users.filters,exact:true}).click();
+  verify(await memberFilters.evaluate(el=>{const r=el.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth;}),'Member filter fits a phone viewport');
+  await memberFilters.getByRole('button',{name:labels.users.resetFilters,exact:true}).click();
+  await team.page.locator('main h1').click();
+  await expect(memberFilters).toHaveCount(0);checks++;
+  const firstRow=team.page.locator('tbody tr').first();
+  team.state.patchDelay=350;team.state.patchFailure=true;
+  await firstRow.getByRole('button',{name:labels.users.regular,exact:true}).click();
+  verify(!(await firstRow.getByRole('button',{name:labels.users.permanentlyDeleteUser,exact:true}).isEnabled()),'Pending changes block conflicting member actions');
+  await team.page.getByRole('alert').filter({hasText:labels.users.actionFailed}).waitFor();checks++;
+  team.state.patchFailure=false;team.state.patchDelay=0;
+  await firstRow.getByRole('button',{name:labels.users.regular,exact:true}).click();
+  await expect(firstRow.getByRole('button',{name:labels.users.regular,exact:true})).toHaveAttribute('aria-pressed','true');checks++;
+  await expect(team.page.getByRole('alert')).toHaveCount(0);checks++;
+  const writesBefore=team.state.patches.length;
+  await firstRow.getByRole('button',{name:labels.users.regular,exact:true}).click();
+  verify(team.state.patches.length===writesBefore,'Choosing the current role sends no request');
+  await team.context.close();
+
+  const review=await app('company_admin');await review.page.goto(base+'/admin/review');
+  await review.page.getByRole('button',{name:labels.timesheetReview.filters,exact:true}).click();
+  const reviewFilters=review.page.getByRole('dialog',{name:labels.timesheetReview.filterReview,exact:true});
+  await reviewFilters.getByRole('button',{name:labels.timesheetReview.clientLabel,exact:true}).click();
+  await review.page.getByRole('option',{name:'Test client',exact:true}).click();
+  verify(await reviewFilters.isVisible(),'Choosing a portaled option keeps the filter panel open');
+  await review.page.setViewportSize({width:390,height:844});
+  verify(await reviewFilters.evaluate(el=>{const r=el.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth;}),'Review filter fits a phone viewport');
+  await review.page.locator('main h1').click();await expect(reviewFilters).toHaveCount(0);checks++;
+  await review.context.close();
+
+  const settings=await app('company_admin');await settings.page.goto(base+'/timesheet');
+  await settings.page.getByRole('button',{name:labels.timesheet.addEntry,exact:true}).first().waitFor();
+  await settings.page.getByRole('link',{name:labels.navigation.companySettings,exact:true}).click();
+  await settings.page.getByRole('button',{name:labels.companySettings.deactivateClient,exact:true}).waitFor();
+  verify(settings.state.requests.filter(r=>r.path.endsWith('/clients')).length===1,'Company settings reuse cached client data');
+  await settings.page.getByRole('button',{name:labels.companySettings.showFilters,exact:true}).first().click();
+  const clientSearch=settings.page.locator('#client-search');await clientSearch.fill('Test');
+  await settings.page.getByRole('button',{name:labels.companySettings.hideFilters,exact:true}).first().click();
+  await settings.page.getByRole('button',{name:labels.companySettings.showFilters,exact:true}).first().click();
+  verify(await clientSearch.inputValue()==='Test','Hiding client filters retains the search');
+  await settings.page.getByRole('button',{name:labels.companySettings.deactivateClient,exact:true}).click();
+  await expect.poll(()=>settings.state.client.is_active).toBe(false);
+  await settings.page.getByRole('link',{name:labels.navigation.timesheets,exact:true}).click();
+  await settings.page.getByRole('button',{name:labels.timesheet.addEntry,exact:true}).first().click();
+  await settings.page.getByRole('dialog').getByRole('button',{name:labels.timesheet.client,exact:true}).click();
+  verify(await settings.page.getByRole('option',{name:'Test client',exact:true}).count()===0,'Client activity changes reach cached timesheet choices immediately');
+  await settings.context.close();
+
+  const invite=await browser.newPage();invite.on('pageerror',e=>errors.push(e.message));
+  await invite.goto(componentBase+'/tests/ux-ui/index.html?mode=invite');
+  await invite.getByLabel(labels.users.fullName,{exact:true}).fill('New colleague');
+  await invite.getByLabel(labels.users.emailAddress,{exact:true}).fill('new@example.invalid');
+  await invite.getByRole('button',{name:labels.users.inviteUser,exact:true}).click();
+  await invite.getByRole('button',{name:labels.users.creating,exact:true}).waitFor();
+  await invite.keyboard.press('Escape');
+  verify(await invite.getByRole('dialog').isVisible(),'An in-flight invitation cannot be dismissed');
+  await invite.getByRole('alert').filter({hasText:'Test invitation failure'}).waitFor();
+  verify(await invite.getByLabel(labels.users.fullName,{exact:true}).inputValue()==='New colleague','Failed invitations retain entered details');
+  await invite.getByRole('button',{name:labels.common.cancel,exact:true}).click();
+  await expect(invite.getByRole('dialog')).toHaveCount(0);checks++;
+  await invite.close();
+
   const login=await app('regular',{loggedOut:true});
   await login.page.goto(base+'/login');
   await login.page.getByRole('button',{name:labels.auth.forgotPassword,exact:true}).click();
@@ -214,6 +315,7 @@ try{
   await login.context.close();
   const logs=await app('super_admin');await logs.page.goto(base+'/super-admin/logs');
   await logs.page.getByRole('heading',{name:labels.auditLogs.title,exact:true}).waitFor();
+  await logs.page.getByText('First result',{exact:true}).waitFor();
   const search=logs.page.getByPlaceholder(labels.auditLogs.searchPlaceholder);
   const initial=logs.state.requests.filter(r=>r.path.endsWith('/audit_logs')).length;
   await search.pressSequentially('second',{delay:25});

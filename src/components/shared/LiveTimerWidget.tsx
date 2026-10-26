@@ -1,49 +1,32 @@
-import React, { useEffect, useRef, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Play, Square } from "lucide-react";
 import { useAuth } from "../../context/useAuth";
+import type { ActiveTimerController } from "../../hooks/useActiveTimer";
 import { Button } from "./Button";
 import { Card, CardContent } from "./Card";
 import {
   fetchActiveClients,
   fetchActiveProjects,
 } from "../../services/clientProjectService";
-import {
-  getActiveTimerState,
-  startTimer,
-  stopTimer,
-  TIMESHEET_REFRESH_EVENT,
-} from "../../services/timesheetService";
-import type { ActiveTimerState } from "../../types/timesheet";
 import { Select } from "./Select";
 
-const formatElapsedTime = (elapsedMs: number) => {
-  const totalSeconds = Math.max(0, Math.floor(elapsedMs / 1000));
-  const hours = Math.floor(totalSeconds / 3600)
-    .toString()
-    .padStart(2, "0");
-  const minutes = Math.floor((totalSeconds % 3600) / 60)
-    .toString()
-    .padStart(2, "0");
-  const seconds = (totalSeconds % 60).toString().padStart(2, "0");
-
-  return `${hours}:${minutes}:${seconds}`;
-};
-
-export const LiveTimerWidget: React.FC = () => {
+export const LiveTimerWidget = ({ timer }: { timer: ActiveTimerController }) => {
   const { profile } = useAuth();
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
-
-  const [activeTimer, setActiveTimer] = useState<ActiveTimerState | null>(null);
+  const {
+    activeTimer,
+    timerDisplay,
+    isHydratingTimer,
+    isSavingTimer,
+    startActiveTimer,
+    stopActiveTimer,
+  } = timer;
   const [draftClientId, setDraftClientId] = useState("");
   const [draftDescription, setDraftDescription] = useState("");
   const [draftProjectId, setDraftProjectId] = useState("");
-  const [now, setNow] = useState(() => Date.now());
-  const [isHydratingTimer, setIsHydratingTimer] = useState(true);
-  const [isSavingTimer, setIsSavingTimer] = useState(false);
-  const timerActionPending = useRef(false);
+  const selectedClientId = activeTimer?.client_id ?? draftClientId;
 
   const { data: activeClients = [] } = useQuery({
     queryKey: ["active-clients", profile?.company_id ?? ""],
@@ -52,86 +35,11 @@ export const LiveTimerWidget: React.FC = () => {
   });
 
   const { data: activeProjects = [] } = useQuery({
-    queryKey: ["active-projects", profile?.company_id ?? "", draftClientId],
-    queryFn: () =>
-      fetchActiveProjects(profile?.company_id ?? "", draftClientId),
-    enabled: Boolean(profile?.company_id && draftClientId),
+    queryKey: ["active-projects", profile?.company_id ?? "", selectedClientId],
+    queryFn: () => fetchActiveProjects(profile?.company_id ?? "", selectedClientId),
+    enabled: Boolean(profile?.company_id && selectedClientId),
   });
 
-  useEffect(() => {
-    let isMounted = true;
-
-    const hydrateTimer = async () => {
-      if (!profile?.id) {
-        setActiveTimer(null);
-        setDraftDescription("");
-        setDraftProjectId("");
-        setIsHydratingTimer(false);
-        return;
-      }
-
-      setIsHydratingTimer(true);
-
-      try {
-        const persistedTimer = await getActiveTimerState();
-        if (!isMounted) return;
-
-        setActiveTimer(persistedTimer);
-        setDraftClientId(persistedTimer?.client_id ?? "");
-        setDraftDescription(persistedTimer?.description ?? "");
-        setDraftProjectId(persistedTimer?.project_id ?? "");
-      } catch (error) {
-        if (isMounted) {
-          console.error("Failed to load active timer", error);
-          setActiveTimer(null);
-          setDraftClientId("");
-          setDraftDescription("");
-          setDraftProjectId("");
-        }
-      } finally {
-        if (isMounted) {
-          setIsHydratingTimer(false);
-          setNow(Date.now());
-        }
-      }
-    };
-
-    void hydrateTimer();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [profile?.id]);
-
-  useEffect(() => {
-    if (!activeTimer) return;
-
-    const intervalId = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(intervalId);
-  }, [activeTimer]);
-
-  useEffect(() => {
-    const handleStorage = (event: StorageEvent) => {
-      if (!profile?.id) return;
-
-      if (event.key?.startsWith("chronosync:active-timer:")) {
-        void getActiveTimerState().then((persistedTimer) => {
-          setActiveTimer(persistedTimer);
-          setDraftClientId(persistedTimer?.client_id ?? "");
-          setDraftDescription(persistedTimer?.description ?? "");
-          setDraftProjectId(persistedTimer?.project_id ?? "");
-        });
-      }
-    };
-
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, [profile?.id]);
-
-  const elapsedMs = activeTimer
-    ? Math.max(0, now - Date.parse(activeTimer.started_at))
-    : 0;
-  const timerDisplay = formatElapsedTime(elapsedMs);
   const isRunning = Boolean(activeTimer);
   const isActionDisabled =
     isSavingTimer ||
@@ -146,58 +54,23 @@ export const LiveTimerWidget: React.FC = () => {
   };
 
   const handleStartTimer = async () => {
-    if (timerActionPending.current || !profile?.company_id || !draftDescription.trim() || !draftProjectId) {
-      return;
-    }
-    timerActionPending.current = true;
-    setIsSavingTimer(true);
-    try {
-      const storedTimer = await startTimer({
-        started_at: new Date().toISOString(),
-        project_id: draftProjectId,
-        description: draftDescription.trim(),
-        company_id: profile.company_id,
-        client_id: draftClientId,
-      });
-
-      setActiveTimer(storedTimer);
+    if (
+      !profile?.company_id ||
+      !draftClientId ||
+      !draftDescription.trim() ||
+      !draftProjectId
+    ) return;
+    const storedTimer = await startActiveTimer({
+      started_at: new Date().toISOString(),
+      project_id: draftProjectId,
+      description: draftDescription.trim(),
+      company_id: profile.company_id,
+      client_id: draftClientId,
+    });
+    if (storedTimer) {
       setDraftClientId(storedTimer.client_id ?? "");
-      setDraftProjectId(storedTimer.project_id);
-      setDraftDescription(storedTimer.description);
-      setNow(Date.now());
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : t("timesheet.timerStartFailed");
-      window.alert(message);
-    } finally {
-      timerActionPending.current = false;
-      setIsSavingTimer(false);
-    }
-  };
-
-  const handleStopTimer = async () => {
-    if (!activeTimer || timerActionPending.current) return;
-
-    timerActionPending.current = true;
-    setIsSavingTimer(true);
-    try {
-      await stopTimer(activeTimer);
-      setActiveTimer(null);
-      setDraftDescription("");
       setDraftProjectId("");
-      setNow(Date.now());
-      // Cache refresh failures must not leave a successfully saved timer running.
-      void queryClient.invalidateQueries({ queryKey: ["timesheets"] });
-      window.dispatchEvent(new Event(TIMESHEET_REFRESH_EVENT));
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : t("timesheet.timerStopFailed");
-      window.alert(message);
-    } finally {
-      timerActionPending.current = false;
-      setIsSavingTimer(false);
+      setDraftDescription("");
     }
   };
 
@@ -216,7 +89,7 @@ export const LiveTimerWidget: React.FC = () => {
               aria-hidden="true"
             />
 
-            <div className="relative flex h-full items-center justify-center font-mono text-[27px] leading-none font-semibold tracking-[0.09em] tabular-nums text-text">
+            <div role="timer" aria-live="off" className="relative flex h-full items-center justify-center font-mono text-[27px] leading-none font-semibold tracking-[0.09em] tabular-nums text-text">
               {timerDisplay}
             </div>
           </section>
@@ -231,7 +104,7 @@ export const LiveTimerWidget: React.FC = () => {
               </label>
               <Select
                 id="live-timer-client"
-                value={draftClientId}
+                value={selectedClientId}
                 onChange={handleClientChange}
                 disabled={isRunning || !activeClients.length}
                 disabledReason={
@@ -263,22 +136,22 @@ export const LiveTimerWidget: React.FC = () => {
               </label>
               <Select
                 id="live-timer-project"
-                value={draftProjectId}
+                value={activeTimer?.project_id ?? draftProjectId}
                 onChange={(event) => setDraftProjectId(event.target.value)}
                 disabled={
-                  isRunning || !draftClientId || !activeProjects.length
+                  isRunning || !selectedClientId || !activeProjects.length
                 }
                 disabledReason={
                   isRunning
                     ? t("timesheet.timerRunning")
-                    : !draftClientId
+                    : !selectedClientId
                       ? t("common.selectClientFirst")
                       : t("timesheet.noActiveProjects")
                 }
                 className="w-full [&_button.auth-input]:bg-white/75 [&_button.auth-input]:shadow-[0_1px_2px_rgba(75,87,57,0.04)]"
               >
                 <option value="">
-                  {!draftClientId
+                  {!selectedClientId
                     ? t("common.selectClientFirst")
                     : activeProjects.length
                       ? t("common.selectProject")
@@ -301,7 +174,7 @@ export const LiveTimerWidget: React.FC = () => {
               </label>
               <input
                 id="live-timer-description"
-                value={draftDescription}
+                value={activeTimer?.description ?? draftDescription}
                 onChange={(event) => setDraftDescription(event.target.value)}
                 disabled={isRunning}
                 placeholder={t("timesheet.taskDescriptionPlaceholder")}
@@ -314,7 +187,7 @@ export const LiveTimerWidget: React.FC = () => {
             <Button
               variant={isRunning ? "danger" : "primary"}
               type="button"
-              onClick={isRunning ? handleStopTimer : handleStartTimer}
+              onClick={isRunning ? stopActiveTimer : handleStartTimer}
               disabled={isActionDisabled}
               className={`h-11 w-full px-5 text-[13px] sm:w-auto xl:min-w-40 disabled:cursor-not-allowed disabled:opacity-60 ${
                 isRunning

@@ -6,7 +6,7 @@ import { cn } from "../../utils/cn";
 import { Button } from "./Button";
 import type { ModalProps } from "../../types/ui";
 
-export const Modal: React.FC<ModalProps> = ({ open, title, onClose, children, className }) => {
+export const Modal: React.FC<ModalProps> = ({ open, title, onClose, children, className, footer }) => {
   const { t } = useTranslation();
   const dialogRef = React.useRef<HTMLDivElement>(null);
   const onCloseRef = React.useRef(onClose);
@@ -107,6 +107,11 @@ export const Modal: React.FC<ModalProps> = ({ open, title, onClose, children, cl
           ></Button>
         </div>
         <div className="min-h-0 overflow-y-auto overscroll-contain">{children}</div>
+        {footer ? (
+          <div className="shrink-0 rounded-b-[inherit] border-t border-border bg-surface-strong px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5 sm:py-4">
+            {footer}
+          </div>
+        ) : null}
       </div>
     </div>,
     document.body,

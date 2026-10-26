@@ -359,11 +359,6 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                 !isProjectFiltersCollapsed && "translate-x-1",
               )}
               onClick={() => {
-                if (!isProjectFiltersCollapsed) {
-                  setProjectSearchTerm("");
-                  setProjectClientFilter("");
-                  setProjectStatusFilter("all");
-                }
                 setIsProjectFiltersCollapsed((value) => !value);
               }}
               icon={
@@ -503,11 +498,11 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
       {editingProject && (
         <Modal
           open={!!editingProject}
-          onClose={() => setEditingProject(null)}
+          onClose={() => { if (!loading) setEditingProject(null); }}
           title={t("companySettings.editProject")}
           className="w-xl max-w-full"
         >
-          <div className="space-y-4 p-4">
+          <fieldset disabled={loading} className="min-w-0 space-y-4 p-4">
             <Input
               id="edit-project-name"
               type="text"
@@ -557,17 +552,17 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                 {t("companySettings.saveChanges")}
               </Button>
             </div>
-          </div>
+          </fieldset>
         </Modal>
       )}
 
       {deletingProjectId && (
         <Modal
           open={!!deletingProjectId}
-          onClose={() => setDeletingProjectId(null)}
+          onClose={() => { if (!loading) setDeletingProjectId(null); }}
           title={t("companySettings.deleteProject")}
         >
-          <div className="space-y-4 p-4">
+          <fieldset disabled={loading} className="min-w-0 space-y-4 p-4">
             <p className="text-sm text-slate-600">
               {t("companySettings.confirmDeleteProject")}
             </p>
@@ -590,7 +585,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                 {t("companySettings.confirmDelete")}
               </Button>
             </div>
-          </div>
+          </fieldset>
         </Modal>
       )}
 

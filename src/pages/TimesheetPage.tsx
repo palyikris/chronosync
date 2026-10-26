@@ -1,12 +1,14 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Calendar, ChevronLeft, ChevronRight, List, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { useAuth } from "../context/useAuth";
+import { useFavoriteProjects } from "../hooks/useFavoriteProjects";
 import {
   TIMESHEET_REFRESH_EVENT,
   cloneEntry,
   fetchUserTimesheets,
+  fetchUserAttentionTimesheets,
   fetchSelectableCompanyUsers,
   createTimesheetEntry,
   deleteTimesheetEntry,
@@ -19,6 +21,7 @@ import {
 } from "../services/clientProjectService";
 import { TimesheetCalendar } from "../components/timesheet/TimesheetCalendar";
 import { TimesheetEntryFilter } from "../components/timesheet/TimesheetEntryFilter";
+import { TimesheetViewSwitcher } from "../components/timesheet/TimesheetViewSwitcher";
 import { TimesheetEntryList } from "../components/timesheet/TimesheetEntryList";
 import { TimesheetEntryModal } from "../components/timesheet/TimesheetEntryModal";
 import { Button } from "../components/shared/Button";
@@ -27,11 +30,23 @@ import { Card } from "../components/shared/Card";
 import { Select } from "../components/shared/Select";
 import { getRoleLabel } from "../utils/getRoleLabel";
 import { getLocalDateValue } from "../utils/timesheetWorkflow";
+import {
+  getEntryPreferencesKey,
+  getRecentEntryProjects,
+  isAvailableEntryProject,
+  isSameFavoriteProject,
+  readEntryPreferences,
+  rememberEntryProject,
+  writeEntryPreferences,
+} from "../utils/timesheetEntryPreferences";
 import { DateLockedForLeaveError } from "../services/leaveService";
 import type { Client, Project } from "../types/client-project";
 import type {
   SelectableTimesheetUser,
+  NewTimesheetPayload,
   TimesheetEntry,
+  TimesheetEntryPreferences,
+  TimesheetFavoriteProject,
   TimesheetEntryUpdatePayload,
   TimesheetFormData,
   TimesheetViewMode,
@@ -50,7 +65,7 @@ const getViewPreference = (): TimesheetViewMode => {
   if (window.matchMedia(MOBILE_TIMESHEET_QUERY).matches) return "list";
 
   const stored = window.localStorage.getItem(TIMESHEET_VIEW_STORAGE_KEY);
-  if (stored === "calendar" || stored === "list") {
+  if (stored === "calendar" || stored === "list" || stored === "attention") {
     return stored;
   }
 
@@ -59,6 +74,7 @@ const getViewPreference = (): TimesheetViewMode => {
 
 export const TimesheetPage: React.FC = () => {
   const { profile, user } = useAuth();
+  const favorites = useFavoriteProjects();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
 
@@ -77,17 +93,22 @@ export const TimesheetPage: React.FC = () => {
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [selectedClientId, setSelectedClientId] = useState<string>("");
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
-  const [viewMode, setViewMode] =
+  const [preferredViewMode, setViewMode] =
     useState<TimesheetViewMode>(getViewPreference);
   const [feedback, setFeedback] = useState<{
     type: "error" | "success";
     message: string;
   } | null>(null);
+  const [entryFeedback, setEntryFeedback] = useState<typeof feedback>(null);
+  const [preferenceOverride, setPreferenceOverride] = useState<{
+    key: string;
+    value: TimesheetEntryPreferences;
+  } | null>(null);
 
   // Form State
   const [formData, setFormData] = useState<TimesheetFormData>({
     work_date: getLocalDateValue(today),
-    hours_logged: 8.0,
+    hours_logged: "",
     description: "",
     company_id: "",
     client_id: "",
@@ -146,6 +167,18 @@ export const TimesheetPage: React.FC = () => {
   );
 
   const targetUserId = activeTargetUser?.id ?? user?.id;
+  const preferencesKey = getEntryPreferencesKey(
+    user?.id ?? "", targetCompanyId, targetUserId ?? "",
+  );
+  const storedPreferences = React.useMemo(
+    () => readEntryPreferences(preferencesKey), [preferencesKey],
+  );
+  const entryPreferences = preferenceOverride?.key === preferencesKey
+    ? preferenceOverride.value : storedPreferences;
+  const saveEntryPreferences = (value: TimesheetEntryPreferences) => {
+    writeEntryPreferences(preferencesKey, value);
+    setPreferenceOverride({ key: preferencesKey, value });
+  };
 
   const { data: allClients = [], isError: clientsError } = useQuery<Client[]>({
     queryKey: ["all-clients", targetCompanyId || "all"],
@@ -189,14 +222,35 @@ export const TimesheetPage: React.FC = () => {
     queryFn: () => fetchUserTimesheets(nextMonthKey, targetUserId),
   });
 
+  const {
+    data: attentionTimesheets = [],
+    isLoading: isLoadingAttention,
+    isError: attentionError,
+    isSuccess: attentionLoaded,
+  } = useQuery({
+    queryKey: ["timesheets", targetUserId, "needs-attention"],
+    enabled: Boolean(targetUserId),
+    queryFn: () => fetchUserAttentionTimesheets(targetUserId),
+  });
+
+  const attentionIsEmpty = attentionLoaded && attentionTimesheets.length === 0;
+  const viewMode = preferredViewMode === "attention" && attentionIsEmpty
+    ? "calendar" : preferredViewMode;
+  // Clear an obsolete selection so new drafts do not reopen this view later.
+  if (viewMode !== preferredViewMode) setViewMode(viewMode);
+
   const { data: approvedLeaveDates = [], isError: leaveError } = useQuery({
     queryKey: ["approved-leave-dates", targetUserId],
     enabled: Boolean(targetUserId),
     queryFn: () => fetchApprovedLeaveDatesForUser(targetUserId!),
   });
 
-  const isLoading = isLoadingCurrentMonth;
-  const hasLoadError = clientsError || projectsError || timesheetsError || previousMonthError || nextMonthError || leaveError;
+  const isLoading = viewMode === "attention" ? isLoadingAttention : isLoadingCurrentMonth;
+  const hasLoadError = clientsError || projectsError || leaveError || (
+    viewMode === "attention"
+      ? attentionError
+      : timesheetsError || previousMonthError || nextMonthError
+  );
   const canEditEntries = canManageTarget && !hasLoadError && !isLoading;
   const retryLoading = () => {
     for (const key of ["all-clients", "all-projects", "timesheets", "approved-leave-dates"]) {
@@ -218,7 +272,37 @@ export const TimesheetPage: React.FC = () => {
     return Array.from(mergedMap.values());
   }, [currentMonthTimesheets, previousMonthTimesheets, nextMonthTimesheets]);
 
+  const recentProjects = React.useMemo(() => getRecentEntryProjects(
+    timesheets, entryPreferences.recentProjects, allClients, allProjects, targetCompanyId,
+  ), [timesheets, entryPreferences.recentProjects, allClients, allProjects, targetCompanyId]);
+  const favoriteProjects = favorites.projects.filter(task =>
+    isAvailableEntryProject(task, allClients, allProjects, targetCompanyId));
+  const toggleFavoriteProject = async (task: TimesheetFavoriteProject) => {
+    if (favorites.isSaving || favorites.isLoading || favorites.isError) return;
+    const existing = favorites.projects.find(item => task.id
+      ? item.id === task.id : isSameFavoriteProject(item, task));
+    try {
+      if (existing) await favorites.remove(existing.id);
+      else await favorites.save({ payload: {
+        project_id: task.project_id,
+      } });
+      setEntryFeedback({ type: "success", message: t(existing
+        ? "userSettings.favoriteDeleted" : "userSettings.favoriteSaved") });
+    } catch {
+      setEntryFeedback({ type: "error", message: t(existing
+        ? "userSettings.favoriteDeleteFailed" : "userSettings.favoriteSaveFailed") });
+    }
+  };
+
   const hasEntryFilter = Boolean(selectedClientId);
+
+  const filteredAttentionTimesheets = React.useMemo(
+    () => attentionTimesheets.filter((entry) =>
+      (!selectedClientId || entry.client_id === selectedClientId) &&
+      (!selectedProjectId || entry.project_id === selectedProjectId),
+    ),
+    [attentionTimesheets, selectedClientId, selectedProjectId],
+  );
 
   const filteredTimesheets = React.useMemo(() => {
     if (!hasEntryFilter) {
@@ -326,18 +410,28 @@ export const TimesheetPage: React.FC = () => {
           ? error.message
           : t(fallbackKey);
     setFeedback({ type: "error", message });
+    if (isModalOpen) setEntryFeedback({ type: "error", message });
   };
 
   const resetForm = useCallback((date = selectedDate) => {
+    const recent = recentProjects.find(project =>
+      (!selectedClientId || project.client_id === selectedClientId) &&
+      (!selectedProjectId || project.project_id === selectedProjectId));
+    const filteredProject = allProjects.find(project =>
+      project.id === selectedProjectId && project.client_id === selectedClientId &&
+      isAvailableEntryProject({ client_id: project.client_id, project_id: project.id },
+        allClients, allProjects, targetCompanyId));
+    const filteredClient = activeClients.find(client => client.id === selectedClientId);
     setFormData({
       work_date: date,
-      hours_logged: 8.0,
+      hours_logged: recent?.hours_logged ?? "",
       description: "",
       company_id: targetCompanyId,
-      client_id: "",
-      project_id: "",
+      client_id: filteredClient?.id ?? recent?.client_id ?? "",
+      project_id: filteredProject?.id ?? recent?.project_id ?? "",
     });
-  }, [selectedDate, targetCompanyId]);
+  }, [selectedDate, targetCompanyId, recentProjects, selectedClientId, selectedProjectId,
+    allProjects, allClients, activeClients]);
 
   const applyMonthChange = (nextDate: Date) => {
     setCurrentDate(nextDate);
@@ -345,14 +439,17 @@ export const TimesheetPage: React.FC = () => {
   };
 
   const openCreateModal = useCallback(() => {
-    if (!canEditEntries || isSelectedDateLocked) return;
+    if (!canEditEntries || isSelectedDateLocked || isModalOpen) return;
     setEditEntryId(null);
+    setEntryFeedback(null);
     resetForm();
     setIsModalOpen(true);
   }, [
     canEditEntries,
     isSelectedDateLocked,
+    isModalOpen,
     resetForm,
+    setEntryFeedback,
     setEditEntryId,
     setIsModalOpen,
   ]);
@@ -377,6 +474,7 @@ export const TimesheetPage: React.FC = () => {
 
   const openEditModal = (entry: TimesheetEntry) => {
     if (!canEditEntries) return;
+    setEntryFeedback(null);
     setFormData({
       work_date: entry.work_date,
       hours_logged: Number(entry.hours_logged),
@@ -394,20 +492,38 @@ export const TimesheetPage: React.FC = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditEntryId(null);
+    setEntryFeedback(null);
   };
 
   // --------------------------------------------------------------------------
   // TanStack Mutation: Create Log Entry
   // --------------------------------------------------------------------------
   const createMutation = useMutation({
-    mutationFn: createTimesheetEntry,
-    onSuccess: () => {
+    mutationFn: ({ payload }: { payload: NewTimesheetPayload; addAnother: boolean }) =>
+      createTimesheetEntry(payload),
+    onSuccess: (_entry, { payload, addAnother }) => {
       queryClient.invalidateQueries({ queryKey: ["timesheets"] });
       queryClient.invalidateQueries({ queryKey: ["timesheets-for-review"] });
       queryClient.invalidateQueries({ queryKey: ["kpis"] });
       queryClient.invalidateQueries({ queryKey: ["adminDashboard"] });
-      closeModal();
-      resetForm();
+      saveEntryPreferences(rememberEntryProject(entryPreferences, {
+        client_id: payload.client_id,
+        project_id: payload.project_id,
+        hours_logged: payload.hours_logged,
+      }));
+      if (addAnother) {
+        setFormData({
+          work_date: payload.work_date,
+          hours_logged: payload.hours_logged,
+          description: "",
+          company_id: payload.company_id,
+          client_id: payload.client_id,
+          project_id: payload.project_id,
+        });
+        setEntryFeedback({ type: "success", message: t("timesheet.entrySavedAddAnother") });
+      } else {
+        closeModal();
+      }
       setFeedback({ type: "success", message: t("timesheet.entrySaved") });
     },
     onError: (error) => showMutationError(error, "timesheet.saveFailed"),
@@ -420,17 +536,22 @@ export const TimesheetPage: React.FC = () => {
     mutationFn: ({
       id,
       payload,
+      resubmit,
     }: {
       id: string;
       payload: TimesheetEntryUpdatePayload;
-    }) => updateTimesheetEntry(id, payload),
-    onSuccess: () => {
+      resubmit: boolean;
+    }) => updateTimesheetEntry(id, payload, { resubmit }),
+    onSuccess: (_entry, { resubmit }) => {
       queryClient.invalidateQueries({ queryKey: ["timesheets"] });
       queryClient.invalidateQueries({ queryKey: ["timesheets-for-review"] });
       queryClient.invalidateQueries({ queryKey: ["kpis"] });
       queryClient.invalidateQueries({ queryKey: ["adminDashboard"] });
       closeModal();
-      setFeedback({ type: "success", message: t("timesheet.entrySaved") });
+      setFeedback({
+        type: "success",
+        message: t(resubmit ? "timesheet.entryResubmitted" : "timesheet.entrySaved"),
+      });
     },
     onError: (error) => showMutationError(error, "timesheet.saveFailed"),
   });
@@ -540,8 +661,9 @@ export const TimesheetPage: React.FC = () => {
     setPendingCopyEntry(null);
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (createMutation.isPending || updateMutation.isPending) return;
     if (!targetCompanyId || !targetUserId || !canManageTarget) return;
     if (!formData.client_id || !formData.project_id) return;
 
@@ -553,10 +675,12 @@ export const TimesheetPage: React.FC = () => {
     if (!Number.isFinite(parsedHours) || parsedHours <= 0 || parsedHours > 24) {
       return;
     }
+    setEntryFeedback(null);
 
     if (editEntryId) {
       updateMutation.mutate({
         id: editEntryId,
+        resubmit: formData.status === "rejected",
         payload: {
           work_date: formData.work_date,
           hours_logged: parsedHours,
@@ -566,11 +690,15 @@ export const TimesheetPage: React.FC = () => {
         },
       });
     } else {
+      const submitter = (e.nativeEvent as SubmitEvent).submitter;
       createMutation.mutate({
-        ...formData,
-        hours_logged: parsedHours,
-        company_id: targetCompanyId,
-        target_user_id: targetUserId,
+        payload: {
+          ...formData,
+          hours_logged: parsedHours,
+          company_id: targetCompanyId,
+          target_user_id: targetUserId,
+        },
+        addAnother: submitter instanceof HTMLButtonElement && submitter.value === "add-another",
       });
     }
   };
@@ -600,28 +728,15 @@ export const TimesheetPage: React.FC = () => {
   };
 
   const viewModeSwitcher = (
-    <div className="inline-flex w-full min-w-0 items-center gap-0.5 rounded-[9px] border border-border bg-black/[0.035] p-0.5 sm:w-auto">
-      <Button
-        variant={viewMode === "calendar" ? "secondary" : "ghost"}
-        aria-pressed={viewMode === "calendar"}
-        size="sm"
-        className="min-w-0 flex-1 basis-1/2 border-transparent sm:flex-none sm:basis-auto"
-        onClick={() => setViewMode("calendar")}
-        icon={<Calendar className="h-4 w-4" />}
-      >
-        {t("timesheet.calendarView")}
-      </Button>
-      <Button
-        variant={viewMode === "list" ? "secondary" : "ghost"}
-        aria-pressed={viewMode === "list"}
-        size="sm"
-        className="min-w-0 flex-1 basis-1/2 border-transparent sm:flex-none sm:basis-auto"
-        onClick={() => setViewMode("list")}
-        icon={<List className="h-4 w-4" />}
-      >
-        {t("timesheet.listView")}
-      </Button>
-    </div>
+    <TimesheetViewSwitcher
+      value={viewMode}
+      attentionCount={!isLoadingAttention && !attentionError ? attentionTimesheets.length : undefined}
+      attentionLoading={isLoadingAttention}
+      onChange={(view) => {
+        setPendingCopyEntry(null);
+        setViewMode(view);
+      }}
+    />
   );
 
   const listNavigationControls = (
@@ -709,7 +824,7 @@ export const TimesheetPage: React.FC = () => {
             <Select
               value={targetUserId ?? ""}
               onChange={handleSelectedUserChange}
-              disabled={!availableUsers.length}
+              disabled={!availableUsers.length || createMutation.isPending || updateMutation.isPending}
             >
               {availableUsers.map((candidate) => (
                 <option key={candidate.id} value={candidate.id}>
@@ -838,6 +953,30 @@ export const TimesheetPage: React.FC = () => {
         </>
       ) : null}
 
+      {viewMode === "attention" ? (
+        <TimesheetEntryList
+          selectedDate={selectedDate}
+          totalDailyHours={0}
+          entries={filteredAttentionTimesheets}
+          allEntries={attentionTimesheets}
+          loading={isLoadingAttention}
+          loadFailed={hasLoadError}
+          hasEntryFilter={hasEntryFilter}
+          onEditEntry={openEditModal}
+          onDuplicateEntry={handleStartCopy}
+          onDeleteEntry={(entryId) => deleteMutation.mutate(entryId)}
+          isUpdating={updateMutation.isPending}
+          isDuplicating={duplicateMutation.isPending}
+          isDeleting={deleteMutation.isPending}
+          clients={allClients}
+          projects={allProjects}
+          canManageTarget={canEditEntries}
+          onFeedback={setFeedback}
+          lockedDates={approvedLeaveDates}
+          viewMode={viewMode}
+        />
+      ) : null}
+
       {canEditEntries ? (
         <div className="fixed inset-x-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-30 sm:hidden">
           <div className="rounded-2xl border border-border bg-surface-strong/95 p-2 shadow-lg backdrop-blur">
@@ -866,6 +1005,15 @@ export const TimesheetPage: React.FC = () => {
         onClose={closeModal}
         onSubmit={handleFormSubmit}
         onChange={setFormData}
+        recentProjects={recentProjects}
+        shortcutProjects={allProjects}
+        favoriteProjects={favoriteProjects}
+        favoritesLoading={favorites.isLoading}
+        favoritesError={favorites.isError}
+        isSavingFavorite={favorites.isSaving}
+        onRetryFavorites={() => { void favorites.retry(); }}
+        onToggleFavorite={task => { void toggleFavoriteProject(task); }}
+        feedback={entryFeedback}
         isSaving={
           editEntryId ? updateMutation.isPending : createMutation.isPending
         }
