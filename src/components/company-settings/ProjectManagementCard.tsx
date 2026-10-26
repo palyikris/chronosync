@@ -2,8 +2,7 @@ import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Check,
-  ChevronDown,
-  ChevronUp,
+  ChevronRight,
   FileSpreadsheet,
   FolderPlus,
   PencilLine,
@@ -292,8 +291,9 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
           </form>
         )}
 
-        <div className="flex items-end gap-3 transition-all duration-300 ease-out">
+        <div className="flex items-center gap-3 transition-all duration-300 ease-out">
           <div
+            inert={isProjectFiltersCollapsed}
             className={cn(
               "grid flex-1 gap-3 overflow-hidden transition-all duration-300 ease-out lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)] lg:items-end",
               isProjectFiltersCollapsed
@@ -355,7 +355,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
               variant="outline"
               size="sm"
               className={cn(
-                "h-[2.75rem] min-h-[2.75rem] px-4 transition-transform duration-300 ease-out",
+                "h-[2.75rem] min-h-[2.75rem] px-4 transition-[transform,background-color,border-color,box-shadow] duration-300 ease-out",
                 !isProjectFiltersCollapsed && "translate-x-1",
               )}
               onClick={() => {
@@ -367,11 +367,12 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                 setIsProjectFiltersCollapsed((value) => !value);
               }}
               icon={
-                isProjectFiltersCollapsed ? (
-                  <ChevronDown className="h-4 w-4" />
-                ) : (
-                  <ChevronUp className="h-4 w-4" />
-                )
+                <ChevronRight
+                  className={cn(
+                    "h-4 w-4 transition-transform duration-300 ease-out",
+                    !isProjectFiltersCollapsed && "rotate-180",
+                  )}
+                />
               }
             >
               {isProjectFiltersCollapsed

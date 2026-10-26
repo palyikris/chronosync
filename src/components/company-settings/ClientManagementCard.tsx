@@ -3,8 +3,7 @@ import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Check,
-  ChevronDown,
-  ChevronUp,
+  ChevronRight,
   PencilLine,
   Plus,
   Search,
@@ -422,8 +421,9 @@ export const ClientManagementCard: React.FC<Props> = ({
           </form>
         )}
 
-        <div className="flex items-end gap-3 transition-all duration-300 ease-out">
+        <div className="flex items-center gap-3 transition-all duration-300 ease-out">
           <div
+            inert={isClientFiltersCollapsed}
             className={cn(
               "grid flex-1 gap-3 overflow-hidden transition-all duration-300 ease-out md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] md:items-end",
               isClientFiltersCollapsed
@@ -469,7 +469,7 @@ export const ClientManagementCard: React.FC<Props> = ({
               variant="outline"
               size="sm"
               className={cn(
-                "h-[2.75rem] min-h-[2.75rem] px-4 transition-transform duration-300 ease-out",
+                "h-[2.75rem] min-h-[2.75rem] px-4 transition-[transform,background-color,border-color,box-shadow] duration-300 ease-out",
                 !isClientFiltersCollapsed && "translate-x-1",
               )}
               onClick={() => {
@@ -480,11 +480,12 @@ export const ClientManagementCard: React.FC<Props> = ({
                 setIsClientFiltersCollapsed((value) => !value);
               }}
               icon={
-                isClientFiltersCollapsed ? (
-                  <ChevronDown className="h-4 w-4" />
-                ) : (
-                  <ChevronUp className="h-4 w-4" />
-                )
+                <ChevronRight
+                  className={cn(
+                    "h-4 w-4 transition-transform duration-300 ease-out",
+                    !isClientFiltersCollapsed && "rotate-180",
+                  )}
+                />
               }
             >
               {isClientFiltersCollapsed
