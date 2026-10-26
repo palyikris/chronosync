@@ -6,6 +6,7 @@ import type { Client } from "../../types/client-project";
 import { downloadSzamlamellekletReport } from "../../utils/downloadExcelReport";
 import { parseDashboardDate } from "../../utils/dashboardCalculations";
 import { Button } from "../shared/Button";
+import { Checkbox } from "../shared/Checkbox";
 import { Modal } from "../shared/Modal";
 
 interface InvoiceAttachmentModalProps {
@@ -266,14 +267,13 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
                 </div>
               </div>
               <label className="mt-4 flex items-start gap-3 rounded-2xl border border-border-strong bg-surface px-4 py-3 text-sm text-text">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={canUpdateRemainingHours && updateRemainingHours}
                   onChange={(event) =>
                     setUpdateRemainingHours(event.target.checked)
                   }
                   disabled={!canUpdateRemainingHours}
-                  className="mt-0.5 h-4 w-4 rounded border-border-strong text-primary focus:ring-primary"
+                  className="mt-0.5"
                 />
                 <span>
                   <span className="block font-medium">
@@ -340,11 +340,10 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
                           )}
                         </td>
                         <td className="px-5 py-4 text-center">
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             checked={isChecked}
                             onChange={() => toggleClient(client.id)}
-                            className="h-4 w-4 rounded border-border-strong text-primary focus:ring-primary"
+                            className="h-4 w-4"
                             aria-label={t("dashboard.selectClientForInvoice", {
                               clientName: client.name,
                             })}

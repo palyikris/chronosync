@@ -2,46 +2,56 @@
 
 @theme {
   --font-sans: "Inter Variable", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", sans-serif;
-  --color-white: #fcfdf7;
+  --color-white: #ffffff;
   --color-black: #34392c;
-  --color-bg: #f2f4ea;
-  --color-bg-accent: #fafbf5;
-  --color-surface: rgba(252, 253, 247, 0.84);
-  --color-surface-strong: #fcfdf7;
+  --color-bg: #eef1e5;
+  --color-bg-accent: #f7f9f1;
+  --color-surface: rgba(255, 255, 255, 0.86);
+  --color-surface-strong: #ffffff;
   --color-text: #353a2f;
   --color-muted: #5f6855;
   --color-muted-strong: #4a5542;
-  --color-border: rgba(91, 104, 66, 0.12);
-  --color-border-strong: rgba(91, 104, 66, 0.22);
-  --color-primary: #cfe78f;
+  --color-border: rgba(63, 76, 43, 0.16);
+  --color-border-strong: rgba(63, 76, 43, 0.26);
+  --color-primary: #b8d978;
+  --color-primary-hover: #a7cb62;
   --color-primary-foreground: #28350d;
-  --color-primary-strong: #60782a;
+  --color-primary-strong: #526d20;
+  --color-success: #5f8738;
+  --color-success-bg: #f0f6e5;
+  --color-success-border: #c9ddb0;
+  --color-info: #397a87;
+  --color-info-bg: #eaf5f5;
+  --color-info-border: #b8d9da;
+  --color-warning: #a87527;
+  --color-warning-bg: #fff8e9;
+  --color-warning-border: #ead49b;
   --color-danger: #a25952;
   --color-danger-bg: #f7ebe7;
   --color-danger-border: #e5c2bb;
 
-  /* Pastel neutral and status scales keep every Tailwind color in the same soft family. */
-  --color-slate-50: #fafbf7;
-  --color-slate-100: #f0f2e9;
-  --color-slate-200: #e1e6d7;
-  --color-slate-300: #ccd4bd;
-  --color-slate-400: #a3ae92;
-  --color-slate-500: #7b866c;
-  --color-slate-600: #626d55;
-  --color-slate-700: #505947;
-  --color-slate-800: #3f4738;
-  --color-slate-900: #30362b;
+  /* Keep data-heavy surfaces cooler and more neutral than the brand palette. */
+  --color-slate-50: #f8faf8;
+  --color-slate-100: #eef2ef;
+  --color-slate-200: #dce4df;
+  --color-slate-300: #c3d0c8;
+  --color-slate-400: #97a79d;
+  --color-slate-500: #6f8176;
+  --color-slate-600: #58695f;
+  --color-slate-700: #46564d;
+  --color-slate-800: #35443c;
+  --color-slate-900: #28352f;
   --color-gray-50: #fafbf7;
-  --color-gray-100: #f0f2e9;
-  --color-gray-200: #e1e6d7;
-  --color-gray-300: #ccd4bd;
-  --color-gray-400: #a3ae92;
-  --color-gray-500: #7b866c;
-  --color-gray-600: #626d55;
-  --color-gray-700: #505947;
-  --color-gray-800: #3f4738;
-  --color-zinc-700: #505947;
-  --color-zinc-800: #3f4738;
+  --color-gray-100: #f1f3ed;
+  --color-gray-200: #e2e6dd;
+  --color-gray-300: #cdd4c6;
+  --color-gray-400: #a4af9d;
+  --color-gray-500: #7d8977;
+  --color-gray-600: #64705e;
+  --color-gray-700: #515c4c;
+  --color-gray-800: #414b3d;
+  --color-zinc-700: #515c4c;
+  --color-zinc-800: #414b3d;
 
   --color-red-50: #fcf6f2;
   --color-red-200: #efd4cc;
@@ -85,11 +95,11 @@
   --color-emerald-600: #627f50;
   --color-emerald-700: #516943;
 
-  --color-blue-50: #eaf4ef;
-  --color-blue-200: #b7d6c8;
-  --color-blue-500: #5d927e;
-  --color-blue-700: #3e6657;
-  --color-blue-800: #345347;
+  --color-blue-50: #eaf5f5;
+  --color-blue-200: #b8d9da;
+  --color-blue-500: #4e8f98;
+  --color-blue-700: #397a87;
+  --color-blue-800: #2f626d;
   --color-indigo-50: #f6f6ef;
   --color-indigo-600: #74784e;
   --color-purple-50: #f1ebed;
@@ -129,7 +139,7 @@ body {
   margin: 0;
   overflow-x: hidden;
   color: var(--color-text);
-  background: linear-gradient(180deg, #fafbf5 0%, var(--color-bg) 100%);
+  background: linear-gradient(180deg, #f7f9f1 0%, var(--color-bg) 100%);
   font-family: var(--font-sans);
   font-optical-sizing: auto;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
@@ -138,6 +148,73 @@ body {
 
 @layer base {
   button, input, select, textarea { font: inherit; }
+}
+
+.shared-checkbox,
+.shared-radio {
+  appearance: none;
+  display: inline-grid;
+  place-content: center;
+  border-color: var(--color-border-strong);
+  background-color: var(--color-surface-strong);
+  box-shadow: 0 1px 2px rgba(75, 87, 57, 0.06);
+}
+
+.shared-checkbox::before,
+.shared-radio::before {
+  content: "";
+  transform: scale(0);
+  transition: transform 160ms var(--ease-out-soft);
+}
+
+.shared-checkbox::before {
+  width: 0.55rem;
+  height: 0.3rem;
+  border-bottom: 2px solid var(--color-primary-foreground);
+  border-left: 2px solid var(--color-primary-foreground);
+  transform: rotate(-45deg) scale(0);
+}
+
+.shared-radio::before {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 9999px;
+  background: var(--color-primary-foreground);
+}
+
+.shared-checkbox:checked,
+.shared-radio:checked {
+  border-color: var(--color-primary-strong);
+  background-color: var(--color-primary);
+}
+
+.shared-checkbox:checked::before {
+  transform: rotate(-45deg) scale(1);
+}
+
+.shared-radio:checked::before {
+  transform: scale(1);
+}
+
+.shared-checkbox:indeterminate {
+  border-color: var(--color-primary-strong);
+  background-color: var(--color-primary);
+}
+
+.shared-checkbox:indeterminate::before {
+  width: 0.55rem;
+  height: 2px;
+  border: 0;
+  border-radius: 9999px;
+  background: var(--color-primary-foreground);
+  transform: scale(1);
+}
+
+.shared-checkbox:focus-visible,
+.shared-radio:focus-visible {
+  outline: 3px solid var(--color-primary-strong);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px rgba(184, 217, 120, 0.45);
 }
 
 .chronosync-logo {
@@ -155,8 +232,9 @@ button:not(:disabled),
 [role="button"]:not([aria-disabled="true"]) { cursor: pointer; }
 
 :focus-visible {
-  outline: 3px solid rgba(96, 120, 42, 0.26);
-  outline-offset: 1px;
+  outline: 3px solid var(--color-primary-strong);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px rgba(184, 217, 120, 0.45);
 }
 
 ::selection {

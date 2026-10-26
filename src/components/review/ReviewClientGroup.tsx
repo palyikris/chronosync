@@ -2,6 +2,7 @@ import React from "react";
 import type { TFunction } from "i18next";
 import { Building2, ChevronDown, FolderGit2 } from "lucide-react";
 import { EntryRow } from "./EntryRow";
+import { Checkbox } from "../shared/Checkbox";
 import { REVIEW_PROJECT_TONE } from "./projectTones";
 import type { ClientGroup, TimesheetReviewRecord } from "./types";
 
@@ -48,15 +49,14 @@ export const ReviewClientGroup: React.FC<ReviewClientGroupProps> = ({
     <React.Fragment key={client.clientId}>
       <tr className="bg-slate-100/80 border-t border-b border-slate-200">
         <td className="p-2.5 text-center">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={isAllClientSelected}
             disabled={submittedClientEntries.length === 0 || isActionPending}
             aria-label={t("timesheetReview.selectAllClient", {
               clientName: client.clientName,
             })}
             onChange={() => onSelectGroup(submittedClientEntries)}
-            className="w-3.5 h-3.5 rounded border-slate-300 text-primary cursor-pointer accent-primary disabled:cursor-not-allowed disabled:opacity-40"
+            className="h-3.5 w-3.5 cursor-pointer disabled:opacity-40"
           />
         </td>
         <td colSpan={6} className="py-2.5 pr-4">
@@ -102,15 +102,14 @@ export const ReviewClientGroup: React.FC<ReviewClientGroupProps> = ({
               <td
                 className={`border-l-2 p-2 text-center ${projectTone.rail}`}
               >
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={isAllProjectSelected}
                   disabled={submittedEntries.length === 0 || isActionPending}
                   aria-label={t("timesheetReview.selectAllProject", {
                     projectName: project.projectName,
                   })}
                   onChange={() => onSelectGroup(submittedEntries)}
-                  className="w-3.5 h-3.5 rounded border-slate-300 text-primary cursor-pointer accent-primary disabled:cursor-not-allowed disabled:opacity-40"
+                  className="h-3.5 w-3.5 cursor-pointer disabled:opacity-40"
                 />
               </td>
               <td colSpan={6} className="py-2.5 pr-4">

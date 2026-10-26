@@ -1,5 +1,6 @@
 import React from "react";
 import type { TFunction } from "i18next";
+import { Checkbox } from "../shared/Checkbox";
 
 interface ReviewTableHeaderProps {
   t: TFunction;
@@ -17,8 +18,7 @@ export const ReviewTableHeader: React.FC<ReviewTableHeaderProps> = ({
   <thead>
     <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs font-semibold uppercase tracking-wider">
       <th className="p-3.5 w-12 text-center">
-        <input
-          type="checkbox"
+        <Checkbox
           checked={isAllActivePageSelected}
           disabled={isSelectionDisabled}
           aria-label={t(
@@ -26,7 +26,7 @@ export const ReviewTableHeader: React.FC<ReviewTableHeaderProps> = ({
             "Select all entries on this page",
           )}
           onChange={onSelectAll}
-          className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer accent-primary disabled:cursor-not-allowed disabled:opacity-40"
+          className="cursor-pointer disabled:opacity-40"
         />
       </th>
       <th className="p-3.5 font-medium w-[200px]">

@@ -10,16 +10,16 @@ export const StatusBadge: React.FC<{
     { container: string; dot: string }
   > = {
     draft: {
-      container: "border border-slate-300 bg-slate-100 text-slate-800",
+      container: "border border-border-strong bg-slate-100 text-slate-800",
       dot: "bg-slate-500",
     },
     submitted: {
-      container: "border border-blue-200 bg-blue-50 text-blue-800",
-      dot: "bg-blue-600",
+      container: "border border-info-border bg-info-bg text-info",
+      dot: "bg-info",
     },
     approved: {
-      container: "border border-emerald-200 bg-emerald-50 text-emerald-800",
-      dot: "bg-emerald-600",
+      container: "border border-success-border bg-success-bg text-success",
+      dot: "bg-success",
     },
     rejected: {
       container: "border border-rose-200 bg-rose-50 text-rose-800",

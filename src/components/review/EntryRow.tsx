@@ -1,6 +1,7 @@
 import React from "react";
 import { Check, Undo2, X } from "lucide-react";
 import { Tooltip } from "../shared/Tooltip";
+import { Checkbox } from "../shared/Checkbox";
 import { StatusBadge } from "./StatusBadge";
 import type { ReviewProjectTone } from "./projectTones";
 import type { TimesheetReviewRecord } from "./types";
@@ -54,13 +55,12 @@ export const EntryRow: React.FC<EntryRowProps> = React.memo(
         <td
           className={`w-12 border-l-2 p-3.5 text-center ${projectTone.rail}`}
         >
-          <input
-            type="checkbox"
+          <Checkbox
             checked={isSelected}
             disabled={entry.status !== "submitted" || isActionPending}
             aria-label={selectLabel}
             onChange={() => onSelect(entry.id)}
-            className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer accent-primary disabled:cursor-not-allowed disabled:opacity-40"
+            className="cursor-pointer disabled:opacity-40"
           />
         </td>
 

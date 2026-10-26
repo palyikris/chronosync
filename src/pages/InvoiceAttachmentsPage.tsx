@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { DatePicker } from "../components/shared/DatePicker";
 import { Button } from "../components/shared/Button";
+import { Checkbox } from "../components/shared/Checkbox";
 import { useAuth } from "../context/useAuth";
 import { fetchActiveClients } from "../services/clientProjectService";
 import type { Client } from "../types/client-project";
@@ -372,12 +373,11 @@ export const InvoiceAttachmentsPage: React.FC = () => {
             <div className="mt-4 grid gap-3 border-t border-border-strong pt-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
               <div className="relative">
                 <label className="flex items-center gap-3 text-sm text-text">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={canUpdateRemainingHours && updateRemainingHours}
                     onChange={(event) => setUpdateRemainingHours(event.target.checked)}
                     disabled={!canUpdateRemainingHours}
-                    className="h-4 w-4 rounded border-border-strong text-primary focus:ring-primary"
+                    className="h-4 w-4"
                   />
                   <span className="inline-flex items-center gap-2">
                     <span className="font-medium">
@@ -562,11 +562,10 @@ export const InvoiceAttachmentsPage: React.FC = () => {
                         )}
                       </td>
                       <td className="px-5 py-4 text-center">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={isChecked}
                           onChange={() => toggleClient(client.id)}
-                          className="h-4 w-4 rounded border-border-strong text-primary focus:ring-primary"
+                          className="h-4 w-4"
                           aria-label={t("dashboard.selectClientForInvoice", {
                             clientName: client.name,
                           })}
