@@ -230,8 +230,12 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
           </div>
         ) : (
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-border-strong bg-surface shadow-sm">
-            <div className="border-b border-primary-strong/20 bg-primary/15 px-4 py-4 sm:px-5">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="relative overflow-hidden border-b border-border-strong bg-white px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] sm:px-5">
+              <div
+                className="pointer-events-none absolute -top-12 -right-10 h-28 w-28 rounded-full border border-primary-strong/10 bg-primary/15"
+                aria-hidden="true"
+              />
+              <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-text">
                     {t("dashboard.invoiceAttachmentSelectionTitle")}

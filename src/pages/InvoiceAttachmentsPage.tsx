@@ -331,8 +331,12 @@ export const InvoiceAttachmentsPage: React.FC = () => {
         </div>
       ) : (
         <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-border-strong bg-surface shadow-sm">
-          <div className="border-b border-primary-strong/20 bg-primary/15 px-4 py-5 sm:px-5 sm:py-6">
-            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+          <div className="relative overflow-hidden border-b border-border-strong bg-white px-4 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] sm:px-5 sm:py-6">
+            <div
+              className="pointer-events-none absolute -top-12 -right-10 h-28 w-28 rounded-full border border-primary-strong/10 bg-primary/15"
+              aria-hidden="true"
+            />
+            <div className="relative grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-text">
                   {t("dashboard.invoiceAttachmentSelectionTitle")}
