@@ -284,13 +284,6 @@ export default function TimesheetReviewPage() {
         </div>
       </Card>
 
-      <KpiSummaryCards
-        items={kpiItems.map((item, index) => ({
-          ...item,
-          onClick: () => setStatusFilter(index === 1 ? "approved" : "submitted"),
-        }))}
-      />
-
       {hasLoadError ? (
         <div
           role="alert"
@@ -305,6 +298,13 @@ export default function TimesheetReviewPage() {
         entries={timesheetsForReview}
         isLoading={isReviewLoading}
       ></TimesheetReviewTable>
+
+      <KpiSummaryCards
+        items={kpiItems.map((item, index) => ({
+          ...item,
+          onClick: () => setStatusFilter(index === 1 ? "approved" : "submitted"),
+        }))}
+      />
     </div>
   );
 }

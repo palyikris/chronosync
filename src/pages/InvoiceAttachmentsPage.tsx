@@ -331,7 +331,7 @@ export const InvoiceAttachmentsPage: React.FC = () => {
         </div>
       ) : (
         <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-border-strong bg-surface shadow-sm">
-          <div className="border-b border-border-strong bg-bg-accent/75 px-4 py-5 sm:px-5 sm:py-6">
+          <div className="border-b border-primary-strong/20 bg-primary/15 px-4 py-5 sm:px-5 sm:py-6">
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-text">

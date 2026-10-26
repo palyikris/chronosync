@@ -147,7 +147,7 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
 
   return (
     <Card className="flex h-full flex-col">
-      <CardHeader className="bg-bg-accent/60 px-4 py-3.5 sm:px-5 sm:py-4">
+      <CardHeader className="bg-primary/15 px-4 py-3.5 sm:px-5 sm:py-4">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">

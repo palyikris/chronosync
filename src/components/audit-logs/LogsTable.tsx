@@ -63,7 +63,7 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({
         <div className="overflow-x-auto">
           <table className="min-w-[980px] w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-border-strong bg-bg-accent text-xs font-semibold uppercase tracking-wider text-muted">
+              <tr className="border-b border-primary-strong/20 bg-primary/15 text-xs font-semibold uppercase tracking-wider text-muted">
                 <th className="p-4">{t("auditLogs.timestamp")}</th>
                 <th className="p-4">{t("auditLogs.actor")}</th>
                 <th className="p-4">{t("auditLogs.operation")}</th>

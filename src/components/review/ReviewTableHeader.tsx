@@ -16,7 +16,7 @@ export const ReviewTableHeader: React.FC<ReviewTableHeaderProps> = ({
   onSelectAll,
 }) => (
   <thead>
-    <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs font-semibold uppercase tracking-wider">
+    <tr className="bg-primary/15 border-b border-primary-strong/20 text-muted text-xs font-semibold uppercase tracking-wider">
       <th className="p-3.5 w-12 text-center">
         <Checkbox
           checked={isAllActivePageSelected}

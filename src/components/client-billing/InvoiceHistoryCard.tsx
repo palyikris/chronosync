@@ -74,7 +74,7 @@ export const InvoiceHistoryCard: React.FC<InvoiceHistoryCardProps> = ({
   return (
     <>
       <Card>
-        <div className="flex items-start justify-between gap-4 border-b border-border bg-bg-accent/35 px-4.5 py-4">
+        <div className="flex items-start justify-between gap-4 border-b border-primary-strong/20 bg-primary/15 px-4.5 py-4">
           <div>
             <h2 className="flex items-center gap-2 text-[14px] font-semibold text-text">
               <FileClock className="h-4 w-4 text-primary-strong" />

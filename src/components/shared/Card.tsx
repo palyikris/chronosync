@@ -15,7 +15,7 @@ export const Card: React.FC<CardProps> = ({ className, ...props }) => {
 };
 
 export const CardHeader: React.FC<CardProps> = ({ className, ...props }) => (
-  <div className={cn("border-b border-border bg-bg-accent/45 px-5 py-3.5", className)} {...props} />
+  <div className={cn("border-b border-primary-strong/20 bg-primary/15 px-5 py-3.5", className)} {...props} />
 );
 
 export const CardTitle: React.FC<CardProps> = ({ className, ...props }) => (
