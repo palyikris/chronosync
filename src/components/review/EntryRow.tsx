@@ -76,7 +76,7 @@ export const EntryRow: React.FC<EntryRowProps> = React.memo(
 
         <td className="p-3.5 text-slate-600">
           <Tooltip content={entry.description || "—"}>
-            <span className="truncate block max-w-[340px]">
+            <span className="block truncate">
               {entry.description || "—"}
             </span>
           </Tooltip>

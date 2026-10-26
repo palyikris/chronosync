@@ -39,14 +39,19 @@ export const getBillingProfileReadiness = (
     ["billingCity", hasText(profile.billing_city)],
     ["billingAddress", hasText(profile.billing_address)],
     ["taxSubject", profile.tax_subject !== null],
-    ["netUnitPrice", profile.net_unit_price !== null],
+    [
+      "netUnitPrice",
+      profile.net_unit_price !== null &&
+        Number.isFinite(profile.net_unit_price) &&
+        profile.net_unit_price >= 0,
+    ],
     ["paymentMethod", hasText(profile.payment_method)],
     ["invoiceItemName", hasText(profile.invoice_item_name)],
     ["invoiceUnit", hasText(profile.invoice_unit)],
     ["vatCode", hasText(profile.vat_code)],
   ];
 
-  if (profile.tax_subject === 1) {
+  if (profile.tax_subject === 1 || profile.tax_subject === 7) {
     fields.push(["taxNumber", hasText(profile.tax_number)]);
   }
 

@@ -80,3 +80,91 @@ export interface BillingProfileReadiness {
   totalCount: number;
   missingFields: BillingProfileField[];
 }
+
+export interface InvoiceReviewRecipient {
+  name: string;
+  country: string | null;
+  postal_code: string;
+  city: string;
+  address: string;
+  email: string | null;
+  send_email: boolean;
+  tax_subject: TaxSubject;
+  tax_number: string | null;
+  eu_tax_number: string | null;
+  group_tax_number: string | null;
+}
+
+export interface InvoiceReviewEntry {
+  id: string;
+  work_date: string;
+  hours_logged: number;
+  description: string;
+  project_name: string;
+}
+
+export interface ClientInvoiceReview {
+  company_id: string;
+  client_id: string;
+  client_code: string;
+  client_name: string;
+  period_start: string;
+  period_end: string;
+  issue_date: string;
+  fulfillment_date: string;
+  due_date: string;
+  payment_method: string;
+  language: InvoiceLanguage;
+  billing_model: BillingModel;
+  item_name: string;
+  quantity: number;
+  unit: string;
+  net_unit_price: number;
+  vat_code: string;
+  currency: string;
+  exchange_rate_bank?: string | null;
+  billing_profile_updated_at?: string | null;
+  net_total: number;
+  vat_total: number;
+  gross_total: number;
+  recipient: InvoiceReviewRecipient;
+  approved_entries: InvoiceReviewEntry[];
+  review_fingerprint: string;
+}
+
+export type InvoiceLedgerStatus =
+  | "issuing"
+  | "issued"
+  | "uncertain"
+  | "failed";
+
+export interface InvoiceHistoryItem {
+  id: string;
+  company_id: string;
+  client_id: string;
+  client_name: string;
+  period_start: string;
+  period_end: string;
+  status: InvoiceLedgerStatus;
+  provider: "szamlazz_hu";
+  external_id: string;
+  recipient_name: string;
+  recipient_email: string | null;
+  send_email: boolean;
+  quantity: number;
+  unit: string;
+  net_unit_price: number;
+  vat_code: string;
+  currency: string;
+  net_total: number;
+  vat_total: number;
+  gross_total: number;
+  invoice_number: string | null;
+  pdf_available: boolean;
+  provider_error_code: string | null;
+  provider_error_message: string | null;
+  attempt_count: number;
+  issued_at: string | null;
+  created_at: string;
+  updated_at: string;
+}

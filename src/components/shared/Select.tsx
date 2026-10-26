@@ -1,4 +1,5 @@
 import React, {
+  useCallback,
   useEffect,
   useId,
   useLayoutEffect,
@@ -96,6 +97,7 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
     const [isOpen, setIsOpen] = useState(false);
     const [isDisabledHintOpen, setIsDisabledHintOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
+    const [isInvalid, setIsInvalid] = useState(false);
     const [openPlacement, setOpenPlacement] =
       useState<DropdownPlacement>("bottom");
     const [menuStyles, setMenuStyles] = useState<React.CSSProperties | null>(
@@ -142,7 +144,7 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
       return Math.min(Math.max(estimatedContentHeight, 120), 320);
     }, [filteredOptions.length, shouldShowSearch]);
 
-    const getMenuPosition = (
+    const getMenuPosition = useCallback((
       lockedPlacement?: DropdownPlacement | null,
     ): { styles: React.CSSProperties; placement: DropdownPlacement } | null => {
       const trigger = triggerRef.current;
@@ -190,7 +192,7 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
           transform: placeTop ? "translateY(-100%)" : undefined,
         },
       };
-    };
+    }, [listMaxHeight, menuPlacement]);
 
     const getDisabledHintPosition = (): React.CSSProperties | null => {
       const lockButton = lockButtonRef.current;
@@ -257,17 +259,29 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
       document.addEventListener("mousedown", handleClickOutside);
       window.addEventListener("resize", updateMenuPosition);
       window.addEventListener("scroll", updateMenuPosition, true);
-      searchInputRef.current?.focus();
+
 
       return () => {
         document.removeEventListener("mousedown", handleClickOutside);
         window.removeEventListener("resize", updateMenuPosition);
         window.removeEventListener("scroll", updateMenuPosition, true);
       };
-    }, [isOpen, listMaxHeight, menuPlacement]);
+    }, [isOpen, getMenuPosition]);
+
+    useEffect(() => {
+      if (!isOpen) return;
+      const focusFrame = window.requestAnimationFrame(() => {
+        const selected = dropdownRef.current?.querySelector<HTMLButtonElement>('[role="option"][aria-selected="true"]:not(:disabled)');
+        const first = dropdownRef.current?.querySelector<HTMLButtonElement>('[role="option"]:not(:disabled)');
+        (searchInputRef.current ?? selected ?? first)?.focus();
+      });
+      return () => window.cancelAnimationFrame(focusFrame);
+    }, [isOpen]);
 
     const handleSelect = (nextValue: string) => {
       setIsOpen(false);
+      setIsInvalid(false);
+      triggerRef.current?.focus();
 
       if (!onChange) {
         return;
@@ -301,8 +315,8 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
       disabledReason ?? t("common.disabled", "Disabled");
     const openAnimationClass =
       openPlacement === "top"
-        ? "animate-[select-popover-in-from-top_180ms_cubic-bezier(0.22,1,0.36,1)]"
-        : "animate-[select-popover-in-from-bottom_180ms_cubic-bezier(0.22,1,0.36,1)]";
+        ? "animate-[select-popover-in-from-top_300ms_cubic-bezier(0.22,0.7,0.24,1)]"
+        : "animate-[select-popover-in-from-bottom_300ms_cubic-bezier(0.22,0.7,0.24,1)]";
 
     useEffect(() => {
       if (!disabled) {
@@ -381,9 +395,24 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
           )}
           disabled={disabled}
           aria-label={accessibleLabel}
+          aria-labelledby={props["aria-labelledby"]}
+          aria-describedby={props["aria-describedby"]}
+          aria-required={props.required}
+          aria-invalid={isInvalid || props["aria-invalid"]}
           aria-haspopup="listbox"
           aria-expanded={isOpen}
           aria-controls={isOpen ? `${controlId}-options` : undefined}
+          onKeyDown={(event) => {
+            if (event.key === "Escape" && isOpen) {
+              event.preventDefault();
+              event.stopPropagation();
+              setIsOpen(false);
+            }
+            if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+              event.preventDefault();
+              if (!isOpen) triggerRef.current?.click();
+            }
+          }}
           onClick={() => {
             if (disabled) {
               return;
@@ -461,10 +490,10 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
                     <div
                       ref={disabledTooltipRef}
                       className={cn(
-                        "relative origin-bottom rounded-md border border-border bg-surface-strong px-2.5 py-1.5 text-[11px] leading-tight text-muted shadow-lg transition-[opacity,transform,filter] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                        "relative origin-bottom rounded-md border border-border bg-surface-strong px-2.5 py-1.5 text-[11px] leading-tight text-muted shadow-lg transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.22,0.7,0.24,1)]",
                         isDisabledHintOpen
                           ? "translate-y-0 scale-100 opacity-100 blur-0"
-                          : "translate-y-1.5 scale-95 opacity-0 blur-[1px]",
+                          : "translate-y-0.5 scale-[0.98] opacity-0",
                       )}
                     >
                       {resolvedDisabledReason}
@@ -490,8 +519,28 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
                   !menuStyles && "invisible",
                 )}
                 aria-hidden={!menuStyles}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setIsOpen(false);
+                    triggerRef.current?.focus();
+                  } else if (event.key === "Tab") {
+                    setIsOpen(false);
+                    triggerRef.current?.focus();
+                  } else if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
+                    if (event.target === searchInputRef.current && ["Home", "End"].includes(event.key)) return;
+                    event.preventDefault();
+                    const items = Array.from(dropdownRef.current?.querySelectorAll<HTMLButtonElement>('[role="option"]:not(:disabled)') ?? []);
+                    const index = items.indexOf(document.activeElement as HTMLButtonElement);
+                    const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? items.length - 1
+                      : event.key === "ArrowDown" ? (index + 1) % items.length
+                      : (index <= 0 ? items.length - 1 : index - 1);
+                    items[nextIndex]?.focus();
+                  }
+                }}
               >
-                <div className={openAnimationClass}>
+                <div className={cn("flex min-h-0 flex-1 flex-col", openAnimationClass)}>
                   {shouldShowSearch ? (
                     <div className="border-b border-border bg-bg-accent/60 px-3 py-3">
                       <div className="auth-field">
@@ -516,7 +565,8 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
                   <div
                     id={`${controlId}-options`}
                     role="listbox"
-                    className="min-h-0 flex-1 overflow-y-auto overscroll-contain py-1"
+                    aria-label={accessibleLabel}
+                    className="motion-list-fast min-h-0 flex-1 overflow-y-auto overscroll-contain py-1"
                   >
                     {filteredOptions.length > 0 ? (
                       filteredOptions.map((option) => {
@@ -530,7 +580,7 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
                             aria-selected={isSelected}
                             disabled={option.disabled}
                             className={cn(
-                              "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-[13px] transition-colors duration-150",
+                              "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-[13px] transition-colors duration-300 ease-out",
                               isSelected
                                 ? "bg-black/6 text-text"
                                 : "text-text hover:bg-black/[0.035]",
@@ -545,14 +595,14 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
                           >
                             <span className="truncate">{option.label}</span>
                             {isSelected ? (
-                              <Check className="h-4 w-4 shrink-0 text-primary-strong" />
+                              <Check className="motion-pop h-4 w-4 shrink-0 text-primary-strong" />
                             ) : null}
                           </button>
                         );
                       })
                     ) : (
                       <div className="px-3 py-2 text-sm text-muted">
-                        No options found
+                        {t("common.noOptionsFound")}
                       </div>
                     )}
                   </div>
@@ -573,6 +623,11 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
           className="sr-only absolute inset-0 opacity-0"
           onChange={(event) => {
             onChange?.(event);
+          }}
+          onInvalid={(event) => {
+            event.preventDefault();
+            setIsInvalid(true);
+            triggerRef.current?.focus();
           }}
         >
           {children}

@@ -25,7 +25,7 @@ export const Modal: React.FC<ModalProps> = ({ open, title, onClose, children, cl
       "button:not([disabled])",
       "[href]",
       "input:not([disabled])",
-      "select:not([disabled])",
+      'select:not([disabled]):not([aria-hidden="true"])',
       "textarea:not([disabled])",
       '[tabindex]:not([tabindex="-1"])',
     ].join(",");
@@ -80,7 +80,7 @@ export const Modal: React.FC<ModalProps> = ({ open, title, onClose, children, cl
 
   return createPortal(
     <div
-      className="fixed inset-0 z-60 flex min-h-dvh w-screen animate-[fade-in_160ms_ease-out] items-end justify-center overflow-y-auto bg-text/28 p-0 backdrop-blur-[10px] sm:items-center sm:p-6"
+      className="fixed inset-0 z-60 flex min-h-dvh w-screen animate-[fade-in_280ms_ease-out] items-end justify-center overflow-y-auto bg-text/28 p-0 backdrop-blur-[10px] sm:items-center sm:p-6"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
@@ -92,11 +92,11 @@ export const Modal: React.FC<ModalProps> = ({ open, title, onClose, children, cl
         aria-labelledby={titleId}
         tabIndex={-1}
         className={cn(
-          "flex max-h-[92dvh] w-full flex-col overflow-visible rounded-t-[1.25rem] border border-border-strong bg-surface-strong/96 shadow-[0_24px_70px_rgba(75,87,57,0.2),0_2px_8px_rgba(75,87,57,0.09)] backdrop-blur-2xl animate-[modal-in_220ms_cubic-bezier(0.22,1,0.36,1)] sm:max-h-[calc(100dvh-3rem)] sm:rounded-[1.125rem]",
+          "flex max-h-[92dvh] w-full flex-col overflow-visible rounded-t-[1.25rem] border border-border-strong bg-surface-strong/96 shadow-[0_24px_70px_rgba(75,87,57,0.2),0_2px_8px_rgba(75,87,57,0.09)] backdrop-blur-2xl animate-[modal-in_360ms_cubic-bezier(0.22,0.7,0.24,1)] sm:max-h-[calc(100dvh-3rem)] sm:rounded-[1.125rem]",
           className,
         )}
       >
-        <div className="flex items-center justify-between rounded-t-[calc(1.25rem-1px)] border-b border-border bg-bg-accent/45 px-5 py-3.5 sm:rounded-t-[calc(1.125rem-1px)]">
+        <div className="flex items-center justify-between rounded-t-[calc(1.25rem-1px)] shrink-0 border-b border-border bg-bg-accent/45 px-5 py-3.5 sm:rounded-t-[calc(1.125rem-1px)]">
           <h2 id={titleId} className="text-[15px] font-semibold tracking-[-0.015em] text-text">{title}</h2>
           <Button
             variant="ghost"
@@ -106,7 +106,7 @@ export const Modal: React.FC<ModalProps> = ({ open, title, onClose, children, cl
             icon={<X className="h-5 w-5 text-muted" />}
           ></Button>
         </div>
-        {children}
+        <div className="min-h-0 overflow-y-auto overscroll-contain">{children}</div>
       </div>
     </div>,
     document.body,

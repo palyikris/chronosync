@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   CircleDollarSign,
   Download,
+  Eye,
   FileCheck2,
   Mail,
   MapPin,
@@ -15,27 +16,36 @@ import {
   Search,
   Settings2,
   ShieldCheck,
-  Sparkles,
+  Send,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Button } from "../components/shared/Button";
 import { Card } from "../components/shared/Card";
 import { Checkbox } from "../components/shared/Checkbox";
+import { InvoiceHistoryCard } from "../components/client-billing/InvoiceHistoryCard";
+import { InvoiceReviewModal } from "../components/client-billing/InvoiceReviewModal";
 import { Input } from "../components/shared/Input";
 import { Select } from "../components/shared/Select";
 import { useAuth } from "../context/useAuth";
 import {
   downloadClientInvoicePreview,
+  downloadIssuedInvoicePdf,
   fetchClientBillingProfiles,
+  fetchInvoiceHistory,
+  issueClientInvoice,
+  reconcileInvoice,
+  reviewClientInvoice,
   saveClientBillingProfile,
 } from "../services/clientBillingService";
 import { fetchClients } from "../services/clientProjectService";
 import { companyService } from "../services/companyService";
 import type {
   BillingProfileField,
+  ClientInvoiceReview,
   ClientBillingProfile,
   ClientBillingProfileUpsert,
+  InvoiceHistoryItem,
   TaxSubject,
 } from "../types/client-billing";
 import type { Client } from "../types/client-project";
@@ -308,6 +318,10 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
     kind: "success" | "error";
     message: string;
   } | null>(null);
+  const [invoiceReview, setInvoiceReview] = useState<ClientInvoiceReview | null>(null);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [issueError, setIssueError] = useState<string | null>(null);
+  const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<string | null>(null);
 
   const clientsQuery = useQuery<Client[]>({
     queryKey: ["clients", userProfile?.id, companyId],
@@ -332,6 +346,15 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
     queryKey: ["company", companyId],
     queryFn: () => companyService.fetchCompany(companyId),
     enabled: Boolean(companyId) && !preview,
+  });
+
+  const historyQuery = useQuery<InvoiceHistoryItem[]>({
+    queryKey: ["invoice-history", companyId],
+    queryFn: () => fetchInvoiceHistory(companyId),
+    enabled: Boolean(companyId) && !preview,
+    retry: false,
+    refetchInterval: (query) =>
+      query.state.data?.some((item) => item.status === "issuing") ? 15_000 : false,
   });
 
   const clients = useMemo(
@@ -375,6 +398,9 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
     setIsDirty(false);
     setResult(null);
     setPreviewResult(null);
+    setInvoiceReview(null);
+    setReviewOpen(false);
+    setIssueError(null);
   }, [selectedClient, selectedStoredProfile]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
@@ -405,6 +431,8 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
     setIsDirty(true);
     setResult(null);
     setPreviewResult(null);
+    setInvoiceReview(null);
+    setIssueError(null);
   };
 
   const saveMutation = useMutation({
@@ -458,6 +486,68 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
     },
   });
 
+  const reviewMutation = useMutation({
+    mutationFn: reviewClientInvoice,
+    onSuccess: (review) => {
+      setInvoiceReview(review);
+      setIssueError(null);
+      setReviewOpen(true);
+    },
+    onError: (error) => {
+      setPreviewResult({
+        kind: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : t("clientBilling.reviewFailed"),
+      });
+    },
+  });
+
+  const issueMutation = useMutation({
+    mutationFn: issueClientInvoice,
+    onSuccess: (issuedInvoice) => {
+      setReviewOpen(false);
+      setInvoiceReview(null);
+      setIssueError(null);
+      setPreviewResult({
+        kind: "success",
+        message: t("clientBilling.invoiceIssued", {
+          invoiceNumber: issuedInvoice.invoice_number,
+        }),
+      });
+      void queryClient.invalidateQueries({ queryKey: ["invoice-history", companyId] });
+      void queryClient.invalidateQueries({ queryKey: ["timesheets"] });
+    },
+    onError: (error) => {
+      setIssueError(
+        error instanceof Error ? error.message : t("clientBilling.issueFailed"),
+      );
+      void queryClient.invalidateQueries({ queryKey: ["invoice-history", companyId] });
+    },
+  });
+
+  const reconcileMutation = useMutation({
+    mutationFn: reconcileInvoice,
+    onSuccess: () => {
+      setPreviewResult({
+        kind: "success",
+        message: t("clientBilling.reconciliationSaved"),
+      });
+      void queryClient.invalidateQueries({ queryKey: ["invoice-history", companyId] });
+      void queryClient.invalidateQueries({ queryKey: ["timesheets"] });
+    },
+    onError: (error) => {
+      setPreviewResult({
+        kind: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : t("clientBilling.reconciliationFailed"),
+      });
+    },
+  });
+
   const clientRows = useMemo(
     () =>
       clients.map((client) => {
@@ -480,8 +570,8 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
   );
 
   const readyCount = clientRows.filter(({ readiness }) => readiness.complete).length;
-  const automatedCount = clientRows.filter(
-    ({ profile: billingProfile }) => billingProfile.automatic_invoicing_enabled,
+  const issuedCount = (historyQuery.data ?? []).filter(
+    (invoice) => invoice.status === "issued",
   ).length;
   const draftReadiness = draft ? getBillingProfileReadiness(draft) : null;
   const savedProfileReadiness = selectedStoredProfile
@@ -511,7 +601,9 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
   };
 
   const integrationConfigured =
-    preview || invoiceSettingsQuery.data?.api_key_configured === true;
+    preview ||
+    (invoiceSettingsQuery.data?.invoice_provider === "szamlazz_hu" &&
+      invoiceSettingsQuery.data.api_key_configured === true);
   const isCompanyPreviewMode =
     preview || (companyQuery.data?.szamlazz_test_mode ?? true);
   const loading = !preview && (clientsQuery.isLoading || profilesQuery.isLoading);
@@ -531,6 +623,7 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
       !isDirty &&
       invoicePeriodIsValid,
   );
+  const canReviewInvoice = canGeneratePreview;
 
   const generatePreview = () => {
     if (!selectedClient || !canGeneratePreview || previewMutation.isPending) return;
@@ -541,6 +634,61 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
       clientCode: selectedClient.client_code,
       periodStart: invoicePeriod.start,
       periodEnd: invoicePeriod.end,
+    });
+  };
+
+  const generateReview = () => {
+    if (!selectedClient || !canReviewInvoice || reviewMutation.isPending) return;
+    setPreviewResult(null);
+    setIssueError(null);
+    reviewMutation.mutate({
+      companyId,
+      clientId: selectedClient.id,
+      periodStart: invoicePeriod.start,
+      periodEnd: invoicePeriod.end,
+    });
+  };
+
+  const downloadInvoicePdf = async (item: InvoiceHistoryItem) => {
+    setDownloadingInvoiceId(item.id);
+    setPreviewResult(null);
+    try {
+      await downloadIssuedInvoicePdf(companyId, item.id);
+    } catch (error) {
+      setPreviewResult({
+        kind: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : t("clientBilling.pdfDownloadFailed"),
+      });
+    } finally {
+      setDownloadingInvoiceId(null);
+    }
+  };
+
+  const resolveNotIssued = (item: InvoiceHistoryItem) => {
+    if (!window.confirm(t("clientBilling.resolveNotIssuedConfirmation"))) return;
+    reconcileMutation.mutate({
+      companyId,
+      invoiceId: item.id,
+      resolution: "not_issued",
+    });
+  };
+
+  const resolveIssued = (
+    item: InvoiceHistoryItem,
+    invoiceNumber: string,
+    netTotal: number,
+    grossTotal: number,
+  ) => {
+    return reconcileMutation.mutateAsync({
+      companyId,
+      invoiceId: item.id,
+      resolution: "issued",
+      invoiceNumber,
+      netTotal,
+      grossTotal,
     });
   };
 
@@ -571,7 +719,7 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
       <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <div className="mb-2 flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-primary-strong">
-            <Sparkles className="h-3.5 w-3.5" />
+            <ReceiptText className="h-3.5 w-3.5" />
             {t("clientBilling.eyebrow")}
           </div>
           <h1 className="text-2xl font-semibold tracking-[-0.035em] text-text sm:text-[28px]">
@@ -630,10 +778,10 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
             icon: <FileCheck2 />,
           },
           {
-            label: t("clientBilling.automatedProfiles"),
-            value: automatedCount,
-            detail: t("clientBilling.automatedProfilesDetail"),
-            icon: <Sparkles />,
+            label: t("clientBilling.issuedInvoices"),
+            value: issuedCount,
+            detail: t("clientBilling.issuedInvoicesDetail"),
+            icon: <Send />,
           },
         ].map((metric) => (
           <Card key={metric.label} className="p-4">
@@ -723,9 +871,8 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
 
             <div className="max-h-[360px] space-y-1 overflow-y-auto p-2 lg:max-h-[640px]">
               {filteredClientRows.length > 0 ? (
-                filteredClientRows.map(({ client, profile: billingProfile, readiness }) => {
+                filteredClientRows.map(({ client, readiness }) => {
                   const isSelected = client.id === effectiveSelectedClientId;
-                  const isAutomated = billingProfile.automatic_invoicing_enabled;
                   return (
                     <button
                       key={client.id}
@@ -760,15 +907,11 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
                           <span>{client.client_code}</span>
                           <span aria-hidden="true">·</span>
                           <span
-                            className={cn(
-                              isAutomated && "font-medium text-primary-strong",
-                            )}
+                            className={cn(readiness.complete && "font-medium text-success")}
                           >
-                            {isAutomated
-                              ? t("clientBilling.statusAutomated")
-                              : readiness.complete
-                                ? t("clientBilling.statusReady")
-                                : t("clientBilling.statusIncomplete")}
+                            {readiness.complete
+                              ? t("clientBilling.statusReady")
+                              : t("clientBilling.statusIncomplete")}
                           </span>
                         </span>
                       </span>
@@ -800,18 +943,14 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
                       <span
                         className={cn(
                           "rounded-full px-2 py-0.5 text-[10px] font-medium",
-                          draft.automatic_invoicing_enabled
-                            ? "bg-primary/18 text-primary-strong"
-                            : draftReadiness.complete
+                          draftReadiness.complete
                               ? "bg-success-bg text-success"
                               : "bg-warning-bg text-warning",
                         )}
                       >
-                        {draft.automatic_invoicing_enabled
-                          ? t("clientBilling.statusAutomated")
-                          : draftReadiness.complete
-                            ? t("clientBilling.statusReady")
-                            : t("clientBilling.statusIncomplete")}
+                        {draftReadiness.complete
+                          ? t("clientBilling.statusReady")
+                          : t("clientBilling.statusIncomplete")}
                       </span>
                     </div>
                     <p className="mt-1 text-[11.5px] text-muted">
@@ -946,18 +1085,33 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
                         setPreviewResult(null);
                       }}
                     />
-                    <Button
-                      type="button"
-                      size="lg"
-                      icon={<Download />}
-                      disabled={!canGeneratePreview || previewMutation.isPending}
-                      onClick={generatePreview}
-                      className="w-full sm:w-auto"
-                    >
-                      {previewMutation.isPending
-                        ? t("clientBilling.generatingPreview")
-                        : t("clientBilling.generatePreview")}
-                    </Button>
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <Button
+                        type="button"
+                        size="lg"
+                        variant="outline"
+                        icon={<Download />}
+                        disabled={!canGeneratePreview || previewMutation.isPending}
+                        onClick={generatePreview}
+                        className="w-full sm:w-auto"
+                      >
+                        {previewMutation.isPending
+                          ? t("clientBilling.generatingPreview")
+                          : t("clientBilling.generatePreview")}
+                      </Button>
+                      <Button
+                        type="button"
+                        size="lg"
+                        icon={<Eye />}
+                        disabled={!canReviewInvoice || reviewMutation.isPending}
+                        onClick={generateReview}
+                        className="w-full sm:w-auto"
+                      >
+                        {reviewMutation.isPending
+                          ? t("clientBilling.loadingReview")
+                          : t("clientBilling.reviewAndIssue")}
+                      </Button>
+                    </div>
                   </div>
                   <div className="min-h-5 text-[11px] leading-5">
                     {previewResult ? (
@@ -1239,13 +1393,9 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
                     id="attach-timesheet-report"
                     title={t("clientBilling.attachTimesheet")}
                     description={t("clientBilling.attachTimesheetDescription")}
-                    checked={draft.attach_timesheet_report}
-                    onChange={(checked) =>
-                      updateDraft((current) => ({
-                        ...current,
-                        attach_timesheet_report: checked,
-                      }))
-                    }
+                    checked={false}
+                    disabled
+                    onChange={() => undefined}
                   />
                 </div>
               </Card>
@@ -1253,9 +1403,9 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
               <Card className="p-4.5">
                 <div className="space-y-5">
                   <SectionHeading
-                    icon={<Sparkles />}
-                    title={t("clientBilling.automationTitle")}
-                    description={t("clientBilling.automationDescription")}
+                    icon={<FileCheck2 />}
+                    title={t("clientBilling.manualReadinessTitle")}
+                    description={t("clientBilling.manualReadinessDescription")}
                   />
 
                   {!draftReadiness.complete ? (
@@ -1291,45 +1441,8 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
                     </div>
                   )}
 
-                  <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_190px]">
-                    <SwitchRow
-                      id="automatic-invoicing"
-                      title={t("clientBilling.enableAutomation")}
-                      description={
-                        selectedClient.is_active
-                          ? t("clientBilling.enableAutomationDescription")
-                          : t("clientBilling.inactiveAutomationDescription")
-                      }
-                      checked={draft.automatic_invoicing_enabled}
-                      disabled={
-                        !draft.automatic_invoicing_enabled &&
-                        (!draftReadiness.complete || !selectedClient.is_active)
-                      }
-                      onChange={(checked) =>
-                        updateDraft((current) => ({
-                          ...current,
-                          automatic_invoicing_enabled: checked,
-                        }))
-                      }
-                    />
-                    <Input
-                      id="invoice-schedule-day"
-                      type="number"
-                      min="1"
-                      max="28"
-                      step="1"
-                      label={t("clientBilling.scheduleDay")}
-                      value={draft.invoice_schedule_day}
-                      onChange={(event) =>
-                        updateDraft((current) => ({
-                          ...current,
-                          invoice_schedule_day: Number(event.target.value),
-                        }))
-                      }
-                    />
-                  </div>
-                  <p className="text-[10.5px] leading-5 text-muted">
-                    {t("clientBilling.scheduleHint")}
+                  <p className="rounded-xl border border-border bg-bg-accent/40 px-3.5 py-3 text-[11px] leading-5 text-muted">
+                    {t("clientBilling.manualOnlyHint")}
                   </p>
                 </div>
               </Card>
@@ -1371,6 +1484,35 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
           ) : null}
         </div>
       )}
+
+      {!preview ? (
+        <InvoiceHistoryCard
+          history={historyQuery.data ?? []}
+          loading={historyQuery.isLoading}
+          error={Boolean(historyQuery.error)}
+          downloadingId={downloadingInvoiceId}
+          reconciling={reconcileMutation.isPending}
+          onDownload={(item) => void downloadInvoicePdf(item)}
+          onResolveNotIssued={resolveNotIssued}
+          onResolveIssued={resolveIssued}
+        />
+      ) : null}
+
+      <InvoiceReviewModal
+        key={invoiceReview?.review_fingerprint ?? "empty-review"}
+        open={reviewOpen}
+        review={invoiceReview}
+        issuing={issueMutation.isPending}
+        canIssue={!isCompanyPreviewMode}
+        error={issueError}
+        onClose={() => {
+          setReviewOpen(false);
+          setIssueError(null);
+        }}
+        onIssue={() => {
+          if (invoiceReview) issueMutation.mutate(invoiceReview);
+        }}
+      />
     </div>
   );
 };

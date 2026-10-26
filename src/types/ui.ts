@@ -33,7 +33,7 @@ export interface ModalProps {
   className?: string;
 }
 
-export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {}
+export type CardProps = React.HTMLAttributes<HTMLDivElement>;
 
 export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   leftIcon?: React.ReactNode;
@@ -42,7 +42,7 @@ export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElemen
   disabledReason?: string;
 }
 
-export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
+export type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement>;
 
 export interface ProtectedRouteProps {
   requireAdmin?: boolean;

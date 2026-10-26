@@ -9,8 +9,8 @@
   --color-surface: rgba(252, 253, 247, 0.84);
   --color-surface-strong: #fcfdf7;
   --color-text: #353a2f;
-  --color-muted: #747b69;
-  --color-muted-strong: #59614f;
+  --color-muted: #5f6855;
+  --color-muted-strong: #4a5542;
   --color-border: rgba(91, 104, 66, 0.12);
   --color-border-strong: rgba(91, 104, 66, 0.22);
   --color-primary: #cfe78f;
@@ -85,26 +85,27 @@
   --color-emerald-600: #627f50;
   --color-emerald-700: #516943;
 
-  --color-blue-50: #f3f8f5;
-  --color-blue-200: #c8dfd6;
-  --color-blue-500: #709d8c;
-  --color-blue-700: #4d7164;
-  --color-blue-800: #405d54;
+  --color-blue-50: #eaf4ef;
+  --color-blue-200: #b7d6c8;
+  --color-blue-500: #5d927e;
+  --color-blue-700: #3e6657;
+  --color-blue-800: #345347;
   --color-indigo-50: #f6f6ef;
   --color-indigo-600: #74784e;
-  --color-purple-50: #f8f6f4;
-  --color-purple-100: #ede8e3;
-  --color-purple-200: #dbd0cc;
-  --color-purple-500: #987d82;
-  --color-purple-700: #6e595d;
-  --color-purple-800: #59494c;
+  --color-purple-50: #f1ebed;
+  --color-purple-100: #e6dadd;
+  --color-purple-200: #d3bec4;
+  --color-purple-500: #8d6871;
+  --color-purple-700: #664b53;
+  --color-purple-800: #523d43;
 
   --shadow-card: 0 1px 2px rgba(75, 87, 57, 0.04), 0 5px 18px rgba(75, 87, 57, 0.045);
   --shadow-card-hover: 0 2px 3px rgba(75, 87, 57, 0.045), 0 10px 28px rgba(75, 87, 57, 0.07);
   --radius-card: 1rem;
   --radius-field: 0.625rem;
-  --transition-fast: 160ms cubic-bezier(0.25, 0.1, 0.25, 1);
-  --transition-card: 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  --transition-fast: 240ms cubic-bezier(0.22, 0.7, 0.24, 1);
+  --transition-card: 440ms cubic-bezier(0.22, 0.7, 0.24, 1);
+  --ease-out-soft: cubic-bezier(0.22, 0.7, 0.24, 1);
 }
 
 :root {
@@ -185,27 +186,76 @@ button:not(:disabled),
     radial-gradient(circle at 12% 88%, rgba(218, 230, 183, 0.3), transparent 30rem);
 }
 
-.page-transition { animation: page-in 280ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.page-transition { animation: page-in 480ms var(--ease-out-soft) both; }
 @keyframes page-in {
-  from { opacity: 0; transform: translateY(4px) scale(0.998); }
+  from { opacity: 0.35; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.motion-list > * { animation: content-in 540ms var(--ease-out-soft) both; }
+.motion-list > :nth-child(2) { animation-delay: 25ms; }
+.motion-list > :nth-child(3) { animation-delay: 50ms; }
+.motion-list > :nth-child(n + 4) { animation-delay: 70ms; }
+
+.motion-list-fast > * { animation: content-in 340ms var(--ease-out-soft) both; }
+.motion-list-fast > :nth-child(2) { animation-delay: 10ms; }
+.motion-list-fast > :nth-child(3) { animation-delay: 20ms; }
+.motion-list-fast > :nth-child(n + 4) { animation-delay: 30ms; }
+
+.motion-pop { animation: soft-pop 380ms var(--ease-out-soft) both; }
+.calendar-month { animation: calendar-month-in 520ms var(--ease-out-soft) both; }
+.calendar-label { animation: calendar-label-in 420ms var(--ease-out-soft) both; }
+
+@keyframes content-in {
+  from { opacity: 0.5; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes soft-pop {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes badge-in {
+  from { opacity: 0; transform: scale(0.82); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes calendar-month-in {
+  from { opacity: 0.55; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes calendar-label-in {
+  from { opacity: 0.4; }
+  to { opacity: 1; }
+}
+
+@keyframes auth-frame-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes auth-content-in {
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes modal-in {
-  from { opacity: 0; transform: translateY(16px) scale(0.985); }
+  from { opacity: 0; transform: translateY(8px) scale(0.995); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 @keyframes popover-in {
-  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  from { opacity: 0; transform: translateY(-2px) scale(0.995); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 @keyframes select-popover-in-from-top {
-  from { opacity: 0; transform: translateY(-4px) scale(0.985); }
+  from { opacity: 0; transform: translateY(-2px) scale(0.995); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 @keyframes select-popover-in-from-bottom {
-  from { opacity: 0; transform: translateY(4px) scale(0.985); }
+  from { opacity: 0; transform: translateY(2px) scale(0.995); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
@@ -232,6 +282,7 @@ button:not(:disabled),
   background: rgba(252, 253, 247, 0.9);
   box-shadow: 0 24px 64px rgba(75, 87, 57, 0.16), 0 2px 7px rgba(75, 87, 57, 0.08);
   backdrop-filter: blur(30px) saturate(1.15);
+  animation: auth-frame-in 680ms var(--ease-out-soft) both;
 }
 
 .auth-showcase {
@@ -261,6 +312,13 @@ button:not(:disabled),
   content: "";
 }
 
+.auth-showcase > * { animation: auth-content-in 620ms var(--ease-out-soft) both; }
+.auth-showcase > :nth-child(1) { animation-delay: 80ms; }
+.auth-showcase > :nth-child(2) { animation-delay: 125ms; }
+.auth-showcase > :nth-child(3) { animation-delay: 170ms; }
+.auth-showcase .chronosync-logo { transition: transform var(--transition-card); }
+.auth-showcase .chronosync-logo:hover { transform: scale(1.025); }
+
 .auth-card {
   position: relative;
   z-index: 1;
@@ -270,6 +328,12 @@ button:not(:disabled),
   padding: clamp(2rem, 4.5vw, 4rem);
   background: rgba(252, 253, 247, 0.92);
 }
+
+.auth-card > * { animation: auth-content-in 600ms var(--ease-out-soft) both; }
+.auth-card > :nth-child(1) { animation-delay: 100ms; }
+.auth-card > :nth-child(2) { animation-delay: 145ms; }
+.auth-card > :nth-child(3) { animation-delay: 190ms; }
+.auth-card > :nth-child(n + 4) { animation-delay: 225ms; }
 
 .auth-brand-badge {
   display: inline-flex;
@@ -281,7 +345,9 @@ button:not(:disabled),
   color: var(--color-primary-foreground);
   background: var(--color-primary);
   box-shadow: 0 5px 14px rgba(96, 120, 42, 0.2);
+  transition: transform var(--transition-card), box-shadow var(--transition-card);
 }
+.auth-brand-badge:hover { box-shadow: 0 7px 16px rgba(96, 120, 42, 0.22); }
 
 .auth-title { color: var(--color-text); }
 .auth-subtitle { color: var(--color-muted); }
@@ -301,6 +367,12 @@ button:not(:disabled),
   pointer-events: none;
   color: var(--color-muted);
   transform: translateY(-50%);
+  transition: color var(--transition-fast), transform var(--transition-fast);
+}
+
+.auth-field:focus-within .auth-field-icon {
+  color: var(--color-primary-strong);
+  transform: translateY(-50%) scale(1.06);
 }
 
 .auth-input {
@@ -313,8 +385,10 @@ button:not(:disabled),
   font-size: 0.8125rem;
   line-height: 1.15rem;
   color: var(--color-text);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
 }
+
+.auth-input:not(:disabled):hover { border-color: rgba(96, 120, 42, 0.34); }
 
 .auth-input:disabled,
 button.auth-input:disabled {
@@ -420,9 +494,11 @@ button.auth-input:disabled {
 }
 .auth-button-primary:hover {
   filter: brightness(1.04);
-  box-shadow: 0 1px 3px rgba(96, 120, 42, 0.24);
+  box-shadow: 0 3px 8px rgba(96, 120, 42, 0.16);
 }
-.auth-button-primary:active { transform: translateY(0) scale(0.99); }
+.auth-button-primary:active { transform: scale(0.995); }
+.auth-button-primary svg { transition: transform var(--transition-fast); }
+.auth-button-primary:hover svg { transform: translateX(1px); }
 .auth-link-button { color: var(--color-primary-strong); }
 .auth-error {
   border: 1px solid var(--color-danger-border);
@@ -431,6 +507,7 @@ button.auth-input:disabled {
   padding: 0.85rem 1rem;
   font-size: 0.8rem;
   color: var(--color-danger);
+  animation: soft-pop 380ms var(--ease-out-soft) both;
 }
 
 table { font-variant-numeric: tabular-nums; }

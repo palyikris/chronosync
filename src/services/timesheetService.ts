@@ -20,6 +20,7 @@ import {
 
 const pad = (value: number) => String(value).padStart(2, "0");
 const ACTIVE_TIMER_STORAGE_PREFIX = "chronosync:active-timer";
+const stoppingTimers = new Map<string, Promise<TimesheetEntry | null>>();
 
 const isBrowser = () => typeof window !== "undefined";
 
@@ -39,6 +40,7 @@ const safeReadActiveTimer = (userId: string): ActiveTimerState | null => {
     if (
       !parsed ||
       typeof parsed.started_at !== "string" ||
+      !Number.isFinite(Date.parse(parsed.started_at)) ||
       typeof parsed.project_id !== "string" ||
       typeof parsed.description !== "string" ||
       typeof parsed.company_id !== "string"
@@ -190,6 +192,11 @@ export async function startTimer(
   data: ActiveTimerState,
 ): Promise<ActiveTimerState> {
   const user = await getCurrentUser();
+  const existingTimer = safeReadActiveTimer(user.id);
+  if (existingTimer) return existingTimer;
+  if (!Number.isFinite(Date.parse(data.started_at)) || Date.parse(data.started_at) > Date.now()) {
+    throw new Error(i18n.t("errors.invalidActiveTimerState"));
+  }
   const activeTimerState: ActiveTimerState = {
     started_at: data.started_at,
     project_id: data.project_id,
@@ -217,9 +224,25 @@ export async function stopTimer(
   entryData: ActiveTimerState,
 ): Promise<TimesheetEntry | null> {
   const user = await getCurrentUser();
+  const pendingStop = stoppingTimers.get(user.id);
+  if (pendingStop) return pendingStop;
+
+  const operation = persistStoppedTimer(user.id, entryData);
+  stoppingTimers.set(user.id, operation);
+  try {
+    return await operation;
+  } finally {
+    stoppingTimers.delete(user.id);
+  }
+}
+
+async function persistStoppedTimer(
+  userId: string,
+  entryData: ActiveTimerState,
+): Promise<TimesheetEntry | null> {
   const startedAtMs = Date.parse(entryData.started_at);
 
-  if (Number.isNaN(startedAtMs)) {
+  if (!Number.isFinite(startedAtMs) || startedAtMs > Date.now()) {
     throw new Error(i18n.t("errors.invalidActiveTimerState"));
   }
 
@@ -229,7 +252,7 @@ export async function stopTimer(
   );
 
   if (!shouldPersistTimerEntry(durationMinutes)) {
-    safeClearActiveTimer(user.id);
+    safeClearActiveTimer(userId);
     return null;
   }
 
@@ -247,6 +270,10 @@ export async function stopTimer(
     throw new Error(i18n.t("errors.invalidActiveTimerState"));
   }
 
+  if (entryData.client_id && entryData.client_id !== projectRow?.client_id) {
+    throw new Error(i18n.t("errors.invalidActiveTimerState"));
+  }
+
   if (
     projectRow?.company_id &&
     projectRow.company_id !== entryData.company_id
@@ -257,16 +284,16 @@ export async function stopTimer(
   const roundedHoursLogged = getRoundedTimerHours(durationMinutes);
 
   const createdEntry = await createTimesheetEntry({
-    work_date: getLocalDateValue(new Date()),
+    work_date: getLocalDateValue(new Date(startedAtMs)),
     hours_logged: roundedHoursLogged,
     description: entryData.description,
     company_id: entryData.company_id,
     client_id: resolvedClientId,
     project_id: entryData.project_id,
-    target_user_id: user.id,
+    target_user_id: userId,
   });
 
-  safeClearActiveTimer(user.id);
+  safeClearActiveTimer(userId);
   return createdEntry;
 }
 
@@ -346,8 +373,11 @@ export async function updateTimesheetEntry(
 
   await assertTimesheetDateIsUnlocked(
     existingEntry.user_id,
-    validatedPayload.work_date ?? existingEntry.work_date,
+    existingEntry.work_date,
   );
+  if (validatedPayload.work_date && validatedPayload.work_date !== existingEntry.work_date) {
+    await assertTimesheetDateIsUnlocked(existingEntry.user_id, validatedPayload.work_date);
+  }
 
   const { data, error } = await supabase
     .from("timesheets")
@@ -368,6 +398,10 @@ export async function updateTimesheetEntry(
         project_id: validatedPayload.project_id,
       }),
       status: "draft",
+      submitted_at: null,
+      approved_by: null,
+      approved_at: null,
+      rejection_reason: null,
     })
     .eq("id", id)
     .select()

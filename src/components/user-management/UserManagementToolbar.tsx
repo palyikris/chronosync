@@ -12,6 +12,8 @@ interface UserManagementToolbarProps {
   isFilterPopoverOpen: boolean;
   onFilterPopoverToggle: () => void;
   onFiltersReset: () => void;
+  onExport: () => void;
+  exportDisabled: boolean;
 }
 
 export const UserManagementToolbar: React.FC<UserManagementToolbarProps> = ({
@@ -22,6 +24,8 @@ export const UserManagementToolbar: React.FC<UserManagementToolbarProps> = ({
   isFilterPopoverOpen,
   onFilterPopoverToggle,
   onFiltersReset,
+  onExport,
+  exportDisabled,
 }) => {
   const { t } = useTranslation();
 
@@ -31,6 +35,7 @@ export const UserManagementToolbar: React.FC<UserManagementToolbarProps> = ({
         <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
         <input
           type="text"
+          aria-label={t("users.searchPlaceholder")}
           value={searchTerm}
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder={t("users.searchPlaceholder")}
@@ -48,6 +53,8 @@ export const UserManagementToolbar: React.FC<UserManagementToolbarProps> = ({
         />
         <button
           type="button"
+          onClick={onExport}
+          disabled={exportDisabled}
           className="flex items-center gap-2 rounded-xl border border-border-strong bg-white px-4 py-2.5 text-sm font-medium text-muted transition hover:bg-slate-100"
         >
           <Download className="w-4 h-4" /> {t("users.export")}

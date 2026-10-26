@@ -48,7 +48,7 @@ export const LanguagePreferencesCard: React.FC<Props> = ({
             <option value="hu">{t("userSettings.languageHungarian")}</option>
           </Select>
           {showSuccess ? (
-            <p className="text-xs font-medium text-primary-strong">
+            <p className="motion-pop text-xs font-medium text-primary-strong">
               {t("userSettings.languageUpdated")}
             </p>
           ) : null}

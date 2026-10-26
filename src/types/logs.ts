@@ -23,9 +23,9 @@ export interface AuditLogEntry {
   table_name: string;
   record_id: string | null;
   operation: AuditOperation;
-  old_data: Record<string, any> | null;
-  new_data: Record<string, any> | null;
-  changed_fields: Record<string, { was: any; became: any }> | null;
+  old_data: Record<string, unknown> | null;
+  new_data: Record<string, unknown> | null;
+  changed_fields: Record<string, { was: unknown; became: unknown }> | null;
   performed_by: string | null;
   created_at: string;
   profiles: AuditLogProfile | null;

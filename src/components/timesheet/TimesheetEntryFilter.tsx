@@ -12,12 +12,12 @@ const TIMESHEET_FILTERS_COLLAPSED_STORAGE_KEY =
 
 const getInitialCollapsedState = () => {
   if (typeof window === "undefined") {
-    return false;
+    return true;
   }
 
   return (
-    window.localStorage.getItem(TIMESHEET_FILTERS_COLLAPSED_STORAGE_KEY) ===
-    "true"
+    window.localStorage.getItem(TIMESHEET_FILTERS_COLLAPSED_STORAGE_KEY) !==
+    "false"
   );
 };
 
@@ -106,27 +106,28 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
   }, [isCollapsed]);
 
   return (
-    <Card className="relative z-10 overflow-visible p-3">
+    <Card className="relative z-10 min-w-0 overflow-visible p-3">
       <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center self-center">
+        <div className="flex min-w-0 flex-col gap-3 xl:flex-row xl:flex-wrap xl:items-center xl:justify-between">
+          <div className="flex w-full min-w-0 items-center sm:w-auto">
             {viewModeSwitcher}
           </div>
 
-          <div className="ml-auto flex shrink-0 items-center gap-2">
+          <div className="flex w-full min-w-0 flex-col gap-3 xl:ml-auto xl:w-auto xl:flex-row xl:items-center xl:gap-2">
             <div
+              inert={isCollapsed}
               className={cn(
-                "flex items-center gap-3 overflow-hidden transition-all duration-300 ease-out",
+                "grid min-w-0 grid-cols-1 gap-3 overflow-hidden transition-all duration-300 ease-out sm:grid-cols-2 xl:flex xl:items-center",
                 isCollapsed
-                  ? "pointer-events-none max-w-0 translate-x-[-10px] opacity-0"
-                  : "max-w-[600px] translate-x-0 opacity-100",
+                  ? "pointer-events-none max-h-0 w-0 max-w-0 translate-x-[-10px] opacity-0"
+                  : "max-h-40 w-full max-w-full translate-x-0 opacity-100 xl:w-auto xl:max-w-[600px]",
               )}
             >
               <Select
                 value={selectedClientId}
                 onChange={(event) => onClientChange(event.target.value)}
                 label={t("timesheet.client")}
-                className="w-[280px] shrink-0"
+                className="w-full min-w-0 xl:w-[280px] xl:shrink-0"
               >
                 <option value="">{t("timesheet.allClients")}</option>
                 {availableClients.map((client) => (
@@ -140,7 +141,7 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
                 value={selectedProjectId}
                 onChange={(event) => onProjectChange(event.target.value)}
                 label={t("timesheet.project")}
-                className="w-[280px] shrink-0"
+                className="w-full min-w-0 xl:w-[280px] xl:shrink-0"
                 disabled={!selectedClientId}
                 disabledReason={t("common.selectClientFirst")}
               >
@@ -157,15 +158,13 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
               </Select>
             </div>
 
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className={cn(
-                  "h-[2.75rem] min-h-[2.75rem] px-4 transition-transform duration-300 ease-out",
-                  !isCollapsed && "translate-x-1",
-                )}
+                className="h-[2.75rem] min-h-[2.75rem] px-4"
+                aria-expanded={!isCollapsed}
                 onClick={() => setIsCollapsed((open) => !open)}
                 icon={
                   isCollapsed ? (
@@ -189,7 +188,7 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
                 icon={<X className="text-danger" />}
                 className="h-[2.75rem] min-h-[2.75rem] border-danger/30 px-4"
               >
-                {t("common.cancel")}
+                {t("common.clearFilters")}
               </Button>
             </div>
           </div>

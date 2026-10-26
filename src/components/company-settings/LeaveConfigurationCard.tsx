@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CalendarDays, ShieldCheck } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "../shared/Card";
 import { Button } from "../shared/Button";
+import { LoadError } from "../shared/LoadError";
 import { Select } from "../shared/Select";
 import { companyService } from "../../services/companyService";
 import type { Client, Project } from "../../types/client-project";
@@ -20,21 +21,20 @@ export const LeaveConfigurationCard: React.FC<LeaveConfigurationCardProps> = ({
   projects,
 }) => {
   const { t } = useTranslation();
-  const [selectedClientId, setSelectedClientId] = useState("");
-  const [selectedProjectId, setSelectedProjectId] = useState("");
+  const queryClient = useQueryClient();
+  const [draftClientId, setSelectedClientId] = useState<string | null>(null);
+  const [draftProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const { data: companyLeaveConfig } = useQuery({
+  const { data: companyLeaveConfig, isLoading, isError, refetch } = useQuery({
     queryKey: ["company-leave-config", companyId],
     queryFn: () => companyService.getCompanyLeaveConfig(companyId),
     enabled: Boolean(companyId),
   });
 
-  useEffect(() => {
-    if (!companyLeaveConfig) return;
-    setSelectedClientId(companyLeaveConfig.leave_client_id ?? "");
-    setSelectedProjectId(companyLeaveConfig.leave_project_id ?? "");
-  }, [companyLeaveConfig]);
+  const selectedClientId = draftClientId ?? companyLeaveConfig?.leave_client_id ?? "";
+  const selectedProjectId = draftProjectId ?? companyLeaveConfig?.leave_project_id ?? "";
 
   const filteredProjects = useMemo(() => {
     if (!selectedClientId) {
@@ -45,7 +45,7 @@ export const LeaveConfigurationCard: React.FC<LeaveConfigurationCardProps> = ({
   }, [projects, selectedClientId]);
 
   const handleSave = async () => {
-    if (!companyId) return;
+    if (!companyId || isSaving) return;
     if (!selectedClientId || !selectedProjectId) {
       alert(t("companySettings.leaveConfigRequiresSelection"));
       return;
@@ -57,6 +57,13 @@ export const LeaveConfigurationCard: React.FC<LeaveConfigurationCardProps> = ({
         leave_client_id: selectedClientId,
         leave_project_id: selectedProjectId,
       });
+      queryClient.setQueryData(["company-leave-config", companyId], {
+        ...companyLeaveConfig,
+        leave_client_id: selectedClientId, leave_project_id: selectedProjectId,
+      });
+      setSelectedClientId(null);
+      setSelectedProjectId(null);
+      setSaved(true);
     } catch (error) {
       alert(
         error instanceof Error
@@ -87,12 +94,15 @@ export const LeaveConfigurationCard: React.FC<LeaveConfigurationCardProps> = ({
       </CardHeader>
 
       <CardContent className="space-y-5 px-0 pb-0">
+        {isError ? <LoadError onRetry={() => { void refetch(); }} /> : null}
+        {saved ? <p role="status" className="text-sm text-primary-strong">{t("common.changesSaved")}</p> : null}
         <div className="grid gap-4 md:grid-cols-2">
           <Select
             id="leave-client-select"
             label={t("companySettings.leaveClientLabel")}
             value={selectedClientId}
             onChange={(event) => {
+              setSaved(false);
               setSelectedClientId(event.target.value);
               setSelectedProjectId("");
             }}
@@ -109,7 +119,7 @@ export const LeaveConfigurationCard: React.FC<LeaveConfigurationCardProps> = ({
             id="leave-project-select"
             label={t("companySettings.leaveProjectLabel")}
             value={selectedProjectId}
-            onChange={(event) => setSelectedProjectId(event.target.value)}
+            onChange={(event) => { setSaved(false); setSelectedProjectId(event.target.value); }}
             disabled={!selectedClientId}
           >
             <option value="">{t("companySettings.selectProject")}</option>
@@ -129,7 +139,7 @@ export const LeaveConfigurationCard: React.FC<LeaveConfigurationCardProps> = ({
           <Button
             type="button"
             onClick={handleSave}
-            disabled={isSaving || !selectedClientId || !selectedProjectId}
+            disabled={isSaving || isLoading || isError || !selectedClientId || !selectedProjectId}
             variant="primary"
           >
             {isSaving

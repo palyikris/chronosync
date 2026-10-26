@@ -1,0 +1,55 @@
+// Run with Vite on port 5178. Requires Playwright and its Chromium browser.
+import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
+import { readFile } from 'node:fs/promises';
+const require = createRequire(import.meta.url);
+const { chromium } = require('playwright');
+const { clientBilling: labels, common } = JSON.parse(await readFile(new URL('../../src/locales/en.json', import.meta.url), 'utf8'));
+const browser = await chromium.launch({headless:true,
+  ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE ? {executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE} : {}),
+});
+let checks = 0;
+const verify = (condition, message) => { assert.ok(condition, message); checks++; };
+try {
+  const page = await browser.newPage({viewport:{width:1280,height:900}});
+  const errors=[];
+  page.on('pageerror', error => errors.push(error.message));
+  const base = process.env.INVOICE_UI_BASE_URL || 'http://127.0.0.1:5178/tests/invoice-ui/index.html';
+  await page.goto(base);
+  await page.getByRole('dialog').waitFor();
+  const issue = page.getByRole('button',{name:labels.issueInvoice,exact:true});
+  verify(!(await issue.isEnabled()),'Issuance requires explicit confirmation');
+  await page.getByRole('checkbox').check();
+  verify(await issue.isEnabled(),'Confirmation enables issuance');
+  await issue.click();
+  await page.getByRole('button',{name:labels.issuingInvoice,exact:true}).waitFor();
+  await page.keyboard.press('Escape');
+  verify(await page.getByRole('dialog').isVisible(),'Escape cannot dismiss an in-flight issue');
+  await page.getByText('Uncertain outcome. Reconcile from invoice history.').waitFor();
+  verify(!(await page.getByRole('checkbox').isChecked()),'A failed attempt resets confirmation');
+  verify((await page.getByTestId('issue-count').textContent())==='1','Exactly one issue callback');
+  await page.getByRole('button',{name:common.cancel,exact:true}).click();
+  verify(await page.getByRole('dialog').count()===0,'Review closes after failure');
+  await page.goto(base+'?mode=preview');
+  await page.getByRole('dialog').waitFor();
+  verify(!(await page.getByRole('checkbox').isEnabled()),'Preview mode blocks confirmation');
+  verify(!(await page.getByRole('button',{name:labels.issueInvoice,exact:true}).isEnabled()),'Preview mode blocks issuance');
+  await page.setViewportSize({width:390,height:844});
+  verify(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'Mobile review has no horizontal overflow');
+  await page.goto(base+'?mode=history');
+  await page.getByRole('button',{name:labels.resolveIssued,exact:true}).click();
+  await page.getByRole('dialog').waitFor();
+  const reconcile=page.getByRole('button',{name:labels.confirmReconciliation,exact:true});
+  verify(!(await reconcile.isEnabled()),'Reconciliation requires invoice number and confirmation');
+  await page.getByLabel(labels.reconcileInvoiceNumber,{exact:true}).fill('TEST-1');
+  await page.getByRole('checkbox').check();
+  await reconcile.click();
+  await page.getByRole('alert').waitFor();
+  verify((await page.getByRole('alert').textContent())==='Provider totals do not match','Reconciliation error is visible inside modal');
+  verify((await page.getByLabel(labels.reconcileInvoiceNumber,{exact:true}).inputValue())==='TEST-1','Failed reconciliation retains entered details');
+  await reconcile.click();
+  await page.getByRole('dialog').waitFor({state:'detached'});
+  verify(await page.getByText('TEST-1',{exact:true}).isVisible(),'Successful reconciliation closes modal and updates history');
+  verify(errors.length===0,JSON.stringify(errors));
+  console.log(`${checks} invoice UI checks passed (desktop and mobile).`);
+} finally { await browser.close(); }

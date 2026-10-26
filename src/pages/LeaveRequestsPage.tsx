@@ -19,6 +19,7 @@ import { LeaveRequestModal } from "../components/leave/LeaveRequestModal";
 import { LeaveStatsCards } from "../components/leave/LeaveStatsCards";
 import { getLocalDateValue } from "../components/leave/leaveRequestHelpers";
 import type { LeaveFormState } from "../components/leave/types";
+import { LoadError } from "../components/shared/LoadError";
 import { Button } from "../components/shared/Button";
 import { Plus } from "lucide-react";
 import type { LeaveRequest } from "../types/leave";
@@ -47,7 +48,7 @@ export const LeaveRequestsPage: React.FC = () => {
   const isAdmin = profile?.role === "company_admin";
   const isRegularUser = profile?.role === "regular";
 
-  const { data: leaveRequests = [], isLoading } = useQuery({
+  const { data: leaveRequests = [], isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ["leave-requests", profile?.company_id, profile?.id],
     queryFn: fetchLeaveRequests,
     enabled: Boolean(profile),
@@ -60,6 +61,9 @@ export const LeaveRequestsPage: React.FC = () => {
       setPageError(null);
       setConflictingDates([]);
       void queryClient.invalidateQueries({ queryKey: ["leave-requests"] });
+      void queryClient.invalidateQueries({ queryKey: ["approved-leave-dates"] });
+      void queryClient.invalidateQueries({ queryKey: ["timesheets"] });
+      void queryClient.invalidateQueries({ queryKey: ["adminDashboard"] });
     },
     onError: (error: unknown) => {
       if (error instanceof LeaveRequestConflictError) {
@@ -79,6 +83,9 @@ export const LeaveRequestsPage: React.FC = () => {
       setPageError(null);
       setConflictingDates([]);
       void queryClient.invalidateQueries({ queryKey: ["leave-requests"] });
+      void queryClient.invalidateQueries({ queryKey: ["approved-leave-dates"] });
+      void queryClient.invalidateQueries({ queryKey: ["timesheets"] });
+      void queryClient.invalidateQueries({ queryKey: ["adminDashboard"] });
     },
     onError: (error: unknown) => {
       setPageError(error instanceof Error ? error.message : t("leave.actionFailed"));
@@ -99,6 +106,9 @@ export const LeaveRequestsPage: React.FC = () => {
       setIsModalOpen(false);
       setEditingRequest(null);
       void queryClient.invalidateQueries({ queryKey: ["leave-requests"] });
+      void queryClient.invalidateQueries({ queryKey: ["approved-leave-dates"] });
+      void queryClient.invalidateQueries({ queryKey: ["timesheets"] });
+      void queryClient.invalidateQueries({ queryKey: ["adminDashboard"] });
     },
     onError: (error: unknown) => {
       setPageError(error instanceof Error ? error.message : t("leave.actionFailed"));
@@ -111,6 +121,9 @@ export const LeaveRequestsPage: React.FC = () => {
       setPageError(null);
       setConflictingDates([]);
       void queryClient.invalidateQueries({ queryKey: ["leave-requests"] });
+      void queryClient.invalidateQueries({ queryKey: ["approved-leave-dates"] });
+      void queryClient.invalidateQueries({ queryKey: ["timesheets"] });
+      void queryClient.invalidateQueries({ queryKey: ["adminDashboard"] });
     },
     onError: (error: unknown) => {
       setPageError(error instanceof Error ? error.message : t("leave.actionFailed"));
@@ -202,6 +215,8 @@ export const LeaveRequestsPage: React.FC = () => {
           approvedRequests={approvedRequests}
         />
       ) : null}
+
+      {isError ? <LoadError onRetry={() => { void refetch(); }} retrying={isFetching} /> : null}
 
       <LeaveErrorBanner error={pageError} conflictingDates={conflictingDates} />
 

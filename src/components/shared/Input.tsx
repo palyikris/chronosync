@@ -17,6 +17,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     { className, leftIcon, rightIcon, label, id, value, placeholder, ...props },
     ref,
   ) => {
+    const generatedId = React.useId();
+    const controlId = id ?? generatedId;
     const hasValue = value !== undefined && value !== null && value !== "";
     const isDateInput = props.type === "date";
     const hasFloatingPlaceholder = Boolean(label && placeholder);
@@ -24,12 +26,12 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     if (isDateInput && label) {
       return (
         <div className={cn("flex flex-col gap-1", className)}>
-          <label htmlFor={id} className="text-xs font-semibold text-muted">
+          <label htmlFor={controlId} className="text-xs font-semibold text-muted">
             {label}
           </label>
           <input
             ref={ref}
-            id={id}
+            id={controlId}
             value={value}
             placeholder={placeholder}
             className="auth-input"
@@ -48,7 +50,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         ) : null}
         <input
           ref={ref}
-          id={id}
+          id={controlId}
           value={value}
           placeholder={placeholder ?? " "}
           className={cn(
@@ -57,7 +59,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           )}
           {...props}
         />
-        {label ? <label htmlFor={id}>{label}</label> : null}
+        {label ? <label htmlFor={controlId}>{label}</label> : null}
         {rightIcon ? (
           <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted">
             {rightIcon}

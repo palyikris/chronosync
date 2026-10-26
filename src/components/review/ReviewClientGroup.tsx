@@ -60,11 +60,11 @@ export const ReviewClientGroup: React.FC<ReviewClientGroupProps> = ({
           />
         </td>
         <td colSpan={6} className="py-2.5 pr-4">
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-800">
-            <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center justify-between gap-4 text-xs font-semibold text-slate-800">
+            <div className="flex min-w-0 items-center gap-2">
               <Building2 className="w-4 h-4 text-slate-600" />
-              <span>{client.clientName}</span>
-              <span className="text-slate-400 font-normal">
+              <span className="truncate">{client.clientName}</span>
+              <span className="shrink-0 text-slate-400 font-normal">
                 ({client.totalEntriesCount}{" "}
                 {client.totalEntriesCount === 1
                   ? t("common.entry", "entry")
@@ -72,7 +72,7 @@ export const ReviewClientGroup: React.FC<ReviewClientGroupProps> = ({
                 )
               </span>
             </div>
-            <span className="font-mono text-slate-600">
+            <span className="shrink-0 font-mono text-slate-600">
               {t("timesheetReview.hoursTotal", {
                 hours: client.totalHours.toFixed(2),
               })}
@@ -114,7 +114,7 @@ export const ReviewClientGroup: React.FC<ReviewClientGroupProps> = ({
                 />
               </td>
               <td colSpan={6} className="py-2.5 pr-4">
-                <div className="flex items-center justify-between gap-4 text-xs">
+                <div className="flex min-w-0 items-center justify-between gap-4 text-xs">
                   <button
                     type="button"
                     onClick={() => onToggleProject(groupKey)}
@@ -144,7 +144,7 @@ export const ReviewClientGroup: React.FC<ReviewClientGroupProps> = ({
                     </span>
                   </button>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex shrink-0 items-center gap-3">
                     <span className="font-mono text-slate-600 font-medium">
                       {t("timesheetReview.hoursShort", {
                         hours: project.totalHours.toFixed(2),

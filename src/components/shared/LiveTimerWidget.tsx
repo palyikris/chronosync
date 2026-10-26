@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Clock3, Play, Square } from "lucide-react";
@@ -42,6 +42,8 @@ export const LiveTimerWidget: React.FC = () => {
   const [draftProjectId, setDraftProjectId] = useState("");
   const [now, setNow] = useState(() => Date.now());
   const [isHydratingTimer, setIsHydratingTimer] = useState(true);
+  const [isSavingTimer, setIsSavingTimer] = useState(false);
+  const timerActionPending = useRef(false);
 
   const { data: activeClients = [] } = useQuery({
     queryKey: ["active-clients", profile?.company_id ?? ""],
@@ -132,6 +134,7 @@ export const LiveTimerWidget: React.FC = () => {
   const timerDisplay = formatElapsedTime(elapsedMs);
   const isRunning = Boolean(activeTimer);
   const isActionDisabled =
+    isSavingTimer ||
     isHydratingTimer ||
     !profile?.company_id ||
     (!isRunning &&
@@ -143,10 +146,11 @@ export const LiveTimerWidget: React.FC = () => {
   };
 
   const handleStartTimer = async () => {
-    if (!profile?.company_id || !draftDescription.trim() || !draftProjectId) {
+    if (timerActionPending.current || !profile?.company_id || !draftDescription.trim() || !draftProjectId) {
       return;
     }
-
+    timerActionPending.current = true;
+    setIsSavingTimer(true);
     try {
       const storedTimer = await startTimer({
         started_at: new Date().toISOString(),
@@ -157,6 +161,9 @@ export const LiveTimerWidget: React.FC = () => {
       });
 
       setActiveTimer(storedTimer);
+      setDraftClientId(storedTimer.client_id ?? "");
+      setDraftProjectId(storedTimer.project_id);
+      setDraftDescription(storedTimer.description);
       setNow(Date.now());
     } catch (error) {
       const message =
@@ -164,24 +171,33 @@ export const LiveTimerWidget: React.FC = () => {
           ? error.message
           : t("timesheet.timerStartFailed");
       window.alert(message);
+    } finally {
+      timerActionPending.current = false;
+      setIsSavingTimer(false);
     }
   };
 
   const handleStopTimer = async () => {
-    if (!activeTimer) return;
+    if (!activeTimer || timerActionPending.current) return;
 
+    timerActionPending.current = true;
+    setIsSavingTimer(true);
     try {
       await stopTimer(activeTimer);
-      await queryClient.invalidateQueries({ queryKey: ["timesheets"] });
-      window.dispatchEvent(new Event(TIMESHEET_REFRESH_EVENT));
       setActiveTimer(null);
       setDraftDescription("");
       setDraftProjectId("");
       setNow(Date.now());
+      // Cache refresh failures must not leave a successfully saved timer running.
+      void queryClient.invalidateQueries({ queryKey: ["timesheets"] });
+      window.dispatchEvent(new Event(TIMESHEET_REFRESH_EVENT));
     } catch (error) {
       const message =
         error instanceof Error ? error.message : t("timesheet.timerStopFailed");
       window.alert(message);
+    } finally {
+      timerActionPending.current = false;
+      setIsSavingTimer(false);
     }
   };
 

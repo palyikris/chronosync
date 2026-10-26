@@ -1,6 +1,7 @@
 import { supabase } from "../lib/supabaseClient";
 import i18n from "../lib/i18n";
 import type { DashboardData } from "../types/dashboard";
+import { fetchAllRows } from "../utils/fetchAllRows";
 import {
   aggregateDashboardData,
   isValidDashboardDateRange,
@@ -26,15 +27,17 @@ export async function fetchAdminDashboardData(
     throw new Error(i18n.t("dashboard.invalidDateRange"));
   }
 
-  const [profilesResult, projectsResult, timesheetsResult] = await Promise.all([
-    supabase
+  const [profiles, projects, timesheets] = await Promise.all([
+    fetchAllRows((from, to) => supabase
       .from("profiles")
       .select("id, weekly_work_hours")
       .eq("company_id", companyId)
       .eq("is_active", true)
-      .neq("role", "super_admin"),
+      .neq("role", "super_admin")
+      .order("id")
+      .range(from, to)),
 
-    supabase
+    fetchAllRows((from, to) => supabase
       .from("projects")
       .select(
         `
@@ -47,9 +50,11 @@ export async function fetchAdminDashboardData(
       )
       .eq("company_id", companyId)
       .eq("is_active", true)
-      .eq("clients.is_active", true),
+      .eq("clients.is_active", true)
+      .order("id")
+      .range(from, to)),
 
-    supabase
+    fetchAllRows((from, to) => supabase
       .from("timesheets")
       .select(
         `
@@ -68,17 +73,15 @@ export async function fetchAdminDashboardData(
       .gte("work_date", startDate)
       .lte("work_date", endDate)
       .neq("status", "draft")
-      .neq("status", "rejected"),
+      .neq("status", "rejected")
+      .order("id")
+      .range(from, to)),
   ]);
 
-  if (profilesResult.error) throw profilesResult.error;
-  if (projectsResult.error) throw projectsResult.error;
-  if (timesheetsResult.error) throw timesheetsResult.error;
-
   return aggregateDashboardData({
-    activeProfiles: (profilesResult.data ?? []) as DashboardProfileRow[],
-    activeProjects: (projectsResult.data ?? []) as DashboardProjectRow[],
-    timesheetEntries: (timesheetsResult.data ?? []) as DashboardTimesheetRow[],
+    activeProfiles: profiles as DashboardProfileRow[],
+    activeProjects: projects as DashboardProjectRow[],
+    timesheetEntries: timesheets as DashboardTimesheetRow[],
     startDate,
     endDate,
     labels: {

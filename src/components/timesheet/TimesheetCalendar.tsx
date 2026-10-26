@@ -73,7 +73,7 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
           <div className="text-[11px] font-medium text-muted">
             {t("common.monthView")}
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div key={yearMonth} className="calendar-label flex flex-wrap items-center gap-3">
             <span className="text-[14px] font-semibold tracking-[-0.015em] text-text">{monthLabel}</span>
             <span className="rounded-full border border-border bg-white/40 px-2.5 py-1 text-[11px] font-medium text-muted-strong">
               {t("timesheet.totalLogged")}: {formatHours(totalMonthlyHours)} hrs
@@ -99,8 +99,8 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
         </div>
       </CardHeader>
 
-      <div className="overflow-x-auto">
-        <div className="min-w-140">
+      <div key={`calendar-${yearMonth}`} className="calendar-month min-w-0">
+        <div className="w-full min-w-0">
           <div className="grid grid-cols-7 border-b border-border bg-transparent py-2 text-center text-[11px] font-medium text-muted">
             {weekDays.map((day) => (
               <div key={day}>{day}</div>
@@ -139,7 +139,7 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
                     type="button"
                     disabled={isCopyTargetDisabled}
                     onClick={() => onSelectDate(dateStr)}
-                    className={`relative flex min-h-14 flex-col justify-between border-b border-r border-border p-1.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-strong/45 focus-visible:ring-inset sm:min-h-17.5 sm:p-2 ${
+                    className={`relative flex min-h-14 min-w-0 flex-col justify-between border-b border-r border-border p-1 text-left transition-[background-color,box-shadow,opacity] duration-300 ease-[cubic-bezier(0.22,0.7,0.24,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-strong/45 focus-visible:ring-inset sm:min-h-17.5 sm:p-2 ${
                       isCopyTargetDisabled
                         ? "cursor-not-allowed bg-slate-100/80 opacity-70"
                         : isLocked
@@ -163,12 +163,12 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
                         className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary-strong shadow-sm"
                       />
                     ) : null}
+                    <span className="text-xs text-text">{dayNumber}</span>
                     {isLocked ? (
-                      <span className="absolute left-2 top-2 rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-bold text-white">
+                      <span className="max-w-full truncate rounded-full bg-slate-800 px-1 py-0.5 text-[8px] font-bold text-white sm:px-2 sm:text-[10px]">
                         {t("leave.lockedDay")}
                       </span>
                     ) : null}
-                    <span className="text-xs text-text">{dayNumber}</span>
                     {hasLogs ? (
                       <div
                         className={`w-full truncate rounded-md px-1 py-0.5 text-center text-[10px] font-medium ${colorClass}`}

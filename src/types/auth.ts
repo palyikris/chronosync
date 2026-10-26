@@ -56,6 +56,7 @@ export interface AuthContextType {
   profile: UserProfile | null;
   session: Session | null;
   loading: boolean;
+  authError?: string | null;
   isSuperAdmin: boolean;
   isCompanyAdmin: boolean;
   refreshProfile: () => Promise<void>;

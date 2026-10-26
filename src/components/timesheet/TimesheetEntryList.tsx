@@ -4,13 +4,12 @@ import {
   Copy,
   Edit,
   History,
-  Plus,
   Trash2,
   Undo2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../shared/Button";
-import { Card, CardContent, CardFooter, CardHeader } from "../shared/Card";
+import { Card, CardContent, CardHeader } from "../shared/Card";
 import { Select } from "../shared/Select";
 import type { TimesheetEntryListProps } from "../../types/timesheet";
 import {
@@ -28,7 +27,6 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
   entries,
   allEntries,
   loading,
-  onAddEntry,
   onEditEntry,
   onDuplicateEntry,
   onDeleteEntry,
@@ -36,7 +34,9 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
   isDuplicating,
   isDeleting,
   clients,
+  projects,
   canManageTarget,
+  onFeedback,
   isSelectedDateLocked = false,
   viewMode,
 }) => {
@@ -68,13 +68,22 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
 
     try {
       await update();
-      await queryClient.invalidateQueries({ queryKey: ["timesheets"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["timesheets"] }),
+        queryClient.invalidateQueries({ queryKey: ["timesheets-for-review"] }),
+        queryClient.invalidateQueries({ queryKey: ["kpis"] }),
+        queryClient.invalidateQueries({ queryKey: ["adminDashboard"] }),
+      ]);
+      onFeedback({
+        type: "success",
+        message: t("timesheet.statusUpdated"),
+      });
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
           : t("timesheet.statusUpdateFailed");
-      window.alert(message);
+      onFeedback({ type: "error", message });
     } finally {
       setIsStatusUpdating(false);
     }
@@ -164,7 +173,7 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
               <p className="truncate text-xs font-semibold text-text">
                 {t("timesheet.submitDraftEntries")}
               </p>
-              <p className="truncate text-[11px] text-muted">
+              <p className="truncate text-xs text-muted">
                 {t("timesheet.submissionPeriod")}
               </p>
             </div>
@@ -192,17 +201,17 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
             const statusColorClass = (() => {
               switch (entry.status) {
                 case "draft":
-                  return "bg-gray-200 text-gray-800";
+                  return "border-slate-300 bg-slate-100 text-slate-800";
                 case "submitted":
-                  return "bg-blue-200 text-blue-800";
+                  return "border-blue-200 bg-blue-50 text-blue-800";
                 case "approved":
-                  return "bg-green-200 text-green-800";
+                  return "border-green-200 bg-green-100 text-green-800";
                 case "rejected":
-                  return "bg-red-200 text-red-800";
+                  return "border-red-300 bg-red-50 text-red-800";
                 case "invoiced":
-                  return "bg-purple-200 text-purple-800";
+                  return "border-purple-200 bg-purple-50 text-purple-800";
                 default:
-                  return "bg-gray-200 text-gray-800";
+                  return "border-slate-300 bg-slate-100 text-slate-800";
               }
             })();
 
@@ -211,15 +220,17 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
                 key={entry.id}
                 className="group relative rounded-xl border border-border-strong bg-surface-strong p-3 transition-all hover:shadow-md"
               >
-                <div className="mb-1 flex items-start justify-between gap-2">
-                  <span className="rounded bg-slate-200 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-strong">
-                    {(() => {
-                      const clientName =
-                        clients.find((c) => c.id === entry.client_id)?.name ??
-                        "";
-                      return clientName || t("timesheet.unknownClient");
-                    })()}
-                  </span>
+                <div className="mb-2 flex items-start justify-between gap-2">
+                  <div className="flex min-w-0 flex-col gap-0.5">
+                    <span className="truncate text-xs font-bold uppercase tracking-[0.08em] text-muted-strong">
+                      {clients.find((client) => client.id === entry.client_id)?.name ??
+                        t("timesheet.unknownClient")}
+                    </span>
+                    <span className="truncate text-[13px] text-muted">
+                      {projects.find((project) => project.id === entry.project_id)?.name ??
+                        t("timesheet.unknownProject")}
+                    </span>
+                  </div>
                   <span className="shrink-0 text-sm font-bold text-primary-strong">
                     {entry.hours_logged} hrs
                   </span>
@@ -229,16 +240,16 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
                   {entry.description || t("timesheet.noDescription")}
                 </p>
 
-                <div className="flex items-center justify-between text-xs text-muted">
+                <div className="flex items-center justify-between gap-2 text-[13px] text-muted">
                   <span className="flex items-center gap-1">
                     <History className="h-3.5 w-3.5" />
-                    <span className={`rounded px-2 py-0.5 ${statusColorClass}`}>
+                    <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${statusColorClass}`}>
                       {status}
                     </span>
                   </span>
 
                   {canManageTarget ? (
-                    <div className="flex flex-wrap items-center justify-end gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100">
+                    <div className="flex flex-wrap items-center justify-end gap-1">
                       {entry.status === "draft" ||
                       entry.status === "rejected" ? (
                         <Button
@@ -319,25 +330,6 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
         )}
       </CardContent>
 
-      {canManageTarget ? (
-        <CardFooter className="flex items-center">
-          {/* <p className="order-1 text-sm text-muted sm:order-3 sm:text-right">
-            {totalDailyHours} {t("timesheet.hoursLogged")}
-          </p> */}
-
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={onAddEntry}
-            disabled={isSelectedDateLocked}
-            icon={<Plus className="h-4 w-4" />}
-          >
-            {isSelectedDateLocked
-              ? t("leave.lockedDay")
-              : t("timesheet.addEntry")}
-          </Button>
-        </CardFooter>
-      ) : null}
     </Card>
   );
 };

@@ -275,6 +275,9 @@ export const InvoiceAttachmentsPage: React.FC = () => {
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 pb-10">
+      <h1 className="text-2xl font-semibold tracking-[-0.03em] text-text sm:text-[28px]">
+        {t("navigation.invoiceAttachments")}
+      </h1>
       <section className="rounded-3xl border border-border-strong bg-surface p-4 shadow-sm sm:p-5">
         <div className="mb-3">
           <h2 className="text-sm font-semibold text-text">

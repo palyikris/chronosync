@@ -4,6 +4,8 @@ import { Check } from "lucide-react";
 
 interface ReviewBulkActionsBarProps {
   selectedCount: number;
+  selectedHours: number;
+  selectedPeople: number;
   isPending: boolean;
   onApprove: () => void;
   t: TFunction;
@@ -11,6 +13,8 @@ interface ReviewBulkActionsBarProps {
 
 export const ReviewBulkActionsBar: React.FC<ReviewBulkActionsBarProps> = ({
   selectedCount,
+  selectedHours,
+  selectedPeople,
   isPending,
   onApprove,
   t,
@@ -25,7 +29,14 @@ export const ReviewBulkActionsBar: React.FC<ReviewBulkActionsBarProps> = ({
         <span className="bg-white/20 px-2.5 py-0.5 rounded text-xs font-bold">
           {selectedCount}
         </span>
-        <span>{t("common.itemsSelected", "items selected")}</span>
+        <span>
+          {t("timesheetReview.selectionSummary", {
+            count: selectedCount,
+            hours: selectedHours,
+            people: selectedPeople,
+            defaultValue: "{{count}} entries · {{hours}} hours · {{people}} people",
+          })}
+        </span>
       </div>
       <button
         type="button"

@@ -1,17 +1,15 @@
 import { supabase } from "../lib/supabaseClient";
 import type { TimesheetEntryStatus } from "../types/timesheet";
 import { calculateReviewKpis } from "../utils/reviewHelpers";
+import { fetchAllRows } from "../utils/fetchAllRows";
 
 export const getKPIsForCompany = async (companyId: string) => {
-  const { data, error } = await supabase
+  const data = await fetchAllRows((from, to) => supabase
     .from("timesheets")
     .select("status, hours_logged, user_id")
-    .eq("company_id", companyId);
-
-  if (error) {
-    console.error("Error fetching KPIs:", error);
-    throw new Error("Failed to fetch KPIs");
-  }
+    .eq("company_id", companyId)
+    .order("id")
+    .range(from, to));
 
   return calculateReviewKpis(data ?? []);
 };
@@ -59,16 +57,9 @@ export const getTimesheetReviews = async (companyId: string, filters: ReviewFilt
     query = query.eq("project_id", filters.projectId);
   }
 
-  query = query.order("work_date", { ascending: false }).order("hours_logged", { ascending: false });
+  query = query.order("work_date", { ascending: false }).order("hours_logged", { ascending: false }).order("id");
 
-  const { data, error } = await query;
-
-  if (error) {
-    console.error("Error fetching timesheet reviews:", error);
-    throw new Error("Failed to fetch timesheet reviews");
-  }
-
-  return data;
+  return fetchAllRows((from, to) => query.range(from, to));
 }
 
 export const approveEntries = async ({

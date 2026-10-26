@@ -1,4 +1,7 @@
-import React, { useDeferredValue, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { downloadCsv } from "../utils/downloadCsv";
+import { useQuery } from "@tanstack/react-query";
+import { LoadError } from "../components/shared/LoadError";
 import { useTranslation } from "react-i18next";
 import { Card } from "../components/shared/Card";
 import { Input } from "../components/shared/Input";
@@ -7,55 +10,39 @@ import {
   fetchAuditLogs,
   fetchAuditedTableNames,
 } from "../services/logsService";
-import type { AuditLogEntry, AuditOperation } from "../types/logs";
+import type { AuditOperation } from "../types/logs";
 import { AuditLogHeader } from "../components/audit-logs/LogsHeader";
 import { AuditLogTable } from "../components/audit-logs/LogsTable";
 
 const AuditLogPage: React.FC = () => {
   const { t } = useTranslation();
-  const [logs, setLogs] = useState<AuditLogEntry[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [availableTables, setAvailableTables] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
   // Filter States
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedOp, setSelectedOp] = useState<string>("ALL");
   const [selectedTable, setSelectedTable] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 25;
-  const deferredSearchQuery = useDeferredValue(searchQuery);
-
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const opsFilter: AuditOperation[] | undefined =
-        selectedOp !== "ALL" ? ([selectedOp] as AuditOperation[]) : undefined;
-
-      const res = await fetchAuditLogs({
-        searchQuery: deferredSearchQuery,
-        tableName: selectedTable || undefined,
-        operations: opsFilter,
-        page: currentPage,
-        pageSize,
-      });
-
-      setLogs(res.data);
-      setTotalCount(res.totalCount);
-    } catch (err) {
-      console.error("Failed to load audit logs:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   useEffect(() => {
-    fetchAuditedTableNames().then(setAvailableTables).catch(console.error);
-  }, []);
+    const timeout = window.setTimeout(() => setDebouncedSearchQuery(searchQuery), 300);
+    return () => window.clearTimeout(timeout);
+  }, [searchQuery]);
 
-  useEffect(() => {
-    loadData();
-  }, [deferredSearchQuery, selectedOp, selectedTable, currentPage]);
+  const tablesQuery = useQuery({ queryKey: ["audit-log-tables"], queryFn: fetchAuditedTableNames });
+  const logsQuery = useQuery({
+    queryKey: ["audit-logs", debouncedSearchQuery, selectedOp, selectedTable, currentPage],
+    queryFn: ({ signal }) => fetchAuditLogs({
+      searchQuery: debouncedSearchQuery,
+      tableName: selectedTable || undefined,
+      operations: selectedOp === "ALL" ? undefined : [selectedOp as AuditOperation],
+      page: currentPage, pageSize,
+    }, signal),
+  });
+  const logs = logsQuery.data?.data ?? [];
+  const totalCount = logsQuery.data?.totalCount ?? 0;
+  const availableTables = tablesQuery.data ?? [];
+  const isLoading = logsQuery.isFetching || searchQuery !== debouncedSearchQuery;
+  const loadData = () => { void logsQuery.refetch(); void tablesQuery.refetch(); };
 
   const handleExportCsv = () => {
     if (logs.length === 0) return;
@@ -74,17 +61,7 @@ const AuditLogPage: React.FC = () => {
       l.created_at,
     ]);
 
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `audit_logs_${new Date().toISOString()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    downloadCsv(`audit_logs_${new Date().toISOString().slice(0, 10)}.csv`, [headers, ...rows]);
   };
 
   return (
@@ -101,6 +78,7 @@ const AuditLogPage: React.FC = () => {
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center">
           <div className="w-full xl:max-w-sm xl:flex-1">
             <Input
+              aria-label={t("auditLogs.searchPlaceholder")}
               placeholder={t("auditLogs.searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => {
@@ -132,6 +110,7 @@ const AuditLogPage: React.FC = () => {
 
           <div className="w-full xl:ml-auto xl:w-64">
             <Select
+              aria-label={t("auditLogs.allTables")}
               value={selectedTable}
               onChange={(e) => {
                 setSelectedTable(e.target.value);
@@ -148,6 +127,8 @@ const AuditLogPage: React.FC = () => {
           </div>
         </div>
       </Card>
+
+      {logsQuery.isError || tablesQuery.isError ? <LoadError onRetry={loadData} retrying={isLoading} /> : null}
 
       <AuditLogTable
         logs={logs}

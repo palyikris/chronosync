@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Clock3 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/useAuth";
@@ -9,23 +9,20 @@ import { Button } from "../shared/Button";
 
 export const WorkHoursCard: React.FC = () => {
   const { t } = useTranslation();
-  const { profile } = useAuth();
-  const [weeklyHours, setWeeklyHours] = useState<number>(profile?.weekly_work_hours ?? 40);
+  const { profile, refreshProfile } = useAuth();
+  const [draftHours, setWeeklyHours] = useState<number | "" | null>(null);
+  const weeklyHours = draftHours ?? profile?.weekly_work_hours ?? 40;
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  useEffect(() => {
-    if (profile?.weekly_work_hours != null) {
-      setWeeklyHours(profile.weekly_work_hours);
-    }
-  }, [profile?.weekly_work_hours]);
-
   const handleSave = async () => {
-    if (!profile?.id) return;
+    if (!profile?.id || isSaving || weeklyHours === "") return;
 
     try {
       setIsSaving(true);
       await updateWeeklyWorkHours(profile.id, weeklyHours);
+      await refreshProfile();
+      setWeeklyHours(null);
       setSaved(true);
       window.setTimeout(() => setSaved(false), 2500);
     } catch (error) {
@@ -56,27 +53,28 @@ export const WorkHoursCard: React.FC = () => {
       </CardHeader>
 
       <CardContent className="px-0 pb-0">
-        <div className="max-w-xs space-y-4">
+        <form className="max-w-xs space-y-4" onSubmit={event => { event.preventDefault(); void handleSave(); }}>
           <Input
             type="number"
+            required
             min={1}
             max={80}
             step={0.5}
             label={t("userSettings.workHoursLabel")}
             value={weeklyHours}
-            onChange={(event) => setWeeklyHours(Number(event.target.value || 0))}
+            onChange={(event) => { setWeeklyHours(event.target.value === "" ? "" : event.target.valueAsNumber); setSaved(false); }}
           />
 
-          <Button type="button" onClick={handleSave} disabled={isSaving} variant="primary">
+          <Button type="submit" disabled={isSaving} variant="primary">
             {isSaving ? t("common.saving") : t("userSettings.saveWorkHours")}
           </Button>
 
           {saved ? (
-            <p className="text-xs font-medium text-primary-strong">
+            <p className="motion-pop text-xs font-medium text-primary-strong">
               {t("userSettings.workHoursSaved")}
             </p>
           ) : null}
-        </div>
+        </form>
       </CardContent>
     </Card>
   );

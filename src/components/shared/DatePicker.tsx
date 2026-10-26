@@ -271,7 +271,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         aria-invalid={invalid}
         onClick={() => (isOpen ? closeCalendar() : openCalendar())}
         className={cn(
-          "auth-input group flex h-11 min-h-11 items-center gap-2.5 py-0 text-left transition-all hover:border-primary-strong/45 hover:bg-bg-accent",
+          "auth-input group flex h-11 min-h-11 items-center gap-2.5 py-0 text-left transition-all duration-300 ease-out hover:border-primary-strong/45 hover:bg-bg-accent",
           invalid && "border-danger-border",
           buttonClassName,
         )}
@@ -307,7 +307,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           aria-modal="false"
           aria-label={t("common.calendar")}
           className={cn(
-            "absolute z-[80] w-[20.5rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-[1.25rem] border border-primary-strong/20 bg-surface-strong shadow-[0_20px_55px_rgba(75,87,57,0.18),0_3px_10px_rgba(75,87,57,0.08)] backdrop-blur-2xl animate-[popover-in_180ms_cubic-bezier(0.22,1,0.36,1)]",
+            "absolute z-[80] w-[20.5rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-[1.25rem] border border-primary-strong/20 bg-surface-strong shadow-[0_20px_55px_rgba(75,87,57,0.18),0_3px_10px_rgba(75,87,57,0.08)] backdrop-blur-2xl animate-[popover-in_300ms_cubic-bezier(0.22,0.7,0.24,1)]",
             align === "end" ? "right-0" : "left-0",
             placement === "top"
               ? "bottom-[calc(100%+0.55rem)] origin-bottom"
@@ -321,7 +321,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                 aria-label={t("common.previousMonth")}
                 disabled={!canMoveToMonth(addMonths(visibleMonth, -1))}
                 onClick={() => setVisibleMonth(addMonths(visibleMonth, -1))}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-border bg-white/55 text-muted-strong transition-colors hover:border-primary-strong/25 hover:bg-primary/25 hover:text-text disabled:cursor-not-allowed disabled:opacity-35"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-border bg-white/55 text-muted-strong transition-colors duration-300 ease-out hover:border-primary-strong/25 hover:bg-primary/25 hover:text-text disabled:cursor-not-allowed disabled:opacity-35"
               >
                 <ChevronLeft className="h-4 w-4" aria-hidden="true" />
               </button>
@@ -342,7 +342,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                       ),
                     )
                   }
-                  className="min-w-0 rounded-xl border border-border-strong bg-bg-accent/80 px-2.5 py-1.5 text-[13px] font-semibold capitalize text-text outline-none transition focus:border-primary-strong/60 focus:ring-2 focus:ring-primary/55"
+                  className="min-w-0 rounded-xl border border-border-strong bg-bg-accent/80 px-2.5 py-1.5 text-[13px] font-semibold capitalize text-text outline-none transition duration-300 ease-out focus:border-primary-strong/60 focus:ring-2 focus:ring-primary/55"
                 >
                   {monthNames.map((monthName, month) => (
                     <option key={monthName} value={month}>
@@ -366,7 +366,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                       ),
                     )
                   }
-                  className="rounded-xl border border-border-strong bg-bg-accent/80 px-2 py-1.5 text-[13px] font-semibold text-text outline-none transition focus:border-primary-strong/60 focus:ring-2 focus:ring-primary/55"
+                  className="rounded-xl border border-border-strong bg-bg-accent/80 px-2 py-1.5 text-[13px] font-semibold text-text outline-none transition duration-300 ease-out focus:border-primary-strong/60 focus:ring-2 focus:ring-primary/55"
                 >
                   {years.map((year) => (
                     <option key={year} value={year}>
@@ -381,14 +381,17 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                 aria-label={t("common.nextMonth")}
                 disabled={!canMoveToMonth(addMonths(visibleMonth, 1))}
                 onClick={() => setVisibleMonth(addMonths(visibleMonth, 1))}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-border bg-white/55 text-muted-strong transition-colors hover:border-primary-strong/25 hover:bg-primary/25 hover:text-text disabled:cursor-not-allowed disabled:opacity-35"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-border bg-white/55 text-muted-strong transition-colors duration-300 ease-out hover:border-primary-strong/25 hover:bg-primary/25 hover:text-text disabled:cursor-not-allowed disabled:opacity-35"
               >
                 <ChevronRight className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
           </div>
 
-          <div className="p-3.5 pt-2.5">
+          <div
+            key={`${visibleMonth.getFullYear()}-${visibleMonth.getMonth()}`}
+            className="calendar-month p-3.5 pt-2.5"
+          >
             <div className="mb-1 grid grid-cols-7" aria-hidden="true">
               {weekDays.map((day, index) => (
                 <div
@@ -425,7 +428,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                     onClick={() => selectDate(date)}
                     onKeyDown={(event) => handleDayKeyDown(event, date)}
                     className={cn(
-                      "relative flex aspect-square min-h-9 items-center justify-center rounded-xl text-[12px] font-medium transition-[background-color,color,box-shadow,transform] focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-strong/45 active:scale-95 disabled:cursor-not-allowed disabled:opacity-25",
+                      "relative flex aspect-square min-h-9 items-center justify-center rounded-xl text-[12px] font-medium transition-[background-color,color,box-shadow,transform] duration-300 ease-[cubic-bezier(0.22,0.7,0.24,1)] focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-strong/45 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-25",
                       isSelected
                         ? "bg-primary text-primary-foreground shadow-[0_3px_10px_rgba(96,120,42,0.22)]"
                         : isToday
@@ -450,7 +453,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
               type="button"
               disabled={!isWithinRange(todayValue)}
               onClick={() => selectDate(today)}
-              className="rounded-lg px-2.5 py-1.5 text-[11px] font-semibold text-primary-strong transition-colors hover:bg-primary/25 disabled:cursor-not-allowed disabled:opacity-35"
+              className="rounded-lg px-2.5 py-1.5 text-[11px] font-semibold text-primary-strong transition-colors duration-300 ease-out hover:bg-primary/25 disabled:cursor-not-allowed disabled:opacity-35"
             >
               {t("common.today")}
             </button>
@@ -461,7 +464,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                 onChange("");
                 closeCalendar(true);
               }}
-              className="rounded-lg px-2.5 py-1.5 text-[11px] font-semibold text-muted-strong transition-colors hover:bg-white/70 hover:text-text disabled:cursor-not-allowed disabled:opacity-35"
+              className="rounded-lg px-2.5 py-1.5 text-[11px] font-semibold text-muted-strong transition-colors duration-300 ease-out hover:bg-white/70 hover:text-text disabled:cursor-not-allowed disabled:opacity-35"
             >
               {t("common.clear")}
             </button>

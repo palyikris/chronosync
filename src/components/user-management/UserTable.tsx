@@ -37,8 +37,6 @@ export const UserTable: React.FC<UserTableProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  console.log("Rendering UserTable with members:", members);
-
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-surface-strong/84 shadow-card backdrop-blur-xl">
       <div className="overflow-x-auto">
@@ -57,13 +55,13 @@ export const UserTable: React.FC<UserTableProps> = ({
           <tbody className="divide-y divide-gray-100 text-sm">
             {isLoading ? (
               <tr>
-                <td colSpan={4} className="text-center py-8 text-gray-400">
+                <td colSpan={isSuperAdmin ? 5 : 4} className="text-center py-8 text-gray-400">
                   {t("users.loadingMembers")}
                 </td>
               </tr>
             ) : members.length === 0 ? (
               <tr>
-                <td colSpan={4} className="text-center py-8 text-gray-400">
+                <td colSpan={isSuperAdmin ? 5 : 4} className="text-center py-8 text-gray-400">
                   {t("users.noMembers")}
                 </td>
               </tr>

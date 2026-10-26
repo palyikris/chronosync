@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Clock3 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/useAuth";
@@ -9,15 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "../shared/Card";
 export const TimesheetTimerVisibilityCard: React.FC = () => {
   const { t } = useTranslation();
   const { profile, refreshProfile } = useAuth();
-  const [showTimer, setShowTimer] = useState(
-    profile?.show_timesheet_timer ?? false,
-  );
+  const [pendingValue, setShowTimer] = useState<boolean | null>(null);
+  const showTimer = pendingValue ?? profile?.show_timesheet_timer ?? false;
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    setShowTimer(profile?.show_timesheet_timer ?? false);
-  }, [profile?.show_timesheet_timer]);
 
   const handleToggle = async () => {
     if (!profile?.id || isSaving) return;
@@ -29,6 +24,7 @@ export const TimesheetTimerVisibilityCard: React.FC = () => {
       setIsSaving(true);
       await updateTimesheetTimerVisibility(profile.id, nextValue);
       await refreshProfile();
+      setShowTimer(null);
       setSaved(true);
       window.setTimeout(() => setSaved(false), 2500);
     } catch (error) {
@@ -105,7 +101,7 @@ export const TimesheetTimerVisibilityCard: React.FC = () => {
           </button>
 
           {saved ? (
-            <p className="text-xs font-medium text-primary-strong">
+            <p className="motion-pop text-xs font-medium text-primary-strong">
               {t("userSettings.timerVisibilitySaved")}
             </p>
           ) : null}

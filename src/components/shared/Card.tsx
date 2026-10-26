@@ -6,7 +6,7 @@ export const Card: React.FC<CardProps> = ({ className, ...props }) => {
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-2xl border border-border bg-surface-strong/88 shadow-card backdrop-blur-xl transition-[box-shadow,border-color] duration-300",
+        "overflow-hidden rounded-2xl border border-border bg-surface-strong/88 shadow-card backdrop-blur-xl transition-[box-shadow,border-color] duration-500 ease-[cubic-bezier(0.22,0.7,0.24,1)]",
         className,
       )}
       {...props}

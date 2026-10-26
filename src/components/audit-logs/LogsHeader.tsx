@@ -4,7 +4,7 @@ import { Button } from "../shared/Button";
 import { Tooltip } from "../shared/Tooltip";
 import type { AuditLogEntry } from "../../types/logs";
 import { useTranslation } from "react-i18next";
-import { RefreshCw } from "lucide-react";
+import { Download, RefreshCw } from "lucide-react";
 
 interface AuditLogHeaderProps {
   logs: AuditLogEntry[];
@@ -18,6 +18,7 @@ export const AuditLogHeader: React.FC<AuditLogHeaderProps> = ({
   logs,
   totalCount,
   onRefresh,
+  onExportCsv,
   isLoading = false,
 }) => {
   const { t } = useTranslation();
@@ -42,6 +43,9 @@ export const AuditLogHeader: React.FC<AuditLogHeaderProps> = ({
         </div>
 
         <div className="flex items-center gap-3">
+          <Button variant="outline" onClick={onExportCsv} disabled={isLoading || logs.length === 0} icon={<Download />}>
+            {t("auditLogs.exportCsv")}
+          </Button>
           <Button
             variant="primary"
             onClick={onRefresh}

@@ -115,7 +115,7 @@ export const LeaveCalendarPanel: React.FC<LeaveCalendarPanelProps> = ({
           <div className="text-[11px] font-medium text-muted">
             {t("common.monthView")}
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div key={getMonthKey(currentDate)} className="calendar-label flex flex-wrap items-center gap-3">
             <span className="text-[14px] font-semibold tracking-[-0.015em] text-text">
               {currentMonthLabel}
             </span>
@@ -156,7 +156,7 @@ export const LeaveCalendarPanel: React.FC<LeaveCalendarPanelProps> = ({
         </div>
       </CardHeader>
 
-      <div className="overflow-x-auto">
+      <div key={`calendar-${getMonthKey(currentDate)}`} className="calendar-month overflow-x-auto">
         <div className="min-w-140">
           <div className="grid grid-cols-7 border-b border-border bg-transparent py-2 text-center text-[11px] font-medium text-muted">
             {monthMatrix.weekDays.map((day) => (
@@ -182,7 +182,7 @@ export const LeaveCalendarPanel: React.FC<LeaveCalendarPanelProps> = ({
                 return (
                   <div
                     key={dateStr}
-                    className={`relative flex min-h-14 flex-col justify-between border-b border-r border-border p-1.5 text-left transition-colors sm:min-h-17.5 sm:p-2 ${isToday ? "bg-primary/5" : ""}`}
+                    className={`relative flex min-h-14 flex-col justify-between border-b border-r border-border p-1.5 text-left transition-colors duration-300 ease-[cubic-bezier(0.22,0.7,0.24,1)] sm:min-h-17.5 sm:p-2 ${isToday ? "bg-primary/5" : ""}`}
                   >
                     {isToday ? (
                       <span

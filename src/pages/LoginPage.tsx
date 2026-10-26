@@ -10,10 +10,11 @@ export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [supportMessage, setSupportMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, profile, authError, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -128,7 +129,7 @@ export const LoginPage: React.FC = () => {
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
-            {errorMsg && <div className="auth-error">{errorMsg}</div>}
+            {(errorMsg || authError) && <div role="alert" className="auth-error">{errorMsg || authError}</div>}
 
             <div className={`auth-field ${email ? "has-value" : ""}`}>
               <Mail
@@ -195,23 +196,26 @@ export const LoginPage: React.FC = () => {
               <div className="flex justify-center">
                 <button
                   type="button"
+                  onClick={() => setSupportMessage(t("auth.passwordResetHelp"))}
                   className="auth-link-button px-3 py-2 text-[12px] font-medium text-primary-strong transition hover:underline"
                 >
                   {t("auth.forgotPassword")}
                 </button>
               </div>
             </div>
+            {supportMessage ? <p role="status" className="rounded-xl border border-border bg-bg-accent p-3 text-sm text-muted-strong">{supportMessage}</p> : null}
           </form>
 
           <div className="mt-7 border-t border-border pt-5 text-center">
             <p className="text-[12px] leading-5 text-muted-strong">
               {t("auth.dontHaveAccount")}{" "}
-              <a
+              <button
+                type="button"
                 className="font-semibold text-primary-strong hover:underline"
-                href="#"
+                onClick={() => setSupportMessage(t("auth.accountAccessHelp"))}
               >
                 {t("auth.contactAdmin")}
-              </a>
+              </button>
             </p>
           </div>
         </section>

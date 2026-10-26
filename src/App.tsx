@@ -1,23 +1,25 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
+import { PageLoading } from "./components/shared/PageLoading";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./context/useAuth";
-import { LoginPage } from "./pages/LoginPage";
 import { getHomeRouteForRole } from "./utils/navigation";
 import { ProtectedRoute } from "./components/shared/ProtectedRoute";
 import { AppLayout } from "./components/shared/AppLayout";
-import { TimesheetPage } from "./pages/TimesheetPage";
-import { CompanySettingsPage } from "./pages/CompanySettingsPage";
-import { UserManagementPage } from "./pages/UserManagementPage";
-import { AdminDashboardPage } from "./pages/DashboardPage";
-import { CompanyManagementPage } from "./pages/CompanyManagementPage";
-import { UserSettingsPage } from "./pages/UserSettingsPage";
 import { AuthProvider } from "./context/AuthContext";
-import TimesheetReviewPage from "./pages/TimesheetReviewPage";
-import AuditLogPage from "./pages/LogsPage";
-import LeaveRequestsPage from "./pages/LeaveRequestsPage";
-import { DashboardHeader } from "./components/dashboard/DashboardHeader";
-import { InvoiceAttachmentsPage } from "./pages/InvoiceAttachmentsPage";
-import { ClientBillingPage } from "./pages/ClientBillingPage";
+
+const LoginPage = lazy(() => import("./pages/LoginPage").then(m => ({ default: m.LoginPage })));
+const TimesheetPage = lazy(() => import("./pages/TimesheetPage").then(m => ({ default: m.TimesheetPage })));
+const CompanySettingsPage = lazy(() => import("./pages/CompanySettingsPage").then(m => ({ default: m.CompanySettingsPage })));
+const UserManagementPage = lazy(() => import("./pages/UserManagementPage").then(m => ({ default: m.UserManagementPage })));
+const AdminDashboardPage = lazy(() => import("./pages/DashboardPage").then(m => ({ default: m.AdminDashboardPage })));
+const CompanyManagementPage = lazy(() => import("./pages/CompanyManagementPage").then(m => ({ default: m.CompanyManagementPage })));
+const UserSettingsPage = lazy(() => import("./pages/UserSettingsPage").then(m => ({ default: m.UserSettingsPage })));
+const TimesheetReviewPage = lazy(() => import("./pages/TimesheetReviewPage"));
+const AuditLogPage = lazy(() => import("./pages/LogsPage"));
+const LeaveRequestsPage = lazy(() => import("./pages/LeaveRequestsPage"));
+const DashboardHeader = lazy(() => import("./components/dashboard/DashboardHeader").then(m => ({ default: m.DashboardHeader })));
+const InvoiceAttachmentsPage = lazy(() => import("./pages/InvoiceAttachmentsPage").then(m => ({ default: m.InvoiceAttachmentsPage })));
+const ClientBillingPage = lazy(() => import("./pages/ClientBillingPage").then(m => ({ default: m.ClientBillingPage })));
 
 const DashboardHeaderPreview: React.FC = () => {
   const [startDate, setStartDate] = React.useState("2026-10-01");
@@ -60,65 +62,62 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Routes>
-          {import.meta.env.DEV ? (
-            <>
-              <Route
-                path="/dashboard-header-preview"
-                element={<DashboardHeaderPreview />}
-              />
-              <Route
-                path="/client-billing-preview"
-                element={<ClientBillingPage preview />}
-              />
-            </>
-          ) : null}
-          {/* Public Auth Route */}
-          <Route path="/login" element={<LoginPage />} />
-
-          {/* Root Redirect Handler */}
-          <Route path="/" element={<Navigate to={"/login"} />} />
-
-          {/* Protected Application Routes */}
-          <Route element={<ProtectedRoute />}>
-            <Route element={<AppLayout />}>
-              <Route path="/timesheet" element={<TimesheetPage />} />
-              <Route path="/leaves" element={<LeaveRequestsPage />} />
-
-              <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
-              <Route path="/admin/users" element={<UserManagementPage />} />
-              <Route
-                path="/admin/settings"
-                element={<CompanySettingsPage />}
-              ></Route>
-              <Route
-                path="/super-admin/companies"
-                element={<CompanyManagementPage />}
-              />
-              <Route
-                element={<ProtectedRoute allowedRoles={["company_admin"]} />}
-              >
-                <Route path="/admin/review" element={<TimesheetReviewPage />} />
+        <Suspense fallback={<PageLoading />}>
+          <Routes>
+            {import.meta.env.DEV ? (
+              <>
                 <Route
-                  path="/admin/invoice-attachments"
-                  element={<InvoiceAttachmentsPage />}
+                  path="/dashboard-header-preview"
+                  element={<DashboardHeaderPreview />}
                 />
                 <Route
-                  path="/admin/billing"
-                  element={<ClientBillingPage />}
+                  path="/client-billing-preview"
+                  element={<ClientBillingPage preview />}
                 />
+              </>
+            ) : null}
+            {/* Public Auth Route */}
+            <Route path="/login" element={<LoginPage />} />
+
+            {/* Root Redirect Handler */}
+            <Route path="/" element={<RootRedirect />} />
+
+            {/* Protected Application Routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route element={<AppLayout />}>
+                <Route path="/timesheet" element={<TimesheetPage />} />
+                <Route path="/leaves" element={<LeaveRequestsPage />} />
+
+                <Route element={<ProtectedRoute requireAdmin />}>
+                  <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+                  <Route path="/admin/users" element={<UserManagementPage />} />
+                  <Route path="/admin/settings" element={<CompanySettingsPage />} />
+                </Route>
+                <Route
+                  element={<ProtectedRoute allowedRoles={["company_admin"]} />}
+                >
+                  <Route path="/admin/review" element={<TimesheetReviewPage />} />
+                  <Route
+                    path="/admin/invoice-attachments"
+                    element={<InvoiceAttachmentsPage />}
+                  />
+                  <Route
+                    path="/admin/billing"
+                    element={<ClientBillingPage />}
+                  />
+                </Route>
+                <Route element={<ProtectedRoute allowedRoles={["super_admin"]} />}>
+                  <Route path="/super-admin/companies" element={<CompanyManagementPage />} />
+                  <Route path="/super-admin/logs" element={<AuditLogPage />} />
+                </Route>
+                <Route path="/settings" element={<UserSettingsPage />} />
               </Route>
-              <Route
-                path="/super-admin/logs"
-                element={<AuditLogPage></AuditLogPage>}
-              ></Route>
-              <Route path="/settings" element={<UserSettingsPage />} />
             </Route>
-          </Route>
 
-          {/* Catch-all Redirect */}
-          <Route path="*" element={<RootRedirect />} />
-        </Routes>
+            {/* Catch-all Redirect */}
+            <Route path="*" element={<RootRedirect />} />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </AuthProvider>
   );

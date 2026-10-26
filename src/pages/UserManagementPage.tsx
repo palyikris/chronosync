@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { LoadError } from "../components/shared/LoadError";
 import { useAuth } from "../context/useAuth";
 import {
   fetchCompanyMembers,
@@ -16,6 +17,8 @@ import { UserManagementToolbar } from "../components/user-management/UserManagem
 import { UserTable } from "../components/user-management/UserTable";
 import type { UserFilterState } from "../components/user-management/UserFilterPopover";
 import type { UserProfile } from "../types/auth";
+import { downloadCsv } from "../utils/downloadCsv";
+import { getRoleLabel } from "../utils/getRoleLabel";
 
 export const UserManagementPage: React.FC = () => {
   const { profile } = useAuth();
@@ -32,7 +35,7 @@ export const UserManagementPage: React.FC = () => {
   });
   const [isFilterPopoverOpen, setIsFilterPopoverOpen] = useState(false);
 
-  const { data: members = [], isLoading } = useQuery({
+  const { data: members = [], isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ["companyMembers", profile?.company_id, profile?.role],
     queryFn: () => fetchCompanyMembers(profile?.company_id, profile?.role),
     enabled: Boolean(profile),
@@ -103,8 +106,7 @@ export const UserManagementPage: React.FC = () => {
 
   const filteredMembers = members.filter((member) => {
     const matchesSearch =
-      member.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ??
-      false;
+      `${member.full_name ?? ""} ${member.email ?? ""}`.toLowerCase().includes(searchTerm.trim().toLowerCase());
 
     const matchesRole = filters.role === "all" || member.role === filters.role;
 
@@ -138,7 +140,14 @@ export const UserManagementPage: React.FC = () => {
         isFilterPopoverOpen={isFilterPopoverOpen}
         onFilterPopoverToggle={() => setIsFilterPopoverOpen((open) => !open)}
         onFiltersReset={() => setFilters({ role: "all", status: "all" })}
+        exportDisabled={isLoading || isError || filteredMembers.length === 0}
+        onExport={() => downloadCsv("team-members.csv", [
+          [t("users.member"), t("users.emailAddress"), t("users.role"), t("users.status")],
+          ...filteredMembers.map(member => [member.full_name, member.email, getRoleLabel(member.role), t(member.is_active ? "users.active" : "users.inactive")]),
+        ])}
       />
+
+      {isError ? <LoadError onRetry={() => { void refetch(); }} retrying={isFetching} /> : null}
 
       <UserTable
         members={filteredMembers}

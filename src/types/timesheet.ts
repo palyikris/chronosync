@@ -135,7 +135,6 @@ export interface TimesheetEntryListProps {
   entries: TimesheetEntry[];
   allEntries: TimesheetEntry[];
   loading: boolean;
-  onAddEntry: () => void;
   onEditEntry: (entry: TimesheetEntry) => void;
   onDuplicateEntry: (entry: TimesheetEntry) => void;
   onDeleteEntry: (entryId: string) => void;
@@ -143,7 +142,9 @@ export interface TimesheetEntryListProps {
   isDuplicating: boolean;
   isDeleting: boolean;
   clients: Client[];
+  projects: Project[];
   canManageTarget: boolean;
+  onFeedback: (feedback: { type: "error" | "success"; message: string }) => void;
   isSelectedDateLocked?: boolean;
   viewMode: "grid" | "calendar" | "list";
 }

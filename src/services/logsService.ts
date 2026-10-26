@@ -24,6 +24,7 @@ const getCurrentUser = async () => {
  */
 export async function fetchAuditLogs(
   filters: AuditLogFilters = { page: 1, pageSize: 10 },
+  signal?: AbortSignal,
 ): Promise<AuditLogsResponse> {
   await getCurrentUser();
 
@@ -51,7 +52,8 @@ export async function fetchAuditLogs(
       created_at,
       profiles:performed_by (
         full_name
-      )
+      ),
+      actor_search:performed_by()
     `,
     { count: "exact" },
   );
@@ -74,16 +76,24 @@ export async function fetchAuditLogs(
 
   if (searchQuery && searchQuery.trim() !== "") {
     const cleanQuery = searchQuery.trim();
-    query = query.or(
-      `record_id.ilike.%${cleanQuery}%,profiles.email.ilike.%${cleanQuery}%,profiles.full_name.ilike.%${cleanQuery}%`,
-    );
+    const escaped = cleanQuery.replace(/[\\%_]/g, "\\$&").replace(/"/g, '\\"');
+    const pattern = `"%${escaped}%"`;
+    // PostgREST cannot OR dotted fields across resources. Use a separate empty
+    // embed for actor matching so the displayed profile remains intact.
+    query = query.or(`email.ilike.${pattern},full_name.ilike.${pattern}`, { referencedTable: "actor_search" });
+    const filters = [`table_name.ilike.${pattern}`, "actor_search.not.is.null"];
+    if (/^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i.test(cleanQuery)) {
+      filters.push(`record_id.eq.${cleanQuery}`);
+    }
+    query = query.or(filters.join(","));
   }
 
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  query = query.order("created_at", { ascending: false }).range(from, to);
+  query = query.order("created_at", { ascending: false }).order("id", { ascending: false }).range(from, to);
 
+  if (signal) query = query.abortSignal(signal);
   const { data, count, error } = await query;
 
   if (error) throw error;

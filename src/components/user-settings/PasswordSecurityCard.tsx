@@ -80,13 +80,13 @@ export const PasswordSecurityCard: React.FC = () => {
       <CardContent className="px-0 pb-0">
         <form onSubmit={handlePasswordSubmit} className="max-w-md space-y-4">
           {passwordError ? (
-            <div className="rounded-xl border border-danger/20 bg-danger/10 p-3 text-xs font-medium text-danger">
+            <div className="motion-pop rounded-xl border border-danger/20 bg-danger/10 p-3 text-xs font-medium text-danger">
               {passwordError}
             </div>
           ) : null}
 
           {passwordSuccess ? (
-            <div className="rounded-xl border border-primary-strong/20 bg-primary/10 p-3 text-xs font-medium text-primary-strong">
+            <div className="motion-pop rounded-xl border border-primary-strong/20 bg-primary/10 p-3 text-xs font-medium text-primary-strong">
               {t("userSettings.passwordUpdated")}
             </div>
           ) : null}

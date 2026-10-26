@@ -33,7 +33,7 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
       title={
         isEditing ? t("timesheet.entryTitleEdit") : t("timesheet.entryTitleNew")
       }
-      onClose={onClose}
+      onClose={() => { if (!isSaving) onClose(); }}
       className="max-w-2xl"
     >
       <form onSubmit={onSubmit} className="space-y-5 p-6">
@@ -43,6 +43,8 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
               {t("timesheet.date")}
             </label>
             <DatePicker
+              id="timesheet-entry-date"
+              ariaLabel={t("timesheet.date")}
               required
               value={formData.work_date}
               onChange={(value) =>
@@ -59,6 +61,8 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
               {t("timesheet.totalHours")}
             </label>
             <Input
+              id="timesheet-entry-hours"
+              aria-label={t("timesheet.totalHours")}
               type="number"
               step="any"
               min="0.01"
@@ -89,6 +93,8 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
             </div>
           ) : null}
           <Textarea
+            id="timesheet-entry-description"
+            aria-label={t("timesheet.taskDescription")}
             rows={3}
             required
             value={formData.description}
@@ -108,6 +114,7 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
               {t("timesheet.client")}
             </label>
             <Select
+              aria-label={t("timesheet.client")}
               className="w-full"
               required
               value={formData.client_id}
@@ -133,6 +140,7 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
               {t("timesheet.project")}
             </label>
             <Select
+              aria-label={t("timesheet.project")}
               className="w-full"
               required
               disabled={!formData.client_id}
@@ -171,6 +179,7 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
             variant="outline"
             className="flex-1"
             onClick={onClose}
+            disabled={isSaving}
             icon={<X className="h-4 w-4" />}
           >
             {t("timesheet.cancel")}
@@ -178,7 +187,7 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
           <Button
             type="submit"
             className="flex-1"
-            disabled={isSaving}
+            disabled={isSaving || !formData.client_id || !formData.project_id}
             icon={<Check className="h-4 w-4" />}
           >
             {isSaving

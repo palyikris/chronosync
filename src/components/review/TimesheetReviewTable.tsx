@@ -46,6 +46,8 @@ export const TimesheetReviewTable: React.FC<TimesheetReviewTableProps> = ({
   const refreshReviewData = () => {
     queryClient.invalidateQueries({ queryKey: ["timesheets-for-review"] });
     queryClient.invalidateQueries({ queryKey: ["kpis"] });
+    queryClient.invalidateQueries({ queryKey: ["timesheets"] });
+    queryClient.invalidateQueries({ queryKey: ["adminDashboard"] });
   };
 
   const approveMutation = useMutation({
@@ -220,6 +222,19 @@ export const TimesheetReviewTable: React.FC<TimesheetReviewTableProps> = ({
     [selectedIds, submittedEntryIdSet],
   );
 
+  const selectedSummary = useMemo(() => {
+    const selectedIdSet = new Set(activeSelectedIds);
+    const selectedEntries = entries.filter((entry) => selectedIdSet.has(entry.id));
+
+    return {
+      hours: selectedEntries.reduce((sum, entry) => {
+        const hours = Number(entry.hours_logged);
+        return sum + (Number.isFinite(hours) ? hours : 0);
+      }, 0),
+      people: new Set(selectedEntries.map((entry) => entry.user_id)).size,
+    };
+  }, [activeSelectedIds, entries]);
+
   // Only submitted entries are eligible for bulk review actions.
   const activePageEntryIds = useMemo(() => {
     return paginatedClients.flatMap((client) =>
@@ -336,14 +351,16 @@ export const TimesheetReviewTable: React.FC<TimesheetReviewTableProps> = ({
 
       <ReviewBulkActionsBar
         selectedCount={activeSelectedIds.length}
+        selectedHours={selectedSummary.hours}
+        selectedPeople={selectedSummary.people}
         isPending={isActionPending}
         onApprove={() => approveMutation.mutate(activeSelectedIds)}
         t={t}
       />
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[900px]">
+        <div className="w-full overflow-hidden">
+          <table className="w-full table-fixed border-collapse text-left">
             <ReviewTableHeader
               t={t}
               isAllActivePageSelected={isAllActivePageSelected}

@@ -14,6 +14,7 @@ export interface KpiSummaryCardItem {
   valueDecimals?: number;
   className?: string;
   footer?: ReactNode;
+  onClick?: () => void;
 }
 
 export interface KpiSummaryCardsProps {
@@ -48,13 +49,27 @@ const KpiCard: React.FC<KpiCardProps> = ({
   valueDecimals,
   className = "",
   footer,
+  onClick,
 }) => {
   const { i18n } = useTranslation();
   const numericValue = getNumericValue(value);
 
   return (
     <div
-      className={`group flex min-h-36 flex-col justify-between rounded-2xl border border-border bg-surface-strong/84 p-4.5 shadow-card backdrop-blur-xl transition-[border-color,box-shadow] duration-300 hover:border-border-strong hover:shadow-card-hover ${className}`.trim()}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={
+        onClick
+          ? (event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onClick();
+              }
+            }
+          : undefined
+      }
+      className={`flex min-h-36 flex-col justify-between rounded-2xl border border-border bg-surface-strong/84 p-4.5 shadow-card backdrop-blur-xl transition-[border-color,box-shadow] duration-500 ease-[cubic-bezier(0.22,0.7,0.24,1)] ${onClick ? "cursor-pointer hover:border-primary-strong/40" : ""} ${className}`.trim()}
     >
       <div className="flex justify-between items-start">
         <span className="text-[11px] font-medium text-muted">{title}</span>
@@ -96,7 +111,7 @@ export const KpiSummaryCards: React.FC<KpiSummaryCardsProps> = ({ items }) => {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="motion-list grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {items.map((item, index) => (
         <KpiCard
           key={`${item.title}-${index}`}
@@ -110,6 +125,7 @@ export const KpiSummaryCards: React.FC<KpiSummaryCardsProps> = ({ items }) => {
           valueDecimals={item.valueDecimals}
           className={item.className}
           footer={item.footer}
+          onClick={item.onClick}
         />
       ))}
     </div>

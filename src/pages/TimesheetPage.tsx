@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Calendar, ChevronLeft, ChevronRight, List } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, List, Plus } from "lucide-react";
 import { useAuth } from "../context/useAuth";
 import {
   TIMESHEET_REFRESH_EVENT,
@@ -15,15 +15,14 @@ import {
 import { fetchApprovedLeaveDatesForUser } from "../services/leaveService";
 import {
   fetchClients,
-  fetchActiveClients,
   fetchProjects,
-  fetchActiveProjects,
 } from "../services/clientProjectService";
 import { TimesheetCalendar } from "../components/timesheet/TimesheetCalendar";
 import { TimesheetEntryFilter } from "../components/timesheet/TimesheetEntryFilter";
 import { TimesheetEntryList } from "../components/timesheet/TimesheetEntryList";
 import { TimesheetEntryModal } from "../components/timesheet/TimesheetEntryModal";
 import { Button } from "../components/shared/Button";
+import { LoadError } from "../components/shared/LoadError";
 import { Card } from "../components/shared/Card";
 import { Select } from "../components/shared/Select";
 import { getRoleLabel } from "../utils/getRoleLabel";
@@ -44,12 +43,14 @@ const getMonthKey = (date: Date) =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}`;
 
 const TIMESHEET_VIEW_STORAGE_KEY = "chronosync:timesheet:view";
+const MOBILE_TIMESHEET_QUERY = "(max-width: 639px)";
 
 const getViewPreference = (): TimesheetViewMode => {
   if (typeof window === "undefined") return "calendar";
+  if (window.matchMedia(MOBILE_TIMESHEET_QUERY).matches) return "list";
 
   const stored = window.localStorage.getItem(TIMESHEET_VIEW_STORAGE_KEY);
-  if (stored === "grid" || stored === "calendar" || stored === "list") {
+  if (stored === "calendar" || stored === "list") {
     return stored;
   }
 
@@ -78,6 +79,10 @@ export const TimesheetPage: React.FC = () => {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [viewMode, setViewMode] =
     useState<TimesheetViewMode>(getViewPreference);
+  const [feedback, setFeedback] = useState<{
+    type: "error" | "success";
+    message: string;
+  } | null>(null);
 
   // Form State
   const [formData, setFormData] = useState<TimesheetFormData>({
@@ -142,33 +147,22 @@ export const TimesheetPage: React.FC = () => {
 
   const targetUserId = activeTargetUser?.id ?? user?.id;
 
-  const { data: activeClients = [] } = useQuery<Client[]>({
-    queryKey: ["clients", targetCompanyId || "all"],
-    queryFn: () => fetchActiveClients(targetCompanyId || ""),
-    enabled: Boolean(targetCompanyId || isSuperAdmin),
-  });
-
-  const { data: activeProjects = [] } = useQuery<Project[]>({
-    queryKey: ["projects", targetCompanyId || "all", formData.client_id],
-    queryFn: () =>
-      fetchActiveProjects(
-        targetCompanyId || "",
-        formData.client_id || undefined,
-      ),
-    enabled: Boolean((targetCompanyId || isSuperAdmin) && formData.client_id),
-  });
-
-  const { data: allClients = [] } = useQuery<Client[]>({
+  const { data: allClients = [], isError: clientsError } = useQuery<Client[]>({
     queryKey: ["all-clients", targetCompanyId || "all"],
     queryFn: () => fetchClients(targetCompanyId || ""),
     enabled: Boolean(targetCompanyId || isSuperAdmin),
   });
 
-  const { data: allProjects = [] } = useQuery<Project[]>({
+  const { data: allProjects = [], isError: projectsError } = useQuery<Project[]>({
     queryKey: ["all-projects", targetCompanyId || "all"],
     queryFn: () => fetchProjects(targetCompanyId || ""),
     enabled: Boolean(targetCompanyId || isSuperAdmin),
   });
+
+  const activeClients = React.useMemo(() => allClients.filter(client => client.is_active), [allClients]);
+  const activeProjects = React.useMemo(() => allProjects.filter(project =>
+    project.is_active && project.client_id === formData.client_id &&
+    activeClients.some(client => client.id === project.client_id)), [allProjects, activeClients, formData.client_id]);
 
   // --------------------------------------------------------------------------
   // TanStack Query: Fetch Logs
@@ -176,31 +170,39 @@ export const TimesheetPage: React.FC = () => {
   const {
     data: currentMonthTimesheets = [],
     isLoading: isLoadingCurrentMonth,
+    isError: timesheetsError,
   } = useQuery({
     queryKey: ["timesheets", targetUserId, yearMonth],
     enabled: Boolean(targetUserId),
     queryFn: () => fetchUserTimesheets(yearMonth, targetUserId),
   });
 
-  const { data: previousMonthTimesheets = [] } = useQuery({
+  const { data: previousMonthTimesheets = [], isError: previousMonthError } = useQuery({
     queryKey: ["timesheets", targetUserId, previousMonthKey],
     enabled: Boolean(targetUserId),
     queryFn: () => fetchUserTimesheets(previousMonthKey, targetUserId),
   });
 
-  const { data: nextMonthTimesheets = [] } = useQuery({
+  const { data: nextMonthTimesheets = [], isError: nextMonthError } = useQuery({
     queryKey: ["timesheets", targetUserId, nextMonthKey],
     enabled: Boolean(targetUserId),
     queryFn: () => fetchUserTimesheets(nextMonthKey, targetUserId),
   });
 
-  const { data: approvedLeaveDates = [] } = useQuery({
+  const { data: approvedLeaveDates = [], isError: leaveError } = useQuery({
     queryKey: ["approved-leave-dates", targetUserId],
     enabled: Boolean(targetUserId),
     queryFn: () => fetchApprovedLeaveDatesForUser(targetUserId!),
   });
 
   const isLoading = isLoadingCurrentMonth;
+  const hasLoadError = clientsError || projectsError || timesheetsError || previousMonthError || nextMonthError || leaveError;
+  const canEditEntries = canManageTarget && !hasLoadError && !isLoading;
+  const retryLoading = () => {
+    for (const key of ["all-clients", "all-projects", "timesheets", "approved-leave-dates"]) {
+      void queryClient.invalidateQueries({ queryKey: [key] });
+    }
+  };
 
   const timesheets = React.useMemo(() => {
     const mergedMap = new Map<string, TimesheetEntry>();
@@ -255,12 +257,17 @@ export const TimesheetPage: React.FC = () => {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    // The mobile day view should not replace the saved desktop preference.
+    if (window.matchMedia(MOBILE_TIMESHEET_QUERY).matches) return;
     window.localStorage.setItem(TIMESHEET_VIEW_STORAGE_KEY, viewMode);
   }, [viewMode]);
 
   useEffect(() => {
     const handleTimesheetRefresh = () => {
       queryClient.invalidateQueries({ queryKey: ["timesheets"] });
+      queryClient.invalidateQueries({ queryKey: ["timesheets-for-review"] });
+      queryClient.invalidateQueries({ queryKey: ["kpis"] });
+      queryClient.invalidateQueries({ queryKey: ["adminDashboard"] });
     };
 
     window.addEventListener(TIMESHEET_REFRESH_EVENT, handleTimesheetRefresh);
@@ -318,7 +325,7 @@ export const TimesheetPage: React.FC = () => {
         : error instanceof Error
           ? error.message
           : t(fallbackKey);
-    window.alert(message);
+    setFeedback({ type: "error", message });
   };
 
   const resetForm = (date = selectedDate) => {
@@ -338,14 +345,14 @@ export const TimesheetPage: React.FC = () => {
   };
 
   const openCreateModal = () => {
-    if (!canManageTarget) return;
+    if (!canEditEntries) return;
     setEditEntryId(null);
     resetForm();
     setIsModalOpen(true);
   };
 
   const openEditModal = (entry: TimesheetEntry) => {
-    if (!canManageTarget) return;
+    if (!canEditEntries) return;
     setFormData({
       work_date: entry.work_date,
       hours_logged: Number(entry.hours_logged),
@@ -372,8 +379,12 @@ export const TimesheetPage: React.FC = () => {
     mutationFn: createTimesheetEntry,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["timesheets"] });
+      queryClient.invalidateQueries({ queryKey: ["timesheets-for-review"] });
+      queryClient.invalidateQueries({ queryKey: ["kpis"] });
+      queryClient.invalidateQueries({ queryKey: ["adminDashboard"] });
       closeModal();
       resetForm();
+      setFeedback({ type: "success", message: t("timesheet.entrySaved") });
     },
     onError: (error) => showMutationError(error, "timesheet.saveFailed"),
   });
@@ -391,7 +402,11 @@ export const TimesheetPage: React.FC = () => {
     }) => updateTimesheetEntry(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["timesheets"] });
+      queryClient.invalidateQueries({ queryKey: ["timesheets-for-review"] });
+      queryClient.invalidateQueries({ queryKey: ["kpis"] });
+      queryClient.invalidateQueries({ queryKey: ["adminDashboard"] });
       closeModal();
+      setFeedback({ type: "success", message: t("timesheet.entrySaved") });
     },
     onError: (error) => showMutationError(error, "timesheet.saveFailed"),
   });
@@ -403,6 +418,10 @@ export const TimesheetPage: React.FC = () => {
     mutationFn: deleteTimesheetEntry,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["timesheets"] });
+      queryClient.invalidateQueries({ queryKey: ["timesheets-for-review"] });
+      queryClient.invalidateQueries({ queryKey: ["kpis"] });
+      queryClient.invalidateQueries({ queryKey: ["adminDashboard"] });
+      setFeedback({ type: "success", message: t("timesheet.entryDeleted") });
     },
     onError: (error) => showMutationError(error, "timesheet.deleteFailed"),
   });
@@ -417,6 +436,9 @@ export const TimesheetPage: React.FC = () => {
     }) => cloneEntry(entry.id, workDate),
     onError: (error) => {
       showMutationError(error, "timesheet.duplicateFailed");
+    },
+    onSuccess: () => {
+      setFeedback({ type: "success", message: t("timesheet.entryDuplicated") });
     },
     onSettled: () => {
       queryClient.invalidateQueries({
@@ -554,9 +576,10 @@ export const TimesheetPage: React.FC = () => {
   };
 
   const viewModeSwitcher = (
-    <div className="inline-flex min-w-0 items-center gap-0.5 rounded-[9px] border border-border bg-black/[0.035] p-0.5">
+    <div className="inline-flex w-full min-w-0 items-center gap-0.5 rounded-[9px] border border-border bg-black/[0.035] p-0.5 sm:w-auto">
       <Button
         variant={viewMode === "calendar" ? "secondary" : "ghost"}
+        aria-pressed={viewMode === "calendar"}
         size="sm"
         className="min-w-0 flex-1 basis-1/2 border-transparent sm:flex-none sm:basis-auto"
         onClick={() => setViewMode("calendar")}
@@ -566,6 +589,7 @@ export const TimesheetPage: React.FC = () => {
       </Button>
       <Button
         variant={viewMode === "list" ? "secondary" : "ghost"}
+        aria-pressed={viewMode === "list"}
         size="sm"
         className="min-w-0 flex-1 basis-1/2 border-transparent sm:flex-none sm:basis-auto"
         onClick={() => setViewMode("list")}
@@ -585,11 +609,12 @@ export const TimesheetPage: React.FC = () => {
           onClick={handlePreviousWeek}
           icon={<ChevronLeft className="h-4 w-4" />}
         >
-          Previous Week
+          {t("timesheet.previousWeek")}
         </Button>
         <Button
           variant="outline"
           size="icon"
+          aria-label={t("timesheet.previousDay")}
           onClick={handlePreviousDay}
           icon={<ChevronLeft className="h-4 w-4" />}
         />
@@ -598,11 +623,12 @@ export const TimesheetPage: React.FC = () => {
           size="sm"
           onClick={handleGoToToday}
         >
-          Today
+          {t("common.today")}
         </Button>
         <Button
           variant="outline"
           size="icon"
+          aria-label={t("timesheet.nextDay")}
           onClick={handleNextDay}
           icon={<ChevronRight className="h-4 w-4" />}
         />
@@ -613,19 +639,35 @@ export const TimesheetPage: React.FC = () => {
           onClick={handleNextWeek}
           icon={<ChevronRight className="h-4 w-4" />}
         >
-          Next Week
+          {t("timesheet.nextWeek")}
         </Button>
       </div>
     </Card>
   );
 
+  const addEntryButton = (
+    <Button
+      variant="primary"
+      size="sm"
+      onClick={openCreateModal}
+      disabled={!canEditEntries || isSelectedDateLocked}
+      className="rounded-xl px-4 shadow-[0_10px_22px_rgba(96,120,42,0.22)] ring-2 ring-primary/15 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_28px_rgba(96,120,42,0.28)]"
+      icon={<Plus className="h-4 w-4" />}
+    >
+      {isSelectedDateLocked ? t("leave.lockedDay") : t("timesheet.addEntry")}
+    </Button>
+  );
+
   return (
-    <div className="mx-auto w-full space-y-5 pb-10">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-[-0.03em] text-text sm:text-[28px]">
-          {t("timesheet.title")}
-        </h1>
-        <p className="mt-1.5 text-sm text-muted">{t("timesheet.subtitle")}</p>
+    <div className="mx-auto w-full min-w-0 space-y-5 pb-24 sm:pb-10">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold tracking-[-0.03em] text-text sm:text-[28px]">
+            {t("timesheet.title")}
+          </h1>
+          <p className="mt-1.5 text-sm text-muted">{t("timesheet.subtitle")}</p>
+        </div>
+        <div className="hidden shrink-0 sm:block">{addEntryButton}</div>
       </div>
 
       {isSuperAdmin ? (
@@ -649,6 +691,20 @@ export const TimesheetPage: React.FC = () => {
         </>
       ) : null}
 
+      {hasLoadError ? <LoadError onRetry={retryLoading} /> : null}
+      {feedback ? (
+        <div
+          role={feedback.type === "error" ? "alert" : "status"}
+          className={`rounded-xl border px-4 py-3 text-sm ${
+            feedback.type === "error"
+              ? "border-danger-border bg-danger-bg text-danger"
+              : "border-green-200 bg-green-50 text-green-800"
+          }`}
+        >
+          {feedback.message}
+        </div>
+      ) : null}
+
       <TimesheetEntryFilter
         clients={allClients}
         projects={allProjects}
@@ -662,8 +718,8 @@ export const TimesheetPage: React.FC = () => {
 
       {viewMode === "calendar" ? (
         <>
-          <div className="grid gap-4 lg:gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.75fr)] xl:items-stretch">
-            <div className="space-y-3">
+          <div className="grid grid-cols-1 gap-4 lg:gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.75fr)] xl:items-stretch">
+            <div className="min-w-0 space-y-3">
               {pendingCopyEntry ? (
                 <Card className="border-dashed border-primary/40 bg-primary/5 p-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -699,7 +755,7 @@ export const TimesheetPage: React.FC = () => {
               />
             </div>
 
-            <div className="flex h-full flex-col xl:sticky xl:top-6">
+            <div className="flex h-full min-w-0 flex-col xl:sticky xl:top-6">
               <div className="flex min-h-0 flex-1 flex-col">
                 <TimesheetEntryList
                   selectedDate={selectedDate}
@@ -707,7 +763,6 @@ export const TimesheetPage: React.FC = () => {
                   entries={selectedDayLogs}
                   allEntries={timesheets}
                   loading={isLoading}
-                  onAddEntry={openCreateModal}
                   onEditEntry={openEditModal}
                   onDuplicateEntry={handleStartCopy}
                   onDeleteEntry={(entryId) => deleteMutation.mutate(entryId)}
@@ -715,7 +770,9 @@ export const TimesheetPage: React.FC = () => {
                   isDuplicating={duplicateMutation.isPending}
                   isDeleting={deleteMutation.isPending}
                   clients={allClients}
-                  canManageTarget={canManageTarget}
+                  projects={allProjects}
+                  canManageTarget={canEditEntries}
+                  onFeedback={setFeedback}
                   isSelectedDateLocked={isSelectedDateLocked}
                   viewMode={viewMode}
                 />
@@ -735,7 +792,6 @@ export const TimesheetPage: React.FC = () => {
             entries={selectedDayLogs}
             allEntries={timesheets}
             loading={isLoading}
-            onAddEntry={openCreateModal}
             onEditEntry={openEditModal}
             onDuplicateEntry={handleStartCopy}
             onDeleteEntry={(entryId) => deleteMutation.mutate(entryId)}
@@ -743,11 +799,32 @@ export const TimesheetPage: React.FC = () => {
             isDuplicating={duplicateMutation.isPending}
             isDeleting={deleteMutation.isPending}
             clients={allClients}
-            canManageTarget={canManageTarget}
+            projects={allProjects}
+            canManageTarget={canEditEntries}
+            onFeedback={setFeedback}
             isSelectedDateLocked={isSelectedDateLocked}
             viewMode={viewMode}
           />
         </>
+      ) : null}
+
+      {canEditEntries ? (
+        <div className="fixed inset-x-4 bottom-4 z-30 sm:hidden">
+          <div className="rounded-2xl border border-border bg-surface-strong/95 p-2 shadow-lg backdrop-blur">
+            <Button
+              variant="primary"
+              size="md"
+              onClick={openCreateModal}
+              disabled={isSelectedDateLocked}
+              className="w-full rounded-xl px-4 shadow-[0_10px_22px_rgba(96,120,42,0.22)] ring-2 ring-primary/15 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_28px_rgba(96,120,42,0.28)]"
+              icon={<Plus className="h-4 w-4" />}
+            >
+              {isSelectedDateLocked
+                ? t("leave.lockedDay")
+                : t("timesheet.addEntry")}
+            </Button>
+          </div>
+        </div>
       ) : null}
 
       <TimesheetEntryModal

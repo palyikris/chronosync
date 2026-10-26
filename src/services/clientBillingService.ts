@@ -7,6 +7,8 @@ import {
   TAX_SUBJECTS,
   type ClientBillingProfile,
   type ClientBillingProfileUpsert,
+  type ClientInvoiceReview,
+  type InvoiceHistoryItem,
 } from "../types/client-billing";
 import { getBillingProfileReadiness } from "../utils/clientBillingReadiness";
 
@@ -134,7 +136,12 @@ export const saveClientBillingProfile = async (
     );
   }
 
-  const payload = validation.data;
+  const payload = {
+    ...validation.data,
+    // Scheduling is intentionally out of scope for the manual invoice workflow.
+    automatic_invoicing_enabled: false,
+    invoice_schedule_day: 1,
+  };
   const { data, error } = await supabase
     .from("client_billing_profiles")
     .upsert(payload, { onConflict: "client_id" })
@@ -159,6 +166,36 @@ const getInvoicePreviewApiUrl = () => {
     throw new Error(i18n.t("clientBilling.previewApiNotConfigured"));
   }
   return `${apiBaseUrl.replace(/\/$/, "")}/invoices/client-preview`;
+};
+
+const getInvoiceApiBaseUrl = () => {
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+  if (!apiBaseUrl) {
+    throw new Error(i18n.t("clientBilling.previewApiNotConfigured"));
+  }
+  return `${apiBaseUrl.replace(/\/$/, "")}/invoices`;
+};
+
+const getAccessToken = async () => {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error(i18n.t("clientBilling.previewAuthenticationRequired"));
+  }
+  return session.access_token;
+};
+
+const getInvoiceApiError = async (response: Response) => {
+  const errorData: unknown = await response.json().catch(() => null);
+  const detail =
+    errorData &&
+    typeof errorData === "object" &&
+    "detail" in errorData &&
+    typeof errorData.detail === "string"
+      ? errorData.detail
+      : null;
+  return detail ?? i18n.t("clientBilling.invoiceRequestFailed");
 };
 
 const getPreviewErrorMessage = async (response: Response): Promise<string> => {
@@ -251,4 +288,161 @@ export const downloadClientInvoicePreview = async ({
   link.click();
   link.remove();
   window.setTimeout(() => window.URL.revokeObjectURL(downloadUrl), 1_000);
+};
+
+interface ClientInvoicePeriodParams {
+  companyId: string;
+  clientId: string;
+  periodStart: string;
+  periodEnd: string;
+}
+
+const normalizeInvoiceReview = (value: ClientInvoiceReview): ClientInvoiceReview => ({
+  ...value,
+  quantity: Number(value.quantity),
+  net_unit_price: Number(value.net_unit_price),
+  net_total: Number(value.net_total),
+  vat_total: Number(value.vat_total),
+  gross_total: Number(value.gross_total),
+  approved_entries: value.approved_entries.map((entry) => ({
+    ...entry,
+    hours_logged: Number(entry.hours_logged),
+  })),
+});
+
+const normalizeInvoiceHistoryItem = (
+  value: InvoiceHistoryItem,
+): InvoiceHistoryItem => ({
+  ...value,
+  quantity: Number(value.quantity),
+  net_unit_price: Number(value.net_unit_price),
+  net_total: Number(value.net_total),
+  vat_total: Number(value.vat_total),
+  gross_total: Number(value.gross_total),
+});
+
+export const reviewClientInvoice = async ({
+  companyId,
+  clientId,
+  periodStart,
+  periodEnd,
+}: ClientInvoicePeriodParams): Promise<ClientInvoiceReview> => {
+  const response = await fetch(`${getInvoiceApiBaseUrl()}/client-review`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${await getAccessToken()}`,
+    },
+    body: JSON.stringify({
+      company_id: companyId,
+      client_id: clientId,
+      period_start: periodStart,
+      period_end: periodEnd,
+    }),
+  });
+  if (!response.ok) throw new Error(await getInvoiceApiError(response));
+  return normalizeInvoiceReview((await response.json()) as ClientInvoiceReview);
+};
+
+export const issueClientInvoice = async (
+  review: ClientInvoiceReview,
+): Promise<InvoiceHistoryItem> => {
+  const response = await fetch(`${getInvoiceApiBaseUrl()}/client-issue`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${await getAccessToken()}`,
+    },
+    body: JSON.stringify({
+      company_id: review.company_id,
+      client_id: review.client_id,
+      period_start: review.period_start,
+      period_end: review.period_end,
+      review_fingerprint: review.review_fingerprint,
+      confirm: true,
+    }),
+  });
+  if (!response.ok) throw new Error(await getInvoiceApiError(response));
+  return normalizeInvoiceHistoryItem(
+    (await response.json()) as InvoiceHistoryItem,
+  );
+};
+
+export const fetchInvoiceHistory = async (
+  companyId: string,
+): Promise<InvoiceHistoryItem[]> => {
+  const query = new URLSearchParams({ company_id: companyId, limit: "50" });
+  const response = await fetch(`${getInvoiceApiBaseUrl()}/history?${query}`, {
+    headers: { Authorization: `Bearer ${await getAccessToken()}` },
+  });
+  if (!response.ok) throw new Error(await getInvoiceApiError(response));
+  const items = (await response.json()) as InvoiceHistoryItem[];
+  return items.map(normalizeInvoiceHistoryItem);
+};
+
+const downloadPdfResponse = async (response: Response, fallbackName: string) => {
+  if (!response.ok) throw new Error(await getInvoiceApiError(response));
+  const blob = await response.blob();
+  const signature = new TextDecoder().decode(await blob.slice(0, 4).arrayBuffer());
+  if (blob.size === 0 || signature !== "%PDF") {
+    throw new Error(i18n.t("clientBilling.previewInvalidFile"));
+  }
+  const disposition = response.headers.get("Content-Disposition") ?? "";
+  const filenameMatch = disposition.match(/filename="([^"]+)"/i);
+  const downloadUrl = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = downloadUrl;
+  link.download = filenameMatch?.[1] ?? fallbackName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => window.URL.revokeObjectURL(downloadUrl), 1_000);
+};
+
+export const downloadIssuedInvoicePdf = async (
+  companyId: string,
+  invoiceId: string,
+) => {
+  const query = new URLSearchParams({ company_id: companyId });
+  const response = await fetch(
+    `${getInvoiceApiBaseUrl()}/${encodeURIComponent(invoiceId)}/pdf?${query}`,
+    { headers: { Authorization: `Bearer ${await getAccessToken()}` } },
+  );
+  await downloadPdfResponse(response, `invoice-${invoiceId}.pdf`);
+};
+
+export const reconcileInvoice = async (params: {
+  companyId: string;
+  invoiceId: string;
+  resolution: "issued" | "not_issued";
+  invoiceNumber?: string;
+  netTotal?: number;
+  grossTotal?: number;
+}): Promise<InvoiceHistoryItem> => {
+  const response = await fetch(
+    `${getInvoiceApiBaseUrl()}/${encodeURIComponent(params.invoiceId)}/reconcile`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${await getAccessToken()}`,
+      },
+      body: JSON.stringify({
+        company_id: params.companyId,
+        resolution: params.resolution,
+        confirm: true,
+        ...(params.invoiceNumber
+          ? { invoice_number: params.invoiceNumber }
+          : {}),
+        ...(params.netTotal !== undefined ? { net_total: params.netTotal } : {}),
+        ...(params.grossTotal !== undefined
+          ? { gross_total: params.grossTotal }
+          : {}),
+      }),
+    },
+  );
+  if (!response.ok) throw new Error(await getInvoiceApiError(response));
+  return normalizeInvoiceHistoryItem(
+    (await response.json()) as InvoiceHistoryItem,
+  );
 };
