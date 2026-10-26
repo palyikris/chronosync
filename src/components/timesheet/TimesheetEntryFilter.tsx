@@ -106,9 +106,9 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
   }, [isCollapsed]);
 
   return (
-    <Card className="relative z-10 min-w-0 overflow-visible p-3">
-      <div className="flex flex-col gap-4">
-        <div className="flex min-w-0 flex-col gap-3 xl:flex-row xl:flex-wrap xl:items-center xl:justify-between">
+    <Card className="relative z-10 min-w-0 overflow-visible p-2.5 sm:p-3">
+      <div className="flex flex-col gap-2.5">
+        <div className="flex min-w-0 flex-col gap-2.5 xl:flex-row xl:flex-wrap xl:items-center xl:justify-between">
           <div className="flex w-full min-w-0 items-center sm:w-auto">
             {viewModeSwitcher}
           </div>
@@ -117,7 +117,7 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
             <div
               inert={isCollapsed}
               className={cn(
-                "grid min-w-0 grid-cols-1 gap-3 overflow-hidden transition-all duration-300 ease-out sm:grid-cols-2 xl:flex xl:items-center",
+                "grid min-w-0 grid-cols-1 gap-2 overflow-hidden transition-all duration-300 ease-out sm:grid-cols-2 xl:flex xl:items-center",
                 isCollapsed
                   ? "pointer-events-none max-h-0 w-0 max-w-0 translate-x-[-10px] opacity-0"
                   : "max-h-40 w-full max-w-full translate-x-0 opacity-100 xl:w-auto xl:max-w-[600px]",
@@ -127,7 +127,7 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
                 value={selectedClientId}
                 onChange={(event) => onClientChange(event.target.value)}
                 label={t("timesheet.client")}
-                className="w-full min-w-0 xl:w-[280px] xl:shrink-0"
+                className="w-full min-w-0 [&_.auth-input]:min-h-11 [&_.auth-input]:py-2 xl:w-[280px] xl:shrink-0"
               >
                 <option value="">{t("timesheet.allClients")}</option>
                 {availableClients.map((client) => (
@@ -141,7 +141,7 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
                 value={selectedProjectId}
                 onChange={(event) => onProjectChange(event.target.value)}
                 label={t("timesheet.project")}
-                className="w-full min-w-0 xl:w-[280px] xl:shrink-0"
+                className="w-full min-w-0 [&_.auth-input]:min-h-11 [&_.auth-input]:py-2 xl:w-[280px] xl:shrink-0"
                 disabled={!selectedClientId}
                 disabledReason={t("common.selectClientFirst")}
               >
@@ -158,12 +158,12 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
               </Select>
             </div>
 
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-[2.75rem] min-h-[2.75rem] px-4"
+                className="min-w-0 flex-1 px-2.5 [&>span]:min-w-0 [&>span]:whitespace-normal [&>span]:text-center [&>span]:leading-tight sm:flex-none sm:px-4"
                 aria-expanded={!isCollapsed}
                 onClick={() => setIsCollapsed((open) => !open)}
                 icon={
@@ -186,7 +186,7 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
                 onClick={onReset}
                 disabled={!selectedClientId && !selectedProjectId}
                 icon={<X className="text-danger" />}
-                className="h-[2.75rem] min-h-[2.75rem] border-danger/30 px-4"
+                className="min-w-0 flex-1 border-danger/30 px-2.5 [&>span]:min-w-0 [&>span]:whitespace-normal [&>span]:text-center [&>span]:leading-tight sm:flex-none sm:px-4"
               >
                 {t("common.clearFilters")}
               </Button>

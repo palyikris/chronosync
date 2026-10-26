@@ -24,6 +24,7 @@ import {
 
 export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
   selectedDate,
+  totalDailyHours,
   entries,
   allEntries,
   loading,
@@ -38,7 +39,6 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
   canManageTarget,
   onFeedback,
   isSelectedDateLocked = false,
-  viewMode,
 }) => {
   const { t, i18n } = useTranslation();
   const selectedDayLabel = new Date(
@@ -147,13 +147,18 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
 
   return (
     <Card className="flex h-full flex-col">
-      <CardHeader className="bg-bg-accent/60">
+      <CardHeader className="bg-bg-accent/60 px-4 py-3.5 sm:px-5 sm:py-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
               {t("timesheet.selectedDay")}
             </p>
-            <h3 className="mt-1 font-bold text-text">{selectedDayLabel}</h3>
+            <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+              <h3 className="text-lg font-bold text-text">{selectedDayLabel}</h3>
+              <span className="text-xs font-semibold tabular-nums text-primary-strong">
+                {totalDailyHours.toFixed(2)} h
+              </span>
+            </div>
             {isSelectedDateLocked ? (
               <p className="mt-1 text-xs font-semibold text-amber-700">
                 {t("leave.dateLockedForLeave")}
@@ -163,7 +168,7 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
         </div>
       </CardHeader>
 
-      {canManageTarget && viewMode === "calendar" ? (
+      {canManageTarget ? (
         <div className="flex flex-col gap-2 border-b border-border bg-primary/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
           <div className="flex min-w-0 items-center gap-2">
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] bg-primary/15 text-primary-strong">
@@ -182,7 +187,7 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
         </div>
       ) : null}
 
-      <CardContent className="flex-1 space-y-3 overflow-y-auto">
+      <CardContent className="flex-1 space-y-3 overflow-y-auto p-3 sm:p-4">
         {loading ? (
           <div className="py-8 text-center text-sm text-muted">
             {t("timesheet.loadingEntries")}
@@ -218,9 +223,9 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
             return (
               <div
                 key={entry.id}
-                className="group relative rounded-xl border border-border-strong bg-surface-strong p-4 shadow-[0_1px_2px_rgba(75,87,57,0.035)] transition-[border-color,box-shadow,transform] duration-300 ease-out hover:-translate-y-0.5 hover:border-primary-strong/30 hover:shadow-card-hover"
+                className="group relative rounded-xl border border-border-strong bg-surface-strong p-3 shadow-[0_1px_2px_rgba(75,87,57,0.035)] transition-[border-color,box-shadow,transform] duration-300 ease-out hover:-translate-y-0.5 hover:border-primary-strong/30 hover:shadow-card-hover sm:p-4"
               >
-                <div className="mb-2 flex items-start justify-between gap-2">
+                <div className="mb-2 flex items-start justify-between gap-3">
                   <div className="flex min-w-0 flex-col gap-0.5">
                     <span className="truncate text-xs font-bold uppercase tracking-[0.08em] text-muted-strong">
                       {clients.find((client) => client.id === entry.client_id)?.name ??
@@ -236,11 +241,11 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
                   </span>
                 </div>
 
-                <p className="mb-2 text-sm font-normal text-text">
+                <p className="mb-3 break-words text-sm font-normal leading-5 text-text">
                   {entry.description || t("timesheet.noDescription")}
                 </p>
 
-                <div className="flex items-center justify-between gap-2 text-[13px] text-muted">
+                <div className="flex flex-col items-stretch gap-2 text-[13px] text-muted sm:flex-row sm:items-center sm:justify-between">
                   <span className="flex items-center gap-1">
                     <History className="h-3.5 w-3.5" />
                     <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${statusColorClass}`}>

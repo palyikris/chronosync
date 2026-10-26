@@ -601,46 +601,52 @@ export const TimesheetPage: React.FC = () => {
   );
 
   const listNavigationControls = (
-    <Card className="p-2.5">
-      <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handlePreviousWeek}
-          icon={<ChevronLeft className="h-4 w-4" />}
-        >
-          {t("timesheet.previousWeek")}
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          aria-label={t("timesheet.previousDay")}
-          onClick={handlePreviousDay}
-          icon={<ChevronLeft className="h-4 w-4" />}
-        />
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleGoToToday}
-        >
-          {t("common.today")}
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          aria-label={t("timesheet.nextDay")}
-          onClick={handleNextDay}
-          icon={<ChevronRight className="h-4 w-4" />}
-        />
-        <Button
-          variant="outline"
-          size="sm"
-          className="col-span-2 sm:col-span-1"
-          onClick={handleNextWeek}
-          icon={<ChevronRight className="h-4 w-4" />}
-        >
-          {t("timesheet.nextWeek")}
-        </Button>
+    <Card className="p-2.5 sm:p-3">
+      <div className="flex w-full flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end sm:gap-2">
+        <div className="grid w-full grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-stretch gap-1.5 sm:contents">
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label={t("timesheet.previousDay")}
+            onClick={handlePreviousDay}
+            icon={<ChevronLeft className="h-4 w-4" />}
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            className="min-w-0 px-1.5 sm:px-3"
+            onClick={handleGoToToday}
+          >
+            {t("common.today")}
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label={t("timesheet.nextDay")}
+            onClick={handleNextDay}
+            icon={<ChevronRight className="h-4 w-4" />}
+          />
+        </div>
+        <div className="grid w-full grid-cols-2 gap-1.5 sm:flex sm:w-auto sm:gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="min-w-0 px-1.5 [&>span]:min-w-0 [&>span]:whitespace-normal [&>span]:text-center [&>span]:leading-tight sm:px-3"
+            onClick={handlePreviousWeek}
+            icon={<ChevronLeft className="h-4 w-4" />}
+          >
+            {t("timesheet.previousWeek")}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="min-w-0 px-1.5 [&>span]:min-w-0 [&>span]:whitespace-normal [&>span]:text-center [&>span]:leading-tight sm:px-3"
+            onClick={handleNextWeek}
+            icon={<ChevronRight className="h-4 w-4" />}
+          >
+            {t("timesheet.nextWeek")}
+          </Button>
+        </div>
       </div>
     </Card>
   );
@@ -659,13 +665,13 @@ export const TimesheetPage: React.FC = () => {
   );
 
   return (
-    <div className="mx-auto w-full min-w-0 space-y-5 pb-24 sm:pb-10">
-      <div className="flex items-start justify-between gap-4">
+    <div className="mx-auto w-full min-w-0 space-y-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] sm:space-y-5 sm:pb-10">
+      <div className="flex items-start justify-between gap-3 sm:gap-4">
         <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-[-0.03em] text-text sm:text-[28px]">
+          <h1 className="text-[23px] font-semibold tracking-[-0.03em] text-text sm:text-[28px]">
             {t("timesheet.title")}
           </h1>
-          <p className="mt-1.5 text-sm text-muted">{t("timesheet.subtitle")}</p>
+          <p className="mt-1 text-[13px] leading-5 text-muted sm:mt-1.5 sm:text-sm">{t("timesheet.subtitle")}</p>
         </div>
         <div className="hidden shrink-0 sm:block">{addEntryButton}</div>
       </div>
@@ -719,7 +725,7 @@ export const TimesheetPage: React.FC = () => {
       {viewMode === "calendar" ? (
         <>
           <div className="grid grid-cols-1 gap-4 lg:gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.75fr)] xl:items-stretch">
-            <div className="min-w-0 space-y-3">
+            <div className="order-2 min-w-0 space-y-3 xl:order-1">
               {pendingCopyEntry ? (
                 <Card className="border-dashed border-primary/40 bg-primary/5 p-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -755,7 +761,7 @@ export const TimesheetPage: React.FC = () => {
               />
             </div>
 
-            <div className="flex h-full min-w-0 flex-col xl:sticky xl:top-6">
+            <div className="order-1 flex h-full min-w-0 flex-col xl:sticky xl:top-6 xl:order-2">
               <div className="flex min-h-0 flex-1 flex-col">
                 <TimesheetEntryList
                   selectedDate={selectedDate}
@@ -809,7 +815,7 @@ export const TimesheetPage: React.FC = () => {
       ) : null}
 
       {canEditEntries ? (
-        <div className="fixed inset-x-4 bottom-4 z-30 sm:hidden">
+        <div className="fixed inset-x-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-30 sm:hidden">
           <div className="rounded-2xl border border-border bg-surface-strong/95 p-2 shadow-lg backdrop-blur">
             <Button
               variant="primary"

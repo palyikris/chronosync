@@ -36,7 +36,7 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
       onClose={() => { if (!isSaving) onClose(); }}
       className="max-w-2xl"
     >
-      <form onSubmit={onSubmit} className="space-y-5 p-6">
+      <form onSubmit={onSubmit} className="space-y-5 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-6">
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2 sm:col-span-1">
             <label className="mb-1 block text-xs font-semibold text-muted">
@@ -64,6 +64,7 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
               id="timesheet-entry-hours"
               aria-label={t("timesheet.totalHours")}
               type="number"
+              inputMode="decimal"
               step="any"
               min="0.01"
               max="24"

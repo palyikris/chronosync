@@ -108,7 +108,7 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
           </div>
 
           <CardContent className="p-0">
-            <div className="grid min-h-96 grid-cols-7 auto-rows-fr text-sm sm:min-h-105">
+            <div className="grid min-h-80 grid-cols-7 auto-rows-fr text-sm sm:min-h-105">
               {Array.from({ length: startDayOfWeek }).map((_, index) => (
                 <div
                   key={`empty-${index}`}
@@ -139,6 +139,7 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
                     type="button"
                     disabled={isCopyTargetDisabled}
                     onClick={() => onSelectDate(dateStr)}
+                    aria-label={`${dateStr}${hasLogs ? `, ${formatHours(dayLogs.reduce((sum, entry) => sum + Number(entry.hours_logged), 0))} hours logged` : ""}${isLocked ? `, ${t("leave.lockedDay")}` : ""}`}
                     className={`relative flex min-h-14 min-w-0 flex-col justify-between border-b border-r border-border p-1 text-left transition-[background-color,box-shadow,opacity] duration-300 ease-[cubic-bezier(0.22,0.7,0.24,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-strong/45 focus-visible:ring-inset sm:min-h-17.5 sm:p-2 ${
                       isCopyTargetDisabled
                         ? "cursor-not-allowed bg-slate-100/80 opacity-70"
