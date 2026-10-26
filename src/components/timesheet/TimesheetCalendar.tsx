@@ -55,27 +55,27 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
   ): string => {
     const statuses = new Set(entryStatuses);
     if (statuses.has("rejected")) {
-      return "bg-red-200 text-red-800";
+      return "border border-red-300 bg-red-50 text-red-800";
     } else if (statuses.has("invoiced")) {
-      return "bg-purple-200 text-purple-800";
+      return "border border-purple-200 bg-purple-50 text-purple-800";
     } else if (statuses.has("submitted")) {
-      return "bg-blue-200 text-blue-800";
+      return "border border-blue-200 bg-blue-50 text-blue-800";
     } else if (statuses.has("approved")) {
-      return "bg-green-200 text-green-800";
+      return "border border-green-200 bg-green-100 text-green-800";
     }
-    return "bg-gray-200 text-gray-800"; // Default color for other statuses
+    return "border border-slate-300 bg-slate-100 text-slate-800";
   };
 
   return (
     <Card className="h-full overflow-hidden">
       <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
-          <div className="text-[11px] font-medium text-muted">
+          <div className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-strong">
             {t("common.monthView")}
           </div>
           <div key={yearMonth} className="calendar-label flex flex-wrap items-center gap-3">
             <span className="text-[14px] font-semibold tracking-[-0.015em] text-text">{monthLabel}</span>
-            <span className="rounded-full border border-border bg-white/40 px-2.5 py-1 text-[11px] font-medium text-muted-strong">
+            <span className="rounded-full border border-border-strong bg-white/55 px-2.5 py-1 text-xs font-semibold text-muted-strong">
               {t("timesheet.totalLogged")}: {formatHours(totalMonthlyHours)} hrs
             </span>
           </div>
@@ -101,7 +101,7 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
 
       <div key={`calendar-${yearMonth}`} className="calendar-month min-w-0">
         <div className="w-full min-w-0">
-          <div className="grid grid-cols-7 border-b border-border bg-transparent py-2 text-center text-[11px] font-medium text-muted">
+          <div className="grid grid-cols-7 border-b border-border bg-transparent py-2.5 text-center text-xs font-semibold text-muted-strong">
             {weekDays.map((day) => (
               <div key={day}>{day}</div>
             ))}
@@ -153,7 +153,7 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
                         : ""
                     } ${
                       isSelected
-                        ? "bg-black/[0.055] font-semibold ring-1 ring-primary-strong/25 ring-inset"
+                        ? "bg-primary/10 font-semibold ring-1 ring-primary-strong/30 ring-inset"
                         : ""
                     }`}
                   >
@@ -171,7 +171,7 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
                     ) : null}
                     {hasLogs ? (
                       <div
-                        className={`w-full truncate rounded-md px-1 py-0.5 text-center text-[10px] font-medium ${colorClass}`}
+                        className={`w-full truncate rounded-md px-1 py-0.5 text-center text-[11px] font-semibold ${colorClass}`}
                       >
                         {formatHours(
                           dayLogs.reduce(

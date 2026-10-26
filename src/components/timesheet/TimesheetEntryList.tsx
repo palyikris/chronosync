@@ -147,7 +147,7 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
 
   return (
     <Card className="flex h-full flex-col">
-      <CardHeader>
+      <CardHeader className="bg-bg-accent/60">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
@@ -164,7 +164,7 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
       </CardHeader>
 
       {canManageTarget && viewMode === "calendar" ? (
-        <div className="flex flex-col gap-2 border-b border-border bg-bg-accent/25 px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+        <div className="flex flex-col gap-2 border-b border-border bg-primary/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
           <div className="flex min-w-0 items-center gap-2">
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] bg-primary/15 text-primary-strong">
               <CalendarCheck2 className="h-3.5 w-3.5" aria-hidden="true" />
@@ -218,7 +218,7 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
             return (
               <div
                 key={entry.id}
-                className="group relative rounded-xl border border-border-strong bg-surface-strong p-3 transition-all hover:shadow-md"
+                className="group relative rounded-xl border border-border-strong bg-surface-strong p-4 shadow-[0_1px_2px_rgba(75,87,57,0.035)] transition-[border-color,box-shadow,transform] duration-300 ease-out hover:-translate-y-0.5 hover:border-primary-strong/30 hover:shadow-card-hover"
               >
                 <div className="mb-2 flex items-start justify-between gap-2">
                   <div className="flex min-w-0 flex-col gap-0.5">
@@ -249,7 +249,7 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
                   </span>
 
                   {canManageTarget ? (
-                    <div className="flex flex-wrap items-center justify-end gap-1">
+                    <div className="flex flex-wrap items-center justify-end gap-1 rounded-lg border border-border bg-bg-accent/45 p-0.5">
                       {entry.status === "draft" ||
                       entry.status === "rejected" ? (
                         <Button
