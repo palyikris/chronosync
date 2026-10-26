@@ -357,6 +357,7 @@ button:not(:disabled),
   display: flex;
   flex-direction: column;
   min-width: 0;
+  --auth-input-background: var(--color-bg-accent);
 }
 
 .auth-field-icon {
@@ -370,6 +371,10 @@ button:not(:disabled),
   transition: color var(--transition-fast), transform var(--transition-fast);
 }
 
+.auth-field:focus-within {
+  --auth-input-background: var(--color-bg-accent);
+}
+
 .auth-field:focus-within .auth-field-icon {
   color: var(--color-primary-strong);
   transform: translateY(-50%) scale(1.06);
@@ -380,7 +385,7 @@ button:not(:disabled),
   min-height: 2.75rem;
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-field);
-  background: rgba(252, 253, 247, 0.72);
+  background: var(--auth-input-background);
   padding: 0.72rem 0.8rem;
   font-size: 0.8125rem;
   line-height: 1.15rem;
@@ -406,7 +411,6 @@ button.auth-input:disabled {
 .auth-field input:focus {
   border-color: rgba(96, 120, 42, 0.72);
   outline: none;
-  background: #fcfdf7;
   box-shadow: 0 0 0 3px rgba(207, 231, 143, 0.38);
 }
 
@@ -416,7 +420,6 @@ button.auth-input:disabled {
 
 .auth-field button.auth-input:focus-visible {
   border-color: rgba(96, 120, 42, 0.72);
-  background: #fcfdf7;
   box-shadow: 0 0 0 3px rgba(207, 231, 143, 0.38);
 }
 
@@ -428,6 +431,7 @@ button.auth-input:disabled {
   padding: 0 0.25rem;
   pointer-events: none;
   color: var(--color-muted);
+  background: var(--auth-input-background);
   transform-origin: left top;
   transition: transform var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
 }
@@ -437,7 +441,6 @@ button.auth-input:disabled {
 .auth-field.has-value > label {
   left: 0.7rem;
   color: var(--color-primary-strong);
-  background: #fcfdf7;
   transform: translateY(-1.18rem) scale(0.76);
 }
 
