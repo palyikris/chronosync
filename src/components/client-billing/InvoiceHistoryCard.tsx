@@ -117,7 +117,7 @@ export const InvoiceHistoryCard: React.FC<InvoiceHistoryCardProps> = ({
                   ) : null}
                 </div>
                 <div className="flex shrink-0 flex-wrap items-center gap-2">
-                  {item.status === "issued" && item.pdf_available ? (
+                  {item.status === "issued" ? (
                     <Button
                       variant="outline"
                       size="sm"
@@ -125,7 +125,7 @@ export const InvoiceHistoryCard: React.FC<InvoiceHistoryCardProps> = ({
                       disabled={downloadingId === item.id}
                       onClick={() => onDownload(item)}
                     >
-                      {t("clientBilling.downloadInvoicePdf")}
+                      {t(item.pdf_available ? "clientBilling.downloadInvoicePdf" : "clientBilling.recoverInvoicePdf")}
                     </Button>
                   ) : null}
                   {item.status === "uncertain" ? (

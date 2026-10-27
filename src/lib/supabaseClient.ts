@@ -8,4 +8,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(i18n.t("errors.missingSupabaseEnv"));
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    flowType: "pkce",
+    detectSessionInUrl: false,
+    persistSession: true,
+    autoRefreshToken: true,
+  },
+});

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { signInUser } from "../services/authService";
+import { requestPasswordReset, signInUser } from "../services/authService";
 import { useAuth } from "../context/useAuth";
 import { getHomeRouteForRole } from "../utils/navigation";
 import { ArrowRight, Clock3, Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
@@ -13,10 +13,31 @@ export const LoginPage: React.FC = () => {
   const [supportMessage, setSupportMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [resetPending, setResetPending] = useState(false);
+  const [resetCooldown, setResetCooldown] = useState(false);
 
   const { user, profile, authError, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
+
+  useEffect(() => {
+    if (!resetCooldown) return;
+    const timer = window.setTimeout(() => setResetCooldown(false), 60_000);
+    return () => window.clearTimeout(timer);
+  }, [resetCooldown]);
+
+  const handlePasswordReset = async () => {
+    if (resetPending || resetCooldown) return;
+    setResetPending(true);
+    setErrorMsg(null);
+    try {
+      await requestPasswordReset(email);
+      setSupportMessage(t("auth.passwordResetRequested"));
+      setResetCooldown(true);
+    } catch (error) {
+      setErrorMsg(error instanceof Error ? error.message : t("auth.passwordUpdateFailed"));
+    } finally { setResetPending(false); }
+  };
 
   useEffect(() => {
     if (!authLoading && user && profile) {
@@ -193,14 +214,16 @@ export const LoginPage: React.FC = () => {
                 <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
               </button>
 
-              <div className="flex justify-center">
+              <div className="flex flex-col items-center">
                 <button
                   type="button"
-                  onClick={() => setSupportMessage(t("auth.passwordResetHelp"))}
+                  onClick={() => void handlePasswordReset()}
+                  disabled={resetPending || resetCooldown}
                   className="auth-link-button px-3 py-2 text-[12px] font-medium text-primary-strong transition hover:underline"
                 >
                   {t("auth.forgotPassword")}
                 </button>
+                <Link to="/auth/recover" className="auth-link-button px-3 py-2 text-[12px]">{t("auth.enterRecoveryCode")}</Link>
               </div>
             </div>
             {supportMessage ? <p role="status" className="rounded-xl border border-border bg-bg-accent p-3 text-sm text-muted-strong">{supportMessage}</p> : null}

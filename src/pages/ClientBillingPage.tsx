@@ -649,6 +649,7 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
     setPreviewResult(null);
     try {
       await downloadIssuedInvoicePdf(companyId, item.id);
+      if (!item.pdf_available) await queryClient.invalidateQueries({ queryKey: ["invoice-history", companyId] });
     } catch (error) {
       setPreviewResult({
         kind: "error",
@@ -1154,6 +1155,9 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
                         }))
                       }
                     />
+                    <p className="text-xs text-muted sm:col-span-2">
+                      {t("clientBilling.groupTaxNumberHint")}
+                    </p>
                   </div>
                 </div>
               </Card>

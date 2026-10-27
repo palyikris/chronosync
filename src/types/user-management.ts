@@ -1,7 +1,6 @@
 import { z } from "zod";
 import {
   emailSchema,
-  passwordSchema,
   trimmedNonEmptyStringSchema,
   uuidSchema,
 } from "../lib/zodSchemas";
@@ -13,7 +12,6 @@ export type CompanyUserRole = z.infer<typeof companyUserRoleSchema>;
 export const createCompanyUserPayloadSchema = z
   .object({
     email: emailSchema,
-    password: passwordSchema.optional(),
     full_name: trimmedNonEmptyStringSchema("Full name is required", 120),
     role: companyUserRoleSchema,
     company_id: uuidSchema,

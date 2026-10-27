@@ -4,7 +4,6 @@ import { Button } from "../shared/Button";
 import { Input } from "../shared/Input";
 import { Select } from "../shared/Select";
 import { useTranslation } from "react-i18next";
-import type { User as SBUser } from "@supabase/supabase-js";
 
 interface InviteUserModalProps {
   isOpen: boolean;
@@ -13,7 +12,7 @@ interface InviteUserModalProps {
     email: string;
     full_name: string;
     role: "company_admin" | "regular";
-  }) => Promise<SBUser | null>;
+  }) => Promise<void>;
   isLoading: boolean;
 }
 

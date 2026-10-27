@@ -10,6 +10,8 @@ import type {
   InvoiceSettings,
 } from "../types/company-settings";
 
+const COMPANY_COLUMNS = "id, name, billing_email, szamlazz_test_mode, is_active, is_deleted, deleted_at, leave_client_id, leave_project_id, created_at";
+
 const getInvoiceApiUrl = () => {
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
   if (!apiBaseUrl) throw new Error("Invoice settings API is not configured.");
@@ -116,7 +118,7 @@ export const companyService = {
         leave_client_id: input.leave_client_id ?? null,
         leave_project_id: input.leave_project_id ?? null,
       })
-      .select()
+      .select(COMPANY_COLUMNS)
       .single();
 
     if (error) throw error;
@@ -160,7 +162,7 @@ export const companyService = {
         leave_project_id: input.leave_project_id ?? null,
       })
       .eq("id", companyId)
-      .select()
+      .select(COMPANY_COLUMNS)
       .single();
 
     if (error) throw error;
@@ -172,7 +174,7 @@ export const companyService = {
       .from("companies")
       .update(input)
       .eq("id", id)
-      .select()
+      .select(COMPANY_COLUMNS)
       .single();
 
     if (error) throw error;
@@ -193,7 +195,7 @@ export const companyService = {
         deleted_at: new Date().toISOString(),
       })
       .eq("id", id)
-      .select()
+      .select(COMPANY_COLUMNS)
       .single();
 
     if (error) throw error;
@@ -210,7 +212,7 @@ export const companyService = {
         deleted_at: null,
       })
       .eq("id", id)
-      .select()
+      .select(COMPANY_COLUMNS)
       .single();
 
     if (error) throw error;

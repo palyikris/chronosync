@@ -8,6 +8,7 @@ import { AppLayout } from "./components/shared/AppLayout";
 import { AuthProvider } from "./context/AuthContext";
 
 const LoginPage = lazy(() => import("./pages/LoginPage").then(m => ({ default: m.LoginPage })));
+const AuthActionPage = lazy(() => import("./pages/AuthActionPage").then(m => ({ default: m.AuthActionPage })));
 const TimesheetPage = lazy(() => import("./pages/TimesheetPage").then(m => ({ default: m.TimesheetPage })));
 const CompanySettingsPage = lazy(() => import("./pages/CompanySettingsPage").then(m => ({ default: m.CompanySettingsPage })));
 const UserManagementPage = lazy(() => import("./pages/UserManagementPage").then(m => ({ default: m.UserManagementPage })));
@@ -78,6 +79,9 @@ export default function App() {
             ) : null}
             {/* Public Auth Route */}
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/auth/invite" element={<AuthActionPage key="invite" />} />
+            <Route path="/auth/magic" element={<AuthActionPage key="magic" />} />
+            <Route path="/auth/recover" element={<AuthActionPage key="recover" />} />
 
             {/* Root Redirect Handler */}
             <Route path="/" element={<RootRedirect />} />

@@ -1,47 +1,14 @@
 import { supabase } from "../lib/supabaseClient";
 import i18n from "../lib/i18n";
-import {
-  signInCredentialsSchema,
-  signUpCredentialsSchema,
-} from "../types/auth";
-import type { CompanyUserRole } from "../types/user-management";
+import { signInCredentialsSchema } from "../types/auth";
+import { emailSchema } from "../lib/zodSchemas";
 
-/**
- * Signs up a new user and assigns them to a specific company.
- */
-export async function signUpUser(params: {
-  email: string;
-  password: string;
-  fullName: string;
-  companyId: string;
-  role?: CompanyUserRole;
-}) {
-  const validatedParams = signUpCredentialsSchema.parse({
-    email: params.email,
-    password: params.password,
-    fullName: params.fullName,
-    companyId: params.companyId,
-    role: params.role,
+export async function requestPasswordReset(email: string) {
+  const normalizedEmail = emailSchema.parse(email).toLowerCase();
+  const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+    redirectTo: `${window.location.origin}/auth/recover`,
   });
-
-  const { data, error } = await supabase.auth.signUp({
-    email: validatedParams.email,
-    password: validatedParams.password,
-    options: {
-      data: {
-        full_name: validatedParams.fullName,
-        company_id: validatedParams.companyId,
-        role: validatedParams.role || "regular",
-      },
-    },
-  });
-
-  if (error) {
-    console.error("Signup Error:", error.message);
-    throw error;
-  }
-
-  return data;
+  if (error) throw error;
 }
 
 /**
@@ -62,6 +29,12 @@ export async function signInUser(email: string, password: string) {
   if (authError) {
     console.error("Sign-in Error:", authError.message);
     throw authError;
+  }
+
+  const { error: claimError } = await supabase.rpc("claim_company_invitation");
+  if (claimError) {
+    await supabase.auth.signOut();
+    throw new Error(i18n.t("auth.invitationClaimFailed"));
   }
 
   const { data: profile, error: profileError } = await supabase
