@@ -85,7 +85,22 @@
     "companyDeactivatedContact": "A céges fiókod le van tiltva. Vedd fel a kapcsolatot a céges adminisztrátorral.",
     "couldNotVerifyUser": "Nem sikerült ellenőrizni a felhasználói fiók állapotát.",
     "couldNotVerifyCompany": "Nem sikerült ellenőrizni a cég állapotát.",
-    "loginFailed": "A bejelentkezés nem sikerült. Kérjük, próbáld újra."
+    "loginFailed": "A bejelentkezés nem sikerült. Kérjük, próbáld újra.",
+    "invitationClaimFailed": "A meghívás elfogadása nem sikerült. Kérd meg az adminisztrátort, hogy küldje el újra.",
+    "actionInvalid": "A hivatkozás vagy kód érvénytelen vagy lejárt. Kérj új e-mailt, és próbáld újra.",
+    "passwordMismatch": "Adj meg kétszer azonos, legalább nyolc karakteres jelszót.",
+    "passwordUpdateFailed": "A jelszó mentése nem sikerült. Próbáld újra, vagy kérj új e-mailt.",
+    "choosePassword": "Állítsd be a jelszavad",
+    "choosePasswordHelp": "A fiókod védelméhez legalább nyolc karaktert használj.",
+    "actionTitle": "Belépés a ChronoSyncbe",
+    "actionHelp": "Az e-mail-címed ellenőrzéséhez kattints a Folytatás gombra, vagy add meg az e-mailben kapott kódot.",
+    "emailCode": "E-mailben kapott kód",
+    "verifyAndContinue": "Folytatás",
+    "newPassword": "Új jelszó",
+    "confirmNewPassword": "Új jelszó megerősítése",
+    "savePassword": "Jelszó mentése és folytatás",
+    "passwordResetRequested": "Ha ehhez az e-mail-címhez tartozik fiók, elküldtük a jelszó-visszaállító e-mailt. A kapott kódot a jelszó-visszaállító oldalon is megadhatod.",
+    "enterRecoveryCode": "Jelszó-visszaállító kód megadása"
   },
   "navigation": {
     "openNavigation": "Navigáció megnyitása",
@@ -797,7 +812,8 @@
     "failedCreateUser": "Nem sikerült létrehozni a felhasználót",
     "placeholderFullName": "Elena Rivera",
     "placeholderEmail": "elena.r@chronotrack.io",
-    "company": "Company"
+    "company": "Company",
+    "invitationSent": "Meghívó elküldve: {{email}}. A csapattag az elfogadás után jelenik meg."
   },
   "clientBilling": {
     "eyebrow": "Kézi számlázás",
@@ -875,9 +891,10 @@
     "taxSubjectNonEu": "EU-n kívüli vállalkozás (7)",
     "taxSubjectUnknown": "Adóalanyiság ismeretlen (0)",
     "taxSubjectNoNumber": "Nincs adószám (-1)",
-    "taxNumber": "Magyar adószám",
+    "taxNumber": "Adószám / csoporttagi azonosító",
     "euVatNumber": "Közösségi adószám",
     "groupTaxNumber": "Csoportazonosító (opcionális)",
+    "groupTaxNumberHint": "Csoportos adóalanynál fent a tag -4- áfakódú azonosítóját, itt a csoport -5- áfakódú adószámát add meg.",
     "commercialTitle": "Kereskedelmi feltételek",
     "commercialDescription": "Állítsd be, hogyan lesz a jóváhagyott időből számlatétel, és mikor esedékes a fizetés.",
     "billingModel": "Számlázási modell",
@@ -978,15 +995,17 @@
       "billingCity": "Település",
       "billingAddress": "Cím",
       "taxSubject": "Adóalanyiság",
-      "taxNumber": "Magyar adószám",
+      "taxNumber": "Adószám / csoporttagi azonosító",
       "euVatNumber": "Közösségi adószám",
+      "groupTaxNumber": "Csoportazonosító (-5-)",
       "billingEmail": "Számlázási e-mail",
       "netUnitPrice": "Nettó egységár",
       "paymentMethod": "Fizetési mód",
       "invoiceItemName": "Számlatétel megnevezése",
       "invoiceUnit": "Mennyiségi egység",
       "vatCode": "Áfakulcs"
-    }
+    },
+    "recoverInvoicePdf": "Számla PDF visszaállítása"
   },
   "userSettings": {
     "title": "Felhasználói beállítások",

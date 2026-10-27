@@ -84,7 +84,22 @@
     "companyDeactivatedContact": "Your company account has been deactivated. Please contact your company administrator.",
     "couldNotVerifyUser": "Could not verify user account status.",
     "couldNotVerifyCompany": "Could not verify company status.",
-    "loginFailed": "Sign in failed. Please try again."
+    "loginFailed": "Sign in failed. Please try again.",
+    "invitationClaimFailed": "Could not accept the invitation. Ask your administrator to resend it.",
+    "actionInvalid": "This link or code is invalid or expired. Request a new email and try again.",
+    "passwordMismatch": "Enter the same password twice, using at least eight characters.",
+    "passwordUpdateFailed": "Could not save the password. Try again or request a new email.",
+    "choosePassword": "Choose your password",
+    "choosePasswordHelp": "Use at least eight characters to secure your account.",
+    "actionTitle": "Continue to ChronoSync",
+    "actionHelp": "Select Continue to verify your email, or enter the code from your email below.",
+    "emailCode": "Email code",
+    "verifyAndContinue": "Continue",
+    "newPassword": "New password",
+    "confirmNewPassword": "Confirm new password",
+    "savePassword": "Save password and continue",
+    "passwordResetRequested": "If this email has an account, a password reset email is on its way. You can enter its code on the password reset page.",
+    "enterRecoveryCode": "Enter a recovery code"
   },
   "navigation": {
     "openNavigation": "Open navigation",
@@ -798,7 +813,8 @@
     "failedCreateUser": "Failed to create user",
     "placeholderFullName": "Elena Rivera",
     "placeholderEmail": "elena.r@chronotrack.io",
-    "company": "Company"
+    "company": "Company",
+    "invitationSent": "Invitation sent to {{email}}. The member appears after accepting it."
   },
   "clientBilling": {
     "eyebrow": "Manual billing",
@@ -876,9 +892,10 @@
     "taxSubjectNonEu": "Business outside the EU (7)",
     "taxSubjectUnknown": "Tax status unknown (0)",
     "taxSubjectNoNumber": "No tax number (-1)",
-    "taxNumber": "Hungarian tax number",
+    "taxNumber": "Tax number / group member ID",
     "euVatNumber": "EU VAT number",
     "groupTaxNumber": "Group tax number (optional)",
+    "groupTaxNumberHint": "For a Hungarian VAT group, enter the member's -4- identifier above and the group's -5- tax number here.",
     "commercialTitle": "Commercial terms",
     "commercialDescription": "Set how approved time becomes an invoice line and when payment is due.",
     "billingModel": "Billing model",
@@ -979,15 +996,17 @@
       "billingCity": "City",
       "billingAddress": "Street address",
       "taxSubject": "Tax status",
-      "taxNumber": "Hungarian tax number",
+      "taxNumber": "Tax number / group member ID",
       "euVatNumber": "EU VAT number",
+      "groupTaxNumber": "Group tax number (-5-)",
       "billingEmail": "Billing email",
       "netUnitPrice": "Net unit price",
       "paymentMethod": "Payment method",
       "invoiceItemName": "Invoice line description",
       "invoiceUnit": "Unit",
       "vatCode": "VAT code"
-    }
+    },
+    "recoverInvoicePdf": "Recover invoice PDF"
   },
   "userSettings": {
     "title": "User Preferences",

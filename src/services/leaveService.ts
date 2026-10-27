@@ -80,12 +80,6 @@ const getCurrentProfile = async (): Promise<CurrentProfile> => {
   return data;
 };
 
-const isWeekend = (dateString: string) => {
-  const date = new Date(`${dateString}T00:00:00`);
-  const day = date.getDay();
-  return day === 0 || day === 6;
-};
-
 const normalizeDate = (value: string) => value.slice(0, 10);
 
 export {
@@ -273,199 +267,28 @@ export async function updateLeaveRequest(
 }
 
 export async function deleteLeaveRequest(id: string) {
-  const profile = await getCurrentProfile();
-
-  const { data: existingRequest, error: fetchError } = await supabase
-    .from("leave_requests")
-    .select("*")
-    .eq("id", id)
-    .single<LeaveRequest>();
-
-  if (fetchError) throw fetchError;
-
-  if (!existingRequest) {
-    throw new Error(i18n.t("leave.requestNotFound"));
-  }
-
-  const isOwner = existingRequest.user_id === profile.id;
-  const isAdmin = profile.role === "company_admin";
-
-  if (!isOwner && !isAdmin) {
-    throw new Error(i18n.t("errors.unauthorized"));
-  }
-
-  if (existingRequest.status === "APPROVED") {
-    const { data: companyConfig, error: companyConfigError } = await supabase
-      .from("companies")
-      .select("leave_client_id, leave_project_id")
-      .eq("id", existingRequest.company_id)
-      .maybeSingle();
-
-    if (companyConfigError) throw companyConfigError;
-
-    if (companyConfig?.leave_client_id && companyConfig?.leave_project_id) {
-      const { error: deleteTimesheetError } = await supabase
-        .from("timesheets")
-        .delete()
-        .eq("user_id", existingRequest.user_id)
-        .eq("project_id", companyConfig.leave_project_id)
-        .gte("work_date", existingRequest.start_date)
-        .lte("work_date", existingRequest.end_date)
-        .eq("description", "Approved leave");
-
-      if (deleteTimesheetError) throw deleteTimesheetError;
-    }
-  }
-
-  const { error } = await supabase.from("leave_requests").delete().eq("id", id);
-
+  const { error } = await supabase.rpc("cancel_leave_request", { p_id: id });
   if (error) throw error;
 }
 
 export async function updateLeaveRequestStatus(
   id: string,
   payload: LeaveRequestStatusUpdatePayload,
-): Promise<
-  | { status: "APPROVED"; data: LeaveRequestWithProfile }
-  | { status: "REJECTED"; data: LeaveRequestWithProfile }
-> {
-  const validatedPayload = leaveRequestStatusUpdateSchema.parse(payload);
-  const profile = await getCurrentProfile();
-
-  if (profile.role !== "company_admin") {
-    throw new Error(i18n.t("errors.unauthorized"));
-  }
-
-  const { data: existingRequest, error: fetchError } = await supabase
-    .from("leave_requests")
-    .select("*")
-    .eq("id", id)
-    .single<LeaveRequest>();
-
-  if (fetchError) throw fetchError;
-
-  if (!existingRequest) {
-    throw new Error(i18n.t("leave.requestNotFound"));
-  }
-
-  let leaveHoursTotal = 0;
-
-  if (validatedPayload.status === "APPROVED") {
-    const { data: conflictingEntries, error: conflictError } = await supabase
-      .from("timesheets")
-      .select("work_date")
-      .eq("user_id", existingRequest.user_id)
-      .gt("hours_logged", 0)
-      .gte("work_date", existingRequest.start_date)
-      .lte("work_date", existingRequest.end_date)
-      .order("work_date", { ascending: true });
-
-    if (conflictError) throw conflictError;
-
-    const conflictingDates = Array.from(
-      new Set(
-        (conflictingEntries ?? [])
-          .map((entry) => normalizeDate(entry.work_date))
-          .filter((date) => !isWeekend(date)),
-      ),
-    );
-
-    if (conflictingDates.length > 0) {
-      throw new LeaveRequestConflictError(conflictingDates);
+): Promise<{ status: "APPROVED" | "REJECTED"; data: LeaveRequestWithProfile }> {
+  const validated = leaveRequestStatusUpdateSchema.parse(payload);
+  const { data, error } = await supabase.rpc("review_leave_request", {
+    p_id: id, p_status: validated.status,
+  });
+  if (error) {
+    if (error.message === "LOGGED_HOURS_EXIST") {
+      let dates: string[] = [];
+      try {
+        const parsed: unknown = JSON.parse(error.details);
+        if (Array.isArray(parsed)) dates = parsed.filter((value): value is string => typeof value === "string");
+      } catch { /* Preserve the conflict even if no dates were returned. */ }
+      throw new LeaveRequestConflictError(dates);
     }
-
-    const { data: companyConfig, error: companyConfigError } = await supabase
-      .from("companies")
-      .select("leave_client_id, leave_project_id")
-      .eq("id", existingRequest.company_id)
-      .maybeSingle();
-
-    if (companyConfigError) throw companyConfigError;
-
-    if (!companyConfig?.leave_client_id || !companyConfig?.leave_project_id) {
-      throw new Error(i18n.t("companySettings.leaveConfigRequiresSelection"));
-    }
-
-    const availableDates = getLeaveDateRange(
-      existingRequest.start_date,
-      existingRequest.end_date,
-    ).filter((date) => !isWeekend(date));
-
-    const { data: employeeProfile, error: employeeProfileError } =
-      await supabase
-        .from("profiles")
-        .select("weekly_work_hours")
-        .eq("id", existingRequest.user_id)
-        .maybeSingle<{ weekly_work_hours: number | null }>();
-
-    if (employeeProfileError) throw employeeProfileError;
-
-    const weeklyHours =
-      existingRequest.weekly_work_hours ??
-      employeeProfile?.weekly_work_hours ??
-      40;
-    const hoursPerWorkday = Number((weeklyHours / 5).toFixed(2));
-    leaveHoursTotal = Number(
-      (availableDates.length * hoursPerWorkday).toFixed(2),
-    );
-
-    const { data: existingLeaveEntries, error: existingLeaveError } =
-      await supabase
-        .from("timesheets")
-        .select("work_date")
-        .eq("user_id", existingRequest.user_id)
-        .eq("project_id", companyConfig.leave_project_id)
-        .gte("work_date", existingRequest.start_date)
-        .lte("work_date", existingRequest.end_date)
-        .order("work_date", { ascending: true });
-
-    if (existingLeaveError) throw existingLeaveError;
-
-    const existingLeaveDates = new Set(
-      (existingLeaveEntries ?? []).map((entry) =>
-        normalizeDate(entry.work_date),
-      ),
-    );
-
-    const rowsToInsert = availableDates
-      .filter((date) => !existingLeaveDates.has(date))
-      .map((date) => ({
-        user_id: existingRequest.user_id,
-        company_id: existingRequest.company_id,
-        client_id: companyConfig.leave_client_id,
-        project_id: companyConfig.leave_project_id,
-        work_date: date,
-        hours_logged: hoursPerWorkday,
-        description: "Approved leave",
-        status: "approved",
-        approved_by: profile.id,
-        approved_at: new Date().toISOString(),
-      }));
-
-    if (rowsToInsert.length > 0) {
-      const { error: insertError } = await supabase
-        .from("timesheets")
-        .insert(rowsToInsert);
-
-      if (insertError) throw insertError;
-    }
+    throw error;
   }
-
-  const { data, error } = await supabase
-    .from("leave_requests")
-    .update({
-      status: validatedPayload.status,
-      hours_taken:
-        validatedPayload.status === "APPROVED" ? leaveHoursTotal : null,
-    })
-    .eq("id", id)
-    .select("*, profiles(id, full_name, role)")
-    .single();
-
-  if (error) throw error;
-
-  return {
-    status: validatedPayload.status,
-    data: data as LeaveRequestWithProfile,
-  };
+  return { status: validated.status, data: data as LeaveRequestWithProfile };
 }

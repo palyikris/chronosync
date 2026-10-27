@@ -1,5 +1,4 @@
 import { supabase } from "../lib/supabaseClient";
-import { createClient } from "@supabase/supabase-js";
 import {
   createCompanyUserPayloadSchema,
   deleteCompanyUserIdSchema,
@@ -13,29 +12,6 @@ import type {
   CreateCompanyUserPayload,
 } from "../types/user-management";
 
-let tempAuthClient: ReturnType<typeof createClient> | null = null;
-
-const getTempAuthClient = () => {
-  if (tempAuthClient) {
-    return tempAuthClient;
-  }
-
-  tempAuthClient = createClient(
-    import.meta.env.VITE_SUPABASE_URL,
-    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-    {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false,
-        storageKey: "chronosync-temp-auth",
-      },
-    },
-  );
-
-  return tempAuthClient;
-};
-
 /**
  * Fetch team members for the Company Admin table
  */
@@ -43,39 +19,28 @@ export async function fetchCompanyMembers(
   companyId?: string,
   role?: string,
 ): Promise<UserProfile[]> {
-  let query = supabase.from("profiles").select("*, companies(name)");
-
-  if (role !== "super_admin" && companyId) {
-    query = query.eq("company_id", companyId);
-  }
-
-  const { data, error } = await query.order("full_name", {
-    ascending: true,
-  });
-
+  const { data, error } = await supabase.rpc("get_company_members");
   if (error) throw error;
-  return data as UserProfile[];
+  const members = (data ?? []) as UserProfile[];
+  return role !== "super_admin" && companyId
+    ? members.filter(member => member.company_id === companyId) : members;
 }
 
-export async function createCompanyUser(payload: CreateCompanyUserPayload) {
+export async function createCompanyUser(payload: CreateCompanyUserPayload): Promise<void> {
   const validatedPayload = createCompanyUserPayloadSchema.parse(payload);
-  const targetPassword = validatedPayload.password || "TempPassword123!";
-  const authClient = getTempAuthClient();
-
-  const { data, error } = await authClient.auth.signUp({
-    email: validatedPayload.email,
-    password: targetPassword,
-    options: {
-      data: {
-        full_name: validatedPayload.full_name,
-        company_id: validatedPayload.company_id,
-        role: validatedPayload.role,
-      },
-    },
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error("Please sign in before inviting a member.");
+  const apiUrl = import.meta.env.VITE_API_BASE_URL;
+  if (!apiUrl) throw new Error("The invitation service is not configured.");
+  const response = await fetch(`${apiUrl.replace(/\/$/, "")}/users/invitations`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+    body: JSON.stringify(validatedPayload),
   });
-
-  if (error) throw error;
-  return data.user;
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+    throw new Error(typeof error?.detail === "string" ? error.detail : "Could not send the invitation.");
+  }
 }
 
 /**
@@ -165,7 +130,7 @@ export async function sendUserPasswordReset(email: string) {
   const validatedEmail = passwordResetEmailSchema.parse(email);
 
   const { error } = await supabase.auth.resetPasswordForEmail(validatedEmail, {
-    redirectTo: `${window.location.origin}/login`,
+    redirectTo: `${window.location.origin}/auth/recover`,
   });
 
   if (error) throw error;

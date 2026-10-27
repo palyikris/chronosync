@@ -28,6 +28,7 @@ export const UserManagementPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const pageSize = 25;
   const refreshMembers = () => {
     for (const key of ["companyMembers", "review-employees", "timesheet-users", "adminDashboard"]) {
@@ -51,6 +52,7 @@ export const UserManagementPage: React.FC = () => {
   });
 
   const inviteMutation = useMutation({
+    onMutate: () => { setActionError(null); setActionSuccess(null); },
     mutationFn: (data: {
       email: string;
       full_name: string;
@@ -60,7 +62,8 @@ export const UserManagementPage: React.FC = () => {
         ...data,
         company_id: profile!.company_id,
       }),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
+      setActionSuccess(t("users.invitationSent", { email: variables.email }));
       refreshMembers();
     },
   });
@@ -174,6 +177,7 @@ export const UserManagementPage: React.FC = () => {
       {isError ? <LoadError onRetry={() => { void refetch(); }} retrying={isFetching} /> : null}
 
       {actionError ? <div role="alert" className="rounded-xl border border-danger-border bg-danger-bg px-4 py-3 text-sm text-danger">{actionError}</div> : null}
+      {actionSuccess ? <div role="status" className="rounded-xl border border-border-strong bg-surface px-4 py-3 text-sm">{actionSuccess}</div> : null}
 
       <UserTable
         members={pageMembers}

@@ -15,6 +15,7 @@ type ProfileForReadiness = Pick<
   | "tax_subject"
   | "tax_number"
   | "eu_vat_number"
+  | "group_tax_number"
   | "billing_email"
   | "send_invoice_email"
   | "net_unit_price"
@@ -29,6 +30,7 @@ const hasText = (value: string | null | undefined) => Boolean(value?.trim());
 export const getBillingProfileReadiness = (
   profile: ProfileForReadiness,
 ): BillingProfileReadiness => {
+  const hasGroupTaxNumber = hasText(profile.group_tax_number);
   const fields: Array<[BillingProfileField, boolean]> = [
     ["billingName", hasText(profile.billing_name)],
     [
@@ -38,7 +40,11 @@ export const getBillingProfileReadiness = (
     ["billingPostalCode", hasText(profile.billing_postal_code)],
     ["billingCity", hasText(profile.billing_city)],
     ["billingAddress", hasText(profile.billing_address)],
-    ["taxSubject", profile.tax_subject !== null],
+    [
+      "taxSubject",
+      profile.tax_subject !== null &&
+        (!hasGroupTaxNumber || profile.tax_subject === 1),
+    ],
     [
       "netUnitPrice",
       profile.net_unit_price !== null &&
@@ -48,11 +54,32 @@ export const getBillingProfileReadiness = (
     ["paymentMethod", hasText(profile.payment_method)],
     ["invoiceItemName", hasText(profile.invoice_item_name)],
     ["invoiceUnit", hasText(profile.invoice_unit)],
-    ["vatCode", hasText(profile.vat_code)],
+    [
+      "vatCode",
+      hasText(profile.vat_code) &&
+        profile.vat_code.trim().toUpperCase() !== "K.AFA",
+    ],
   ];
 
   if (profile.tax_subject === 1 || profile.tax_subject === 7) {
-    fields.push(["taxNumber", hasText(profile.tax_number)]);
+    fields.push([
+      "taxNumber",
+      hasGroupTaxNumber
+        ? /^[0-9]{8}-4-[0-9]{2}$/.test(profile.tax_number?.trim() ?? "")
+        : hasText(profile.tax_number),
+    ]);
+  }
+
+  if (hasGroupTaxNumber) {
+    fields.push([
+      "groupTaxNumber",
+      /^[0-9]{8}-5-[0-9]{2}$/.test(profile.group_tax_number?.trim() ?? ""),
+    ]);
+  }
+
+  if (profile.tax_subject === -1) {
+    if (hasText(profile.tax_number)) fields.push(["taxNumber", false]);
+    if (hasText(profile.eu_vat_number)) fields.push(["euVatNumber", false]);
   }
 
   if (profile.tax_subject === 6) {

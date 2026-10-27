@@ -67,6 +67,7 @@ export type BillingProfileField =
   | "taxSubject"
   | "taxNumber"
   | "euVatNumber"
+  | "groupTaxNumber"
   | "billingEmail"
   | "netUnitPrice"
   | "paymentMethod"

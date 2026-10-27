@@ -25,6 +25,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     staleTime: 60_000,
     refetchOnWindowFocus: true,
     queryFn: async ({ signal }) => {
+      const { error: claimError } = await supabase.rpc("claim_company_invitation");
+      if (claimError) throw new Error(i18n.t("auth.invitationClaimFailed"));
       const { data, error } = await supabase
         .from("profiles")
         .select("*, company:companies(is_active)")

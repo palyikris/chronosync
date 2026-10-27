@@ -1,12 +1,7 @@
 import type { User, Session } from "@supabase/supabase-js";
 import { z } from "zod";
 import i18n from "../lib/i18n";
-import {
-  emailSchema,
-  passwordSchema,
-  trimmedNonEmptyStringSchema,
-  uuidSchema,
-} from "../lib/zodSchemas";
+import { emailSchema } from "../lib/zodSchemas";
 
 export const userRoleSchema = z.enum([
   "super_admin",
@@ -17,20 +12,7 @@ export const userRoleSchema = z.enum([
 export const signInCredentialsSchema = z
   .object({
     email: emailSchema,
-    password: z.string().trim().min(1, i18n.t("validation.passwordRequired")),
-  })
-  .strict();
-
-export const signUpCredentialsSchema = z
-  .object({
-    email: emailSchema,
-    password: passwordSchema,
-    fullName: trimmedNonEmptyStringSchema(
-      i18n.t("validation.fullNameRequired"),
-      120,
-    ),
-    companyId: uuidSchema,
-    role: userRoleSchema.optional(),
+    password: z.string().min(1, i18n.t("validation.passwordRequired")),
   })
   .strict();
 
