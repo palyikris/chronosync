@@ -18,10 +18,7 @@ type ProfileForReadiness = Pick<
   | "group_tax_number"
   | "billing_email"
   | "send_invoice_email"
-  | "net_unit_price"
   | "payment_method"
-  | "invoice_item_name"
-  | "invoice_unit"
   | "vat_code"
 >;
 
@@ -45,15 +42,7 @@ export const getBillingProfileReadiness = (
       profile.tax_subject !== null &&
         (!hasGroupTaxNumber || profile.tax_subject === 1),
     ],
-    [
-      "netUnitPrice",
-      profile.net_unit_price !== null &&
-        Number.isFinite(profile.net_unit_price) &&
-        profile.net_unit_price >= 0,
-    ],
     ["paymentMethod", hasText(profile.payment_method)],
-    ["invoiceItemName", hasText(profile.invoice_item_name)],
-    ["invoiceUnit", hasText(profile.invoice_unit)],
     [
       "vatCode",
       hasText(profile.vat_code) &&

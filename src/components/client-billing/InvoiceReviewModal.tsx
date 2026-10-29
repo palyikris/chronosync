@@ -36,6 +36,7 @@ export const InvoiceReviewModal: React.FC<InvoiceReviewModalProps> = ({
   const [confirmed, setConfirmed] = useState(false);
 
   if (!review) return null;
+  const items = review.items ?? [];
 
   const handleClose = () => {
     setConfirmed(false);
@@ -114,7 +115,7 @@ export const InvoiceReviewModal: React.FC<InvoiceReviewModalProps> = ({
           {[
             {
               label: t("clientBilling.reviewQuantity"),
-              value: `${review.quantity} ${review.unit}`,
+              value: t("clientBilling.projectLineCount", { count: items.length }),
             },
             {
               label: t("clientBilling.reviewNet"),
@@ -134,6 +135,21 @@ export const InvoiceReviewModal: React.FC<InvoiceReviewModalProps> = ({
               <p className="mt-1 text-[13px] font-semibold text-text">{item.value}</p>
             </div>
           ))}
+        </div>
+
+        <div className="mt-4 overflow-x-auto rounded-xl border border-border">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-bg-accent/45 text-muted"><tr>
+              {["reviewProject", "reviewQuantity", "netUnitPrice", "reviewNet"].map(key =>
+                <th key={key} className="px-3 py-2 font-medium">{t(`clientBilling.${key}`)}</th>)}
+            </tr></thead>
+            <tbody className="divide-y divide-border">{items.map(item => <tr key={`${item.project_id}-${item.pricing_year}`}>
+              <td className="px-3 py-2 font-medium">{item.project_name}</td>
+              <td className="whitespace-nowrap px-3 py-2">{item.quantity} {item.unit}</td>
+              <td className="whitespace-nowrap px-3 py-2">{new Intl.NumberFormat(undefined, { maximumFractionDigits: 4 }).format(item.net_unit_price)} {item.currency}</td>
+              <td className="whitespace-nowrap px-3 py-2">{formatMoney(item.net_total, item.currency)}</td>
+            </tr>)}</tbody>
+          </table>
         </div>
 
         <div className="mt-4 overflow-hidden rounded-xl border border-border">

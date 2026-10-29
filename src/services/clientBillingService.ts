@@ -2,7 +2,6 @@ import { z } from "zod";
 import { supabase } from "../lib/supabaseClient";
 import i18n from "../lib/i18n";
 import {
-  BILLING_MODELS,
   INVOICE_LANGUAGES,
   TAX_SUBJECTS,
   type ClientBillingProfile,
@@ -49,14 +48,9 @@ const profileSchema = z
       .transform((value) => value || null),
     send_invoice_email: z.boolean(),
     invoice_language: z.enum(INVOICE_LANGUAGES),
-    currency: z.string().trim().toUpperCase().regex(/^[A-Z]{3}$/),
     payment_method: z.string().trim().min(1).max(64),
     payment_term_days: z.number().int().min(0).max(365),
-    billing_model: z.enum(BILLING_MODELS),
-    net_unit_price: z.number().min(0).max(9999999999).nullable(),
-    invoice_unit: z.string().trim().min(1).max(32),
     vat_code: z.string().trim().min(1).max(16),
-    invoice_item_name: z.string().trim().min(1).max(255),
     automatic_invoicing_enabled: z.boolean(),
     invoice_schedule_day: z.number().int().min(1).max(28),
     attach_timesheet_report: z.boolean(),
@@ -98,14 +92,9 @@ const PROFILE_COLUMNS = [
   "billing_email",
   "send_invoice_email",
   "invoice_language",
-  "currency",
   "payment_method",
   "payment_term_days",
-  "billing_model",
-  "net_unit_price",
-  "invoice_unit",
   "vat_code",
-  "invoice_item_name",
   "automatic_invoicing_enabled",
   "invoice_schedule_day",
   "attach_timesheet_report",
@@ -158,6 +147,7 @@ interface DownloadClientInvoicePreviewParams {
   clientCode: string;
   periodStart: string;
   periodEnd: string;
+  projectQuantities?: Record<string, number>;
 }
 
 const getInvoicePreviewApiUrl = () => {
@@ -221,7 +211,7 @@ const getPreviewErrorMessage = async (response: Response): Promise<string> => {
     return i18n.t("clientBilling.previewConfigurationMissing");
   }
   if (response.status === 409) {
-    return i18n.t("clientBilling.previewProfileConflict");
+    return detail ?? i18n.t("clientBilling.previewProfileConflict");
   }
   if (response.status === 413) {
     return i18n.t("clientBilling.previewTooManyEntries");
@@ -241,6 +231,7 @@ export const downloadClientInvoicePreview = async ({
   clientCode,
   periodStart,
   periodEnd,
+  projectQuantities = {},
 }: DownloadClientInvoicePreviewParams): Promise<void> => {
   const {
     data: { session },
@@ -260,6 +251,7 @@ export const downloadClientInvoicePreview = async ({
       client_id: clientId,
       period_start: periodStart,
       period_end: periodEnd,
+      project_quantities: projectQuantities,
     }),
   });
 
@@ -295,20 +287,29 @@ interface ClientInvoicePeriodParams {
   clientId: string;
   periodStart: string;
   periodEnd: string;
+  projectQuantities?: Record<string, number>;
 }
 
-const normalizeInvoiceReview = (value: ClientInvoiceReview): ClientInvoiceReview => ({
+const normalizeInvoiceReview = (value: ClientInvoiceReview): ClientInvoiceReview => {
+  if (value.billing_model !== "project" || !value.items?.length) {
+    throw new Error(i18n.t("clientBilling.projectPricingUnavailable"));
+  }
+  return ({
   ...value,
   quantity: Number(value.quantity),
   net_unit_price: Number(value.net_unit_price),
   net_total: Number(value.net_total),
   vat_total: Number(value.vat_total),
   gross_total: Number(value.gross_total),
+  project_quantities: Object.fromEntries(Object.entries(value.project_quantities ?? {}).map(([key, quantity]) => [key, Number(quantity)])),
+  items: (value.items ?? []).map(item => ({ ...item, quantity: Number(item.quantity), net_unit_price: Number(item.net_unit_price),
+    net_total: Number(item.net_total), vat_total: Number(item.vat_total), gross_total: Number(item.gross_total) })),
   approved_entries: value.approved_entries.map((entry) => ({
     ...entry,
     hours_logged: Number(entry.hours_logged),
   })),
-});
+  });
+};
 
 const normalizeInvoiceHistoryItem = (
   value: InvoiceHistoryItem,
@@ -326,6 +327,7 @@ export const reviewClientInvoice = async ({
   clientId,
   periodStart,
   periodEnd,
+  projectQuantities = {},
 }: ClientInvoicePeriodParams): Promise<ClientInvoiceReview> => {
   const response = await fetch(`${getInvoiceApiBaseUrl()}/client-review`, {
     method: "POST",
@@ -338,6 +340,7 @@ export const reviewClientInvoice = async ({
       client_id: clientId,
       period_start: periodStart,
       period_end: periodEnd,
+      project_quantities: projectQuantities,
     }),
   });
   if (!response.ok) throw new Error(await getInvoiceApiError(response));
@@ -359,6 +362,7 @@ export const issueClientInvoice = async (
       period_start: review.period_start,
       period_end: review.period_end,
       review_fingerprint: review.review_fingerprint,
+      project_quantities: review.project_quantities,
       confirm: true,
     }),
   });

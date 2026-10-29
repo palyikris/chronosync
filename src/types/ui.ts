@@ -31,6 +31,7 @@ export interface ModalProps {
   onClose: () => void;
   children: React.ReactNode;
   className?: string;
+  size?: "default" | "content";
   footer?: React.ReactNode;
 }
 

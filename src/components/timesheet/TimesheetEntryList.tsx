@@ -228,11 +228,11 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
             <p className={isAttentionView ? "font-semibold text-text" : undefined}>
               {t(isAttentionView
                 ? hasEntryFilter ? "timesheet.noAttentionMatches" : "timesheet.allCaughtUp"
-                : "timesheet.noEntries")}
+                : hasEntryFilter ? "timesheet.noEntriesMatchFilters" : "timesheet.noEntries")}
             </p>
             <p>{t(isAttentionView
               ? hasEntryFilter ? "timesheet.clearAttentionFilters" : "timesheet.noAttentionEntries"
-              : "timesheet.addFirstEntry")}</p>
+              : hasEntryFilter ? "timesheet.clearEntryFilters" : "timesheet.addFirstEntry")}</p>
           </div>
         ) : (
           entries.map((entry) => (

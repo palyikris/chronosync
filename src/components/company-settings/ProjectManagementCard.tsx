@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  AlertTriangle,
+  CircleDollarSign,
   Check,
   ChevronRight,
   FileSpreadsheet,
@@ -28,6 +30,10 @@ import type { Project } from "../../types/client-project";
 import { Select } from "../shared/Select";
 import { Input } from "../shared/Input";
 import { ProjectImportModal } from "./ProjectImportModal";
+import { isIndexedPriceMissing } from "../../utils/projectPricing";
+import { ProjectPricingModal } from "./ProjectPricingModal";
+import type { ProjectPricing } from "../../types/project-pricing";
+import { usePricingYear } from "../../hooks/usePricingYear";
 
 const normalizeEstimatedHours = (value: string) => {
   if (value === "") return 0;
@@ -40,9 +46,23 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   companyId,
   clients,
   projects,
+  projectPricing,
+  pricingYear: suppliedPricingYear,
   onRefresh,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentYear = usePricingYear();
+  const pricingYear = suppliedPricingYear ?? currentYear;
+  const [onlyMissingPrices, setOnlyMissingPrices] = useState(false);
+  const [pricingProject, setPricingProject] = useState<{ project: Project; year: number; price: ProjectPricing | undefined } | null>(null);
+  const pricingByProject = useMemo(() => new Map(
+    (projectPricing ?? []).filter(price => price.pricing_year === pricingYear)
+      .map(price => [price.project_id, price]),
+  ), [projectPricing, pricingYear]);
+  const pricingLoaded = projectPricing !== undefined;
+  const missingPriceCount = pricingLoaded
+    ? projects.filter(project => isIndexedPriceMissing(pricingByProject.get(project.id))).length : 0;
+  const priceFormatter = new Intl.NumberFormat(i18n.resolvedLanguage ?? i18n.language, { maximumFractionDigits: 4 });
   const [newProjectName, setNewProjectName] = useState("");
   const [newProjectClientId, setNewProjectClientId] = useState("");
   const [newProjectEstimatedHours, setNewProjectEstimatedHours] = useState(0);
@@ -83,10 +103,12 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
               ? project.is_active
               : !project.is_active;
 
-        return matchesSearch && matchesClient && matchesStatus;
+        const matchesPrice = !onlyMissingPrices || !pricingLoaded ||
+          isIndexedPriceMissing(pricingByProject.get(project.id));
+        return matchesSearch && matchesClient && matchesStatus && matchesPrice;
       })
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [projectClientFilter, projectSearchTerm, projectStatusFilter, projects]);
+  }, [projectClientFilter, projectSearchTerm, projectStatusFilter, projects, onlyMissingPrices, pricingLoaded, pricingByProject]);
 
   const handleCreate = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -377,6 +399,19 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
           </div>
         </div>
 
+        {pricingLoaded && (missingPriceCount > 0 || onlyMissingPrices) && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warning-border bg-warning-bg px-4 py-3">
+            <p className="flex items-center gap-2 text-sm font-medium text-amber-900">
+              <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
+              {t("projectPricing.missingCount", { count: missingPriceCount, year: pricingYear })}
+            </p>
+            <Button size="sm" variant="outline" aria-pressed={onlyMissingPrices}
+              onClick={() => setOnlyMissingPrices(value => !value)}>
+              {t(onlyMissingPrices ? "projectPricing.showAll" : "projectPricing.showMissing")}
+            </Button>
+          </div>
+        )}
+
         <div className="max-h-100 space-y-3 overflow-x-hidden overflow-y-auto pr-1">
           {visibleProjects.length === 0 ? (
             <p className="rounded-xl border border-dashed border-border-strong bg-bg-accent px-4 py-6 text-center text-sm text-muted-strong">
@@ -398,7 +433,11 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
             visibleProjects.map((project) => (
               <article
                 key={project.id}
-                className="group rounded-2xl border border-border-strong bg-surface-strong/80 p-4 shadow-[0_1px_2px_rgba(76,65,92,0.035)] transition-[border-color,box-shadow,background-color] duration-200 hover:border-primary-strong/35 hover:bg-surface-strong hover:shadow-card"
+                data-project-id={project.id}
+                className={cn("group rounded-2xl border p-4 shadow-[0_1px_2px_rgba(76,65,92,0.035)] transition-[border-color,box-shadow,background-color] duration-200 hover:shadow-card",
+                  pricingLoaded && isIndexedPriceMissing(pricingByProject.get(project.id))
+                    ? "border-warning-border bg-warning-bg hover:border-warning"
+                    : "border-border-strong bg-surface-strong/80 hover:border-primary-strong/35 hover:bg-surface-strong")}
               >
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex min-w-0 items-start gap-3">
@@ -421,10 +460,20 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                             ? t("common.active")
                             : t("common.inactive")}
                         </span>
+                        {pricingLoaded && isIndexedPriceMissing(pricingByProject.get(project.id)) && (
+                          <span className="inline-flex items-center gap-1 rounded-full border border-warning-border bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900">
+                            <AlertTriangle className="h-3 w-3" aria-hidden="true" />
+                            {t("projectPricing.missingBadge", { year: pricingYear })}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-0.5 self-start rounded-xl border border-border bg-bg-accent/80 p-1">
+                    {pricingLoaded && <Button size="icon" variant="ghost" disabled={loading}
+                      onClick={() => setPricingProject({ project, year: pricingYear, price: pricingByProject.get(project.id) })}
+                      tooltip={t("projectPricing.edit")} aria-label={t("projectPricing.edit")}
+                      icon={<CircleDollarSign className="h-4 w-4" />} />}
                     <Button
                       size="icon"
                       variant="ghost"
@@ -488,12 +537,36 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                       {project.estimated_hours_per_month}
                     </dd>
                   </div>
+                  {pricingLoaded && <div className="min-w-0">
+                    <dt className="text-[10px] font-semibold uppercase tracking-[0.07em] text-muted">
+                      {t("projectPricing.indexedFee", { year: pricingYear })}
+                    </dt>
+                    <dd className="mt-0.5 text-sm font-medium tabular-nums text-text">
+                      {(() => {
+                        const price = pricingByProject.get(project.id);
+                        return !price || isIndexedPriceMissing(price)
+                          ? <span className="font-semibold text-amber-900">{t("projectPricing.needsAttention")}</span>
+                          : `${priceFormatter.format(price.indexed_fee!)} ${price.currency} · ${price.unit}`;
+                      })()}
+                    </dd>
+                  </div>}
+                  {pricingByProject.get(project.id) && <div className="min-w-0">
+                    <dt className="text-[10px] font-semibold uppercase tracking-[0.07em] text-muted">{t("projectPricing.originalFee")}</dt>
+                    <dd className="mt-0.5 text-sm font-medium tabular-nums text-text">{(() => {
+                      const price = pricingByProject.get(project.id)!;
+                      return price.original_fee === null ? price.original_fee_text ?? t("projectPricing.unset")
+                        : `${priceFormatter.format(price.original_fee)} ${price.original_currency ?? price.currency} · ${price.original_unit ?? price.unit}`;
+                    })()}</dd>
+                  </div>}
                 </dl>
               </article>
             ))
           )}
         </div>
       </CardContent>
+
+      {pricingProject && <ProjectPricingModal project={pricingProject.project} year={pricingProject.year}
+        price={pricingProject.price} onClose={() => setPricingProject(null)} onSaved={onRefresh} />}
 
       {editingProject && (
         <Modal

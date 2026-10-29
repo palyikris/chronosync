@@ -17,11 +17,9 @@ export const INVOICE_LANGUAGES = [
 ] as const;
 
 export const TAX_SUBJECTS = [-1, 0, 1, 6, 7] as const;
-export const BILLING_MODELS = ["hourly", "fixed_monthly"] as const;
 
 export type InvoiceLanguage = (typeof INVOICE_LANGUAGES)[number];
 export type TaxSubject = (typeof TAX_SUBJECTS)[number];
-export type BillingModel = (typeof BILLING_MODELS)[number];
 
 export interface ClientBillingProfile {
   client_id: string;
@@ -38,14 +36,9 @@ export interface ClientBillingProfile {
   billing_email: string | null;
   send_invoice_email: boolean;
   invoice_language: InvoiceLanguage;
-  currency: string;
   payment_method: string;
   payment_term_days: number;
-  billing_model: BillingModel;
-  net_unit_price: number | null;
-  invoice_unit: string;
   vat_code: string;
-  invoice_item_name: string;
   automatic_invoicing_enabled: boolean;
   invoice_schedule_day: number;
   attach_timesheet_report: boolean;
@@ -69,10 +62,7 @@ export type BillingProfileField =
   | "euVatNumber"
   | "groupTaxNumber"
   | "billingEmail"
-  | "netUnitPrice"
   | "paymentMethod"
-  | "invoiceItemName"
-  | "invoiceUnit"
   | "vatCode";
 
 export interface BillingProfileReadiness {
@@ -102,6 +92,7 @@ export interface InvoiceReviewEntry {
   hours_logged: number;
   description: string;
   project_name: string;
+  project_id?: string;
 }
 
 export interface ClientInvoiceReview {
@@ -116,7 +107,7 @@ export interface ClientInvoiceReview {
   due_date: string;
   payment_method: string;
   language: InvoiceLanguage;
-  billing_model: BillingModel;
+  billing_model: "project";
   item_name: string;
   quantity: number;
   unit: string;
@@ -130,6 +121,8 @@ export interface ClientInvoiceReview {
   gross_total: number;
   recipient: InvoiceReviewRecipient;
   approved_entries: InvoiceReviewEntry[];
+  project_quantities: Record<string, number>;
+  items: InvoiceReviewProjectLine[];
   review_fingerprint: string;
 }
 
@@ -168,4 +161,19 @@ export interface InvoiceHistoryItem {
   issued_at: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface InvoiceReviewProjectLine {
+  project_id: string;
+  project_name: string;
+  pricing_year: number;
+  pricing_updated_at: string;
+  quantity: number;
+  unit: string;
+  net_unit_price: number;
+  vat_code: string;
+  currency: string;
+  net_total: number;
+  vat_total: number;
+  gross_total: number;
 }
