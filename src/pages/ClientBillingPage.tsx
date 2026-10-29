@@ -23,6 +23,7 @@ import { Button } from "../components/shared/Button";
 import { Card } from "../components/shared/Card";
 import { Checkbox } from "../components/shared/Checkbox";
 import { InvoiceHistoryCard } from "../components/client-billing/InvoiceHistoryCard";
+import { ProjectInvoicePricing } from "../components/client-billing/ProjectInvoicePricing";
 import { InvoiceReviewModal } from "../components/client-billing/InvoiceReviewModal";
 import { Input } from "../components/shared/Input";
 import { Select } from "../components/shared/Select";
@@ -163,14 +164,9 @@ const createProfileDraft = (
         billing_email: profile.billing_email,
         send_invoice_email: profile.send_invoice_email,
         invoice_language: profile.invoice_language,
-        currency: profile.currency,
         payment_method: profile.payment_method,
         payment_term_days: profile.payment_term_days,
-        billing_model: profile.billing_model,
-        net_unit_price: profile.net_unit_price,
-        invoice_unit: profile.invoice_unit,
         vat_code: profile.vat_code,
-        invoice_item_name: profile.invoice_item_name,
         automatic_invoicing_enabled:
           profile.automatic_invoicing_enabled,
         invoice_schedule_day: profile.invoice_schedule_day,
@@ -191,14 +187,9 @@ const createProfileDraft = (
         billing_email: null,
         send_invoice_email: false,
         invoice_language: client.invoice_attachment_language ?? "hu",
-        currency: "HUF",
         payment_method: "Átutalás",
         payment_term_days: 8,
-        billing_model: "hourly",
-        net_unit_price: null,
-        invoice_unit: "óra",
         vat_code: "27",
-        invoice_item_name: "Szolgáltatás",
         automatic_invoicing_enabled: false,
         invoice_schedule_day: 1,
         attach_timesheet_report: true,
@@ -214,8 +205,6 @@ const PREVIEW_PROFILES: ClientBillingProfile[] = [
     tax_number: "12345678-2-41",
     billing_email: "billing@northstar.example",
     send_invoice_email: true,
-    net_unit_price: 28500,
-    invoice_item_name: "Szoftverfejlesztési szolgáltatás",
     automatic_invoicing_enabled: true,
     created_at: "2026-10-22T00:00:00Z",
     updated_at: "2026-10-22T00:00:00Z",
@@ -229,11 +218,7 @@ const PREVIEW_PROFILES: ClientBillingProfile[] = [
     tax_subject: 6,
     eu_vat_number: "DE123456789",
     billing_email: "finance@lumen.example",
-    net_unit_price: 95,
-    currency: "EUR",
     invoice_language: "en",
-    invoice_unit: "hour",
-    invoice_item_name: "Product design services",
     vat_code: "EUFAD37",
     automatic_invoicing_enabled: false,
     created_at: "2026-10-22T00:00:00Z",
@@ -304,6 +289,7 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
   const companyId = preview
     ? PREVIEW_COMPANY_ID
     : (userProfile?.company_id ?? "");
+  const [quantityDrafts, setQuantityDrafts] = useState<Record<string, Record<string, string>>>({});
   const [selectedClientId, setSelectedClientId] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [draft, setDraft] = useState<ClientBillingProfileUpsert | null>(null);
@@ -379,6 +365,11 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
       clients.find((client) => client.id === effectiveSelectedClientId) ?? null,
     [clients, effectiveSelectedClientId],
   );
+
+  const quantityScope = `${companyId}:${effectiveSelectedClientId}:${invoicePeriod.start}:${invoicePeriod.end}`;
+  const quantityDraft = quantityDrafts[quantityScope] ?? {};
+  const projectQuantities = Object.fromEntries(Object.entries(quantityDraft)
+    .filter(([, value]) => value.trim() !== "").map(([key, value]) => [key, Number(value)]));
 
   const selectedStoredProfile = selectedClient
     ? profilesByClientId.get(selectedClient.id)
@@ -629,6 +620,7 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
       clientCode: selectedClient.client_code,
       periodStart: invoicePeriod.start,
       periodEnd: invoicePeriod.end,
+      projectQuantities,
     });
   };
 
@@ -641,6 +633,7 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
       clientId: selectedClient.id,
       periodStart: invoicePeriod.start,
       periodEnd: invoicePeriod.end,
+      projectQuantities,
     });
   };
 
@@ -1169,80 +1162,13 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
                     title={t("clientBilling.commercialTitle")}
                     description={t("clientBilling.commercialDescription")}
                   />
+                  {!preview && <ProjectInvoicePricing key={quantityScope} companyId={companyId}
+                    clientId={effectiveSelectedClientId} year={Number(invoicePeriod.start.slice(0, 4))}
+                    quantities={quantityDraft} onQuantityChange={(projectId, value) => {
+                      setQuantityDrafts(current => ({ ...current, [quantityScope]: { ...current[quantityScope], [projectId]: value } }));
+                      setInvoiceReview(null); setIssueError(null); setPreviewResult(null);
+                    }} />}
                   <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                    <Select
-                      id="billing-model"
-                      label={t("clientBilling.billingModel")}
-                      value={draft.billing_model}
-                      onChange={(event) =>
-                        updateDraft((current) => ({
-                          ...current,
-                          billing_model: event.target.value as "hourly" | "fixed_monthly",
-                        }))
-                      }
-                    >
-                      <option value="hourly">{t("clientBilling.billingModelHourly")}</option>
-                      <option value="fixed_monthly">{t("clientBilling.billingModelFixed")}</option>
-                    </Select>
-                    <Input
-                      id="net-unit-price"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      label={t("clientBilling.netUnitPrice")}
-                      value={draft.net_unit_price ?? ""}
-                      onChange={(event) =>
-                        updateDraft((current) => ({
-                          ...current,
-                          net_unit_price:
-                            event.target.value === ""
-                              ? null
-                              : Number(event.target.value),
-                        }))
-                      }
-                    />
-                    <Select
-                      id="billing-currency"
-                      label={t("clientBilling.currency")}
-                      value={draft.currency}
-                      onChange={(event) =>
-                        updateDraft((current) => ({
-                          ...current,
-                          currency: event.target.value,
-                        }))
-                      }
-                    >
-                      {(["HUF", "EUR", "USD", "GBP", "CHF"] as const).map(
-                        (currency) => (
-                          <option key={currency} value={currency}>
-                            {currency}
-                          </option>
-                        ),
-                      )}
-                    </Select>
-                    <Input
-                      id="invoice-item-name"
-                      label={t("clientBilling.invoiceItemName")}
-                      value={draft.invoice_item_name}
-                      onChange={(event) =>
-                        updateDraft((current) => ({
-                          ...current,
-                          invoice_item_name: event.target.value,
-                        }))
-                      }
-                      className="xl:col-span-2"
-                    />
-                    <Input
-                      id="invoice-unit"
-                      label={t("clientBilling.invoiceUnit")}
-                      value={draft.invoice_unit}
-                      onChange={(event) =>
-                        updateDraft((current) => ({
-                          ...current,
-                          invoice_unit: event.target.value,
-                        }))
-                      }
-                    />
                     <Select
                       id="vat-code"
                       label={t("clientBilling.vatCode")}
@@ -1309,11 +1235,9 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
                       ))}
                     </Select>
                   </div>
-                  <p className="rounded-xl border border-border bg-bg-accent/40 px-3 py-2.5 text-[11px] leading-5 text-muted">
-                    {draft.billing_model === "hourly"
-                      ? t("clientBilling.hourlyHint")
-                      : t("clientBilling.fixedHint")}
-                  </p>
+                  {preview && <p className="rounded-xl border border-border bg-bg-accent/40 px-3 py-2.5 text-[11px] leading-5 text-muted">
+                    {t("clientBilling.projectPricingHint")}
+                  </p>}
                 </div>
               </Card>
 

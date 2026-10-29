@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/useAuth";
 import { fetchClients, fetchProjects } from "../services/clientProjectService";
+import { fetchProjectPricing } from "../services/projectPricingService";
 import { CompanySettingsHeader } from "../components/company-settings/CompanySettingsHeader";
 import { ClientManagementCard } from "../components/company-settings/ClientManagementCard";
 import { ProjectManagementCard } from "../components/company-settings/ProjectManagementCard";
@@ -13,12 +14,20 @@ import { InvoiceSettingsCard } from "../components/company-settings/InvoiceSetti
 import { companyService } from "../services/companyService";
 import { LoadError } from "../components/shared/LoadError";
 import { PageLoading } from "../components/shared/PageLoading";
+import { PriceIndexSettingsCard } from "../components/company-settings/PriceIndexSettingsCard";
+import { usePricingYear } from "../hooks/usePricingYear";
 
 export const CompanySettingsPage: React.FC = () => {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   const companyId = profile?.company_id || "";
+  const pricingYear = usePricingYear();
+  const pricingQuery = useQuery({
+    queryKey: ["project-pricing", companyId, pricingYear],
+    queryFn: () => fetchProjectPricing(companyId, pricingYear),
+    enabled: Boolean(companyId),
+  });
   const clientsQuery = useQuery({
     queryKey: ["all-clients", companyId],
     queryFn: () => fetchClients(companyId),
@@ -46,7 +55,7 @@ export const CompanySettingsPage: React.FC = () => {
 
   const refreshCompanySettings = () => {
     // Client/project changes affect selectors, reports, and invoice selections.
-    for (const key of ["all-clients", "all-projects", "clients", "projects", "active-clients", "active-projects", "activeClients", "review-clients", "review-projects", "adminDashboard"]) {
+    for (const key of ["project-pricing", "all-clients", "all-projects", "clients", "projects", "active-clients", "active-projects", "activeClients", "review-clients", "review-projects", "adminDashboard"]) {
       void queryClient.invalidateQueries({ queryKey: [key] });
     }
   };
@@ -65,7 +74,12 @@ export const CompanySettingsPage: React.FC = () => {
             onRetry={() => { void clientsQuery.refetch(); void projectsQuery.refetch(); }} />
           : <>
             <ClientManagementCard clients={clients} onRefresh={refreshCompanySettings} companyId={companyId} />
-            <ProjectManagementCard companyId={companyId} clients={clients} projects={projects} onRefresh={refreshCompanySettings} />
+            <PriceIndexSettingsCard companyId={companyId} year={pricingYear} />
+            {pricingQuery.isError && <LoadError retrying={pricingQuery.isFetching}
+              onRetry={() => { void pricingQuery.refetch(); }} />}
+            <ProjectManagementCard companyId={companyId} clients={clients} projects={projects}
+              projectPricing={pricingQuery.isSuccess ? pricingQuery.data : undefined}
+              pricingYear={pricingYear} onRefresh={refreshCompanySettings} />
             <LeaveConfigurationCard companyId={companyId} clients={clients} projects={projects} />
           </>}
         {companyQuery.isLoading || invoiceQuery.isLoading ? <PageLoading />

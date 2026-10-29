@@ -71,6 +71,8 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
   const selectedProjectExists =
     !selectedProjectId ||
     availableProjects.some((project) => project.id === selectedProjectId);
+  const selectedClient = availableClients.find(client => client.id === selectedClientId);
+  const selectedProject = availableProjects.find(project => project.id === selectedProjectId);
 
   React.useEffect(() => {
     if (!selectedClientExists) {
@@ -139,6 +141,18 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
           </Button>
         </div>
       </div>
+
+      {selectedClient ? (
+        <div role="status" aria-atomic="true" className="mt-3 min-w-0 rounded-lg border border-primary-strong/20 bg-primary/10 px-3 py-2 text-xs text-primary-strong">
+          <p className="font-semibold break-words">
+            {t("timesheet.client")}: {selectedClient.name}
+            {selectedProject ? ` · ${t("timesheet.project")}: ${selectedProject.name}` : ""}
+          </p>
+          <p className="mt-1">
+            {t(selectedProject ? "timesheet.filterEntriesActiveWithProject" : "timesheet.filterEntriesActive")}
+          </p>
+        </div>
+      ) : null}
 
       <div id={filterPanelId} hidden={isCollapsed}>
         {!isCollapsed ? (

@@ -6,7 +6,7 @@ import { cn } from "../../utils/cn";
 import { Button } from "./Button";
 import type { ModalProps } from "../../types/ui";
 
-export const Modal: React.FC<ModalProps> = ({ open, title, onClose, children, className, footer }) => {
+export const Modal: React.FC<ModalProps> = ({ open, title, onClose, children, className, footer, size = "default" }) => {
   const { t } = useTranslation();
   const dialogRef = React.useRef<HTMLDivElement>(null);
   const onCloseRef = React.useRef(onClose);
@@ -80,7 +80,8 @@ export const Modal: React.FC<ModalProps> = ({ open, title, onClose, children, cl
 
   return createPortal(
     <div
-      className="fixed inset-0 z-60 flex min-h-dvh w-screen animate-[fade-in_280ms_ease-out] items-end justify-center overflow-y-auto bg-text/28 p-0 backdrop-blur-[10px] sm:items-center sm:p-6"
+      className={cn("fixed inset-0 z-60 flex min-h-dvh w-screen animate-[fade-in_280ms_ease-out] justify-center overflow-y-auto bg-text/28 backdrop-blur-[10px]",
+        size === "content" ? "items-center p-4 sm:p-6" : "items-end p-0 sm:items-center sm:p-6")}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
@@ -92,7 +93,9 @@ export const Modal: React.FC<ModalProps> = ({ open, title, onClose, children, cl
         aria-labelledby={titleId}
         tabIndex={-1}
         className={cn(
-          "flex max-h-[92dvh] w-full flex-col overflow-visible rounded-t-[1.25rem] border border-border-strong bg-surface-strong/96 shadow-[0_24px_70px_rgba(75,87,57,0.2),0_2px_8px_rgba(75,87,57,0.09)] backdrop-blur-2xl animate-[modal-in_360ms_cubic-bezier(0.22,0.7,0.24,1)] sm:max-h-[calc(100dvh-3rem)] sm:rounded-[1.125rem]",
+          "flex flex-col overflow-visible border border-border-strong bg-surface-strong/96 shadow-[0_24px_70px_rgba(75,87,57,0.2),0_2px_8px_rgba(75,87,57,0.09)] backdrop-blur-2xl animate-[modal-in_360ms_cubic-bezier(0.22,0.7,0.24,1)] sm:max-h-[calc(100dvh-3rem)]",
+          size === "content" ? "max-h-[calc(100dvh-2rem)] rounded-[1.125rem]"
+            : "max-h-[92dvh] w-full rounded-t-[1.25rem] sm:rounded-[1.125rem]",
           className,
         )}
       >

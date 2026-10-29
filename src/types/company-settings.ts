@@ -26,5 +26,7 @@ export interface ProjectManagementCardProps {
   companyId: string;
   clients: Client[];
   projects: Project[];
+  projectPricing?: import("./project-pricing").ProjectPricing[];
+  pricingYear?: number;
   onRefresh: () => void;
 }

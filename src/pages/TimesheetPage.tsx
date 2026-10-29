@@ -907,6 +907,7 @@ export const TimesheetPage: React.FC = () => {
                   totalDailyHours={totalDailyHours}
                   entries={selectedDayLogs}
                   allEntries={timesheets}
+                  hasEntryFilter={hasEntryFilter}
                   loading={isLoading}
                   onEditEntry={openEditModal}
                   onDuplicateEntry={handleStartCopy}
@@ -936,6 +937,7 @@ export const TimesheetPage: React.FC = () => {
             totalDailyHours={totalDailyHours}
             entries={selectedDayLogs}
             allEntries={timesheets}
+            hasEntryFilter={hasEntryFilter}
             loading={isLoading}
             onEditEntry={openEditModal}
             onDuplicateEntry={handleStartCopy}

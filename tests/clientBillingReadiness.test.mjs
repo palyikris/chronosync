@@ -26,9 +26,9 @@ test('A private recipient with stored business identifiers is not ready to invoi
 test('A single-line profile cannot represent margin-scheme VAT', () => {
   assert.ok(getBillingProfileReadiness({...profile,vat_code:'K.AFA'}).missingFields.includes('vatCode'));
 });
-test('Billing readiness rejects invalid prices and allows a zero price', () => {
+test('Recipient readiness is independent of deprecated client-level prices', () => {
   for (const net_unit_price of [null,-1,NaN,Infinity]) {
-    assert.ok(getBillingProfileReadiness({...profile,net_unit_price}).missingFields.includes('netUnitPrice'));
+    assert.equal(getBillingProfileReadiness({...profile,net_unit_price}).complete, true);
   }
   assert.equal(getBillingProfileReadiness({...profile,net_unit_price:0}).complete,true);
 });
