@@ -1,0 +1,24 @@
+.favoritePicker :global(.auth-input) {
+  min-height: 2.25rem;
+  height: 2.25rem;
+  padding-block: 0;
+  border-color: transparent;
+  background: transparent;
+}
+
+.favoritePicker :global(.auth-input):not(:disabled):hover {
+  border-color: transparent;
+  background: var(--color-bg-accent);
+}
+
+.favoritePicker :global(.auth-field-icon) {
+  left: 0.5rem;
+}
+
+.favoritePicker :global(.auth-field-icon + .auth-input) {
+  padding-left: 2rem;
+}
+
+.favoritePicker :global(.auth-input) > span {
+  font-size: 0.75rem;
+}

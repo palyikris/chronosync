@@ -492,6 +492,7 @@
     "showingCount": "Showing {{count}} companies"
   },
   "companySettings": {
+    "payrollEntryCalculation": "{{hours}} logged hours · entry multipliers applied",
     "title": "Company Settings",
     "subtitle": "Manage your clients and project structure",
     "clientsTitle": "Clients",
@@ -604,7 +605,7 @@
     "estimatedHoursPerMonthLabel": "Estimated hours / month",
     "payrollProject": "Payroll project",
     "payrollHeadcount": "Number of people",
-    "payrollHint": "Invoice hours = logged hours × number of people. Applies to hourly invoice lines and invoice attachments.",
+    "payrollHint": "Employees set the multiplier separately on each time entry for this project.",
     "payrollInvalid": "Enter a whole number of people between 1 and 2,147,483,647.",
     "payrollBadge_one": "Payroll · {{count}} person",
     "payrollBadge_other": "Payroll · {{count}} people",
@@ -673,6 +674,11 @@
     "testConnection": "Test Számlázz.hu connection"
   },
   "timesheet": {
+    "billingMultiplierShort": "Multiplier",
+    "billingMultiplierInvalid": "Enter a whole number between 1 and 2,147,483,647.",
+    "billingMultiplierInfo": "How the multiplier works",
+    "billingMultiplierHint": "Invoice and attachment hours = logged hours × this entry’s multiplier. Your logged time stays the same.",
+    "billingMultiplier": "Multiplier (number of people)",
     "previousWeek": "Previous week",
     "nextWeek": "Next week",
     "previousDay": "Previous day",
@@ -755,6 +761,7 @@
     "project": "Project",
     "cancel": "Cancel",
     "saveEntry": "Save Entry",
+    "saveAndAddAnotherShort": "Save & new",
     "saveAndAddAnother": "Save and add another",
     "entrySavedAddAnother": "Entry saved. Add another task for this date and project.",
     "recentProjects": "Recent projects",

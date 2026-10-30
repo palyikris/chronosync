@@ -489,6 +489,7 @@
     "showingCount": "{{count}} cég megjelenítve"
   },
   "companySettings": {
+    "payrollEntryCalculation": "{{hours}} rögzített óra · bejegyzésenkénti szorzókkal",
     "title": "Cégbeállítások",
     "subtitle": "Ügyfelek és projektstruktúra kezelése",
     "clientsTitle": "Ügyfelek",
@@ -601,7 +602,7 @@
     "estimatedHoursPerMonthLabel": "Becsült órák / hónap",
     "payrollProject": "Bérszámfejtési projekt",
     "payrollHeadcount": "Létszám (fő)",
-    "payrollHint": "Számlázott órák = rögzített órák × létszám. Az óradíjas számlatételekre és a számlamellékletre vonatkozik.",
+    "payrollHint": "A munkatársak minden időbejegyzésnél külön adják meg a szorzót ennél a projektnél.",
     "payrollInvalid": "Adjon meg egy egész létszámot 1 és 2 147 483 647 között.",
     "payrollBadge_one": "Bérszámfejtés · {{count}} fő",
     "payrollBadge_other": "Bérszámfejtés · {{count}} fő",
@@ -670,6 +671,11 @@
     "szamlazzTestConnection": "Számlázz.hu kapcsolat tesztelése"
   },
   "timesheet": {
+    "billingMultiplierShort": "Szorzó",
+    "billingMultiplierInvalid": "Adjon meg egy egész számot 1 és 2 147 483 647 között.",
+    "billingMultiplierInfo": "A szorzó működése",
+    "billingMultiplierHint": "Számlázott és mellékleti órák = rögzített órák × a bejegyzés szorzója. A rögzített munkaidő nem változik.",
+    "billingMultiplier": "Szorzó (létszám)",
     "previousWeek": "Előző hét",
     "nextWeek": "Következő hét",
     "previousDay": "Előző nap",
@@ -752,6 +758,7 @@
     "project": "Projekt",
     "cancel": "Mégse",
     "saveEntry": "Bejegyzés mentése",
+    "saveAndAddAnotherShort": "Mentés és új",
     "saveAndAddAnother": "Mentés és újabb bejegyzés",
     "entrySavedAddAnother": "A bejegyzés mentve. Adj hozzá újabb feladatot ehhez a naphoz és projekthez.",
     "recentProjects": "Legutóbbi projektek",

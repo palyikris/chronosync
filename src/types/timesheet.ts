@@ -11,6 +11,8 @@ const timesheetTextSchema = z.string().trim().min(1).max(2000);
 
 const timesheetIdSchema = z.string().trim().min(1);
 
+export const billingMultiplierSchema = z.number().int().min(1).max(2147483647);
+
 const timesheetHoursSchema = z
   .number()
   .finite()
@@ -25,6 +27,7 @@ export const newTimesheetPayloadSchema = z
     company_id: timesheetIdSchema,
     client_id: timesheetIdSchema,
     project_id: timesheetIdSchema,
+    billing_multiplier: billingMultiplierSchema.optional(),
     duration_minutes: z
       .number()
       .int()
@@ -49,6 +52,7 @@ export const timesheetEntryUpdatePayloadSchema = z
     description: timesheetTextSchema.optional(),
     client_id: timesheetIdSchema.optional(),
     project_id: timesheetIdSchema.optional(),
+    billing_multiplier: billingMultiplierSchema.optional(),
   })
   .strict()
   .refine((payload) => Object.keys(payload).length > 0, {
@@ -69,6 +73,7 @@ export interface TimesheetEntry {
   project_id: string;
   work_date: string;
   hours_logged: number;
+  billing_multiplier?: number;
   duration_minutes?: number;
   description: string;
   created_at: string;
@@ -115,6 +120,7 @@ export type TimesheetFormData = Omit<
   "hours_logged"
 > & {
   hours_logged: number | "";
+  billing_multiplier?: number | "";
 };
 
 export interface TimesheetCalendarProps {
@@ -162,7 +168,6 @@ export interface TimesheetEntryModalProps {
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
   onChange: React.Dispatch<React.SetStateAction<TimesheetFormData>>;
   isSaving: boolean;
-  recentProjects: TimesheetProjectShortcut[];
   shortcutProjects: Project[];
   favoriteProjects: TimesheetFavoriteProject[];
   favoritesLoading: boolean;

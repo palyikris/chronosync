@@ -11,10 +11,10 @@ const companyId = "10000000-0000-4000-8000-000000000001";
 const client: Client = { id: "20000000-0000-4000-8000-000000000001", company_id: companyId,
   name: "Test client", client_code: "TEST", is_active: true, is_default: false,
   invoice_attachment_language: "hu", available_hours_per_month: 100, hours_from_previous_month: 0 };
-const initialProjects: Project[] = [null, 3].map((payroll_headcount, i) => ({
+const initialProjects: Project[] = [false, true].map((is_payroll, i) => ({
   id: `30000000-0000-4000-8000-00000000000${i + 1}`, company_id: companyId,
   client_id: client.id, name: i === 0 ? "Consulting" : "Payroll work",
-  is_active: true, estimated_hours_per_month: 2.5, payroll_headcount, created_at: "2026-10-29T00:00:00Z",
+  is_active: true, estimated_hours_per_month: 2.5, is_payroll, created_at: "2026-10-29T00:00:00Z",
 }));
 
 export function Harness() {

@@ -90,6 +90,7 @@ export interface InvoiceReviewEntry {
   id: string;
   work_date: string;
   hours_logged: number;
+  billing_multiplier?: number;
   description: string;
   project_name: string;
   project_id?: string;
@@ -166,7 +167,7 @@ export interface InvoiceHistoryItem {
 export interface InvoiceReviewProjectLine {
   project_id: string;
   project_name: string;
-  payroll_headcount?: number | null;
+  is_payroll?: boolean;
   logged_hours?: number | null;
   pricing_year: number;
   pricing_updated_at: string;

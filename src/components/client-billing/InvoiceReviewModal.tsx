@@ -146,15 +146,15 @@ export const InvoiceReviewModal: React.FC<InvoiceReviewModalProps> = ({
             <tbody className="divide-y divide-border">{items.map(item => <tr key={`${item.project_id}-${item.pricing_year}`}>
               <td className="px-3 py-2 font-medium">
                 {item.project_name}
-                {item.payroll_headcount != null && <span className="mt-1 block text-xs text-primary-strong">
-                  {t("companySettings.payrollBadge", { count: item.payroll_headcount })}
+                {item.is_payroll && <span className="mt-1 block text-xs text-primary-strong">
+                  {t("companySettings.payrollProject")}
                 </span>}
               </td>
               <td className="whitespace-nowrap px-3 py-2">
                 {item.quantity} {item.unit}
-                {item.payroll_headcount != null && item.logged_hours != null &&
+                {(item.is_payroll || Number(item.quantity) !== Number(item.logged_hours)) && item.logged_hours != null &&
                   <span className="mt-1 block text-xs text-muted-strong">
-                    {t("companySettings.payrollCalculation", { hours: item.logged_hours, count: item.payroll_headcount })}
+                    {t("companySettings.payrollEntryCalculation", { hours: item.logged_hours })}
                   </span>}
               </td>
               <td className="whitespace-nowrap px-3 py-2">{new Intl.NumberFormat(undefined, { maximumFractionDigits: 4 }).format(item.net_unit_price)} {item.currency}</td>
@@ -194,7 +194,10 @@ export const InvoiceReviewModal: React.FC<InvoiceReviewModalProps> = ({
                       <td className="max-w-64 truncate px-3 py-2 text-muted" title={entry.description}>
                         {entry.description}
                       </td>
-                      <td className="px-3 py-2 text-right font-medium text-text">{entry.hours_logged}</td>
+                      <td className="whitespace-nowrap px-3 py-2 text-right font-medium text-text">
+                        {entry.hours_logged}
+                        {(entry.billing_multiplier ?? 1) !== 1 ? ` × ${entry.billing_multiplier}` : ""}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

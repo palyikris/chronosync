@@ -35,7 +35,6 @@ import { isIndexedPriceMissing } from "../../utils/projectPricing";
 import { ProjectPricingModal } from "./ProjectPricingModal";
 import type { ProjectPricing } from "../../types/project-pricing";
 import { usePricingYear } from "../../hooks/usePricingYear";
-import { payrollHeadcountSchema } from "../../types/client-project";
 import { ProjectPayrollFields } from "./ProjectPayrollFields";
 
 const normalizeEstimatedHours = (value: string) => {
@@ -69,7 +68,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   const [newProjectName, setNewProjectName] = useState("");
   const [newProjectClientId, setNewProjectClientId] = useState("");
   const [newProjectEstimatedHours, setNewProjectEstimatedHours] = useState(0);
-  const [newProjectPayrollHeadcount, setNewProjectPayrollHeadcount] = useState<number | null>(null);
+  const [newProjectIsPayroll, setNewProjectIsPayroll] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deletingProjectId, setDeletingProjectId] = useState<string | null>(
     null,
@@ -116,8 +115,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
 
   const handleCreate = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!newProjectName.trim() || !newProjectClientId ||
-      !payrollHeadcountSchema.safeParse(newProjectPayrollHeadcount).success) return;
+    if (!newProjectName.trim() || !newProjectClientId) return;
 
     try {
       setLoading(true);
@@ -126,12 +124,12 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
         newProjectClientId,
         newProjectName.trim(),
         newProjectEstimatedHours,
-        newProjectPayrollHeadcount,
+        newProjectIsPayroll,
       );
       setNewProjectName("");
       setNewProjectClientId("");
       setNewProjectEstimatedHours(0);
-      setNewProjectPayrollHeadcount(null);
+      setNewProjectIsPayroll(false);
       onRefresh();
     } catch (error) {
       alert(
@@ -145,8 +143,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   };
 
   const handleUpdate = async () => {
-    if (!editingProject || !editingProject.name.trim() ||
-      !payrollHeadcountSchema.safeParse(editingProject.payroll_headcount ?? null).success) return;
+    if (!editingProject || !editingProject.name.trim()) return;
 
     try {
       setLoading(true);
@@ -154,7 +151,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
         editingProject.id,
         editingProject.name.trim(),
         editingProject.estimated_hours_per_month ?? 0,
-        editingProject.payroll_headcount ?? null,
+        editingProject.is_payroll ?? false,
       );
       setEditingProject(null);
       onRefresh();
@@ -304,8 +301,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
               <Button
                 type="submit"
                 disabled={
-                  !newProjectClientId || !newProjectName.trim() || loading ||
-                  !payrollHeadcountSchema.safeParse(newProjectPayrollHeadcount).success
+                  !newProjectClientId || !newProjectName.trim() || loading
                 }
                 className="gap-1 rounded-xl px-4"
                 icon={<Plus className="h-4 w-4" />}
@@ -313,8 +309,8 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                 {t("common.add")}
               </Button>
             </div>
-            <ProjectPayrollFields id="new-project-payroll" headcount={newProjectPayrollHeadcount}
-              onChange={setNewProjectPayrollHeadcount} />
+            <ProjectPayrollFields id="new-project-payroll" enabled={newProjectIsPayroll}
+              onChange={setNewProjectIsPayroll} />
             <p className="text-xs text-muted-strong">
               {selectedClientForNewProject
                 ? t("companySettings.creatingUnder", {
@@ -478,10 +474,10 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                             {t("projectPricing.missingBadge", { year: pricingYear })}
                           </span>
                         )}
-                        {project.payroll_headcount != null && (
+                        {project.is_payroll && (
                           <span className="inline-flex items-center gap-1 rounded-full border border-primary-strong/20 bg-primary/20 px-2 py-0.5 text-xs font-semibold text-primary-strong">
                             <Users className="h-3 w-3" aria-hidden="true" />
-                            {t("companySettings.payrollBadge", { count: project.payroll_headcount })}
+                            {t("companySettings.payrollProject")}
                           </span>
                         )}
                       </div>
@@ -625,8 +621,8 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                 })
               }
             />
-            <ProjectPayrollFields id="edit-project-payroll" headcount={editingProject.payroll_headcount ?? null}
-              onChange={payroll_headcount => setEditingProject({ ...editingProject, payroll_headcount })} />
+            <ProjectPayrollFields id="edit-project-payroll" enabled={editingProject.is_payroll ?? false}
+              onChange={is_payroll => setEditingProject({ ...editingProject, is_payroll })} />
             <div className="flex justify-end gap-2">
               <Button
                 variant="secondary"
@@ -638,8 +634,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
               </Button>
               <Button
                 onClick={handleUpdate}
-                disabled={loading || !editingProject.name.trim() ||
-                  !payrollHeadcountSchema.safeParse(editingProject.payroll_headcount ?? null).success}
+                disabled={loading || !editingProject.name.trim()}
                 className="rounded-xl"
                 icon={<Check className="h-4 w-4" />}
               >

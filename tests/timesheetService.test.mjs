@@ -51,7 +51,7 @@ function serviceFixture(t, options = {}) {
         update: row => { mutation = row; return query; },
         single: async () => {
           if (table === "projects") return { data: { client_id: "client-1", company_id: "company-1" }, error: null };
-          if (!mutation) return { data: { user_id: "user-1", work_date: "2026-10-20" }, error: null };
+          if (!mutation) return { data: options.existingEntry ?? { user_id: "user-1", work_date: "2026-10-20" }, error: null };
           if (options.existingStatus && predicates.some(({method, field, value}) =>
             method === "in" && field === "status" && !value.includes(options.existingStatus))) {
             return { data: null, error: new Error("Entry is no longer editable") };
@@ -207,4 +207,20 @@ test("resubmission respects leave locks and does not overwrite an entry that has
   const { service: stale, writes: staleWrites } = serviceFixture(t, { existingStatus: "approved" });
   await assert.rejects(stale.updateTimesheetEntry("entry-1", { description: "Correction" }, { resubmit: true }), /no longer editable/);
   assert.equal(staleWrites.length, 0);
+});
+
+
+test("entry create, edit and duplication persist their own billing multiplier", async t => {
+  const {service, writes} = serviceFixture(t, {existingEntry: {
+    user_id: "user-1", company_id: "company-1", client_id: "client-1", project_id: "project-1",
+    work_date: "2026-10-20", hours_logged: 2.5, description: "Payroll", billing_multiplier: 7,
+  }});
+  await service.createTimesheetEntry({work_date: "2026-10-20", company_id: "company-1",
+    client_id: "client-1", project_id: "project-1", hours_logged: 2.5, description: "Payroll", billing_multiplier: 3});
+  assert.equal(writes.at(-1).billing_multiplier, 3);
+  assert.equal(writes.at(-1).hours_logged, 2.5);
+  await service.updateTimesheetEntry("entry-1", {billing_multiplier: 12});
+  assert.equal(writes.at(-1).billing_multiplier, 12);
+  await service.cloneEntry("entry-1", "2026-10-21");
+  assert.equal(writes.at(-1).billing_multiplier, 7);
 });

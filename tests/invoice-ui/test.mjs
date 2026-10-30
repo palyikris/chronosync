@@ -36,6 +36,11 @@ try {
   verify(!(await page.getByRole('button',{name:labels.issueInvoice,exact:true}).isEnabled()),'Preview mode blocks issuance');
   await page.setViewportSize({width:390,height:844});
   verify(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'Mobile review has no horizontal overflow');
+  await page.goto(base+'?mode=payroll');
+  await page.getByRole('dialog').waitFor();
+  verify(await page.getByRole('cell', {name:'1.25 × 3', exact:true}).isVisible(), 'Review shows the first entry multiplier');
+  verify(await page.getByRole('cell', {name:'1.25 × 7', exact:true}).isVisible(), 'Review shows a different multiplier on the same project');
+  verify(await page.getByRole('cell', {name:/12.5 hour/}).isVisible(), 'Review shows the sum of individually multiplied entries');
   await page.goto(base+'?mode=history');
   await page.getByRole('button',{name:labels.resolveIssued,exact:true}).click();
   await page.getByRole('dialog').waitFor();

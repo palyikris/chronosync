@@ -16,10 +16,10 @@ try {
     const { companySettings: text, common } = JSON.parse(await readFile(new URL(`../../src/locales/${language}.json`, import.meta.url), 'utf8'));
     const context = await browser.newContext({ viewport: { width, height: 950 } });
     const errors = [], writes = [];
-    const projects = [null, 3].map((payroll_headcount, i) => ({
+    const projects = [false, true].map((is_payroll, i) => ({
       id: `30000000-0000-4000-8000-00000000000${i + 1}`, company_id: '10000000-0000-4000-8000-000000000001',
       client_id: '20000000-0000-4000-8000-000000000001', name: i === 0 ? 'Consulting' : 'Payroll work',
-      is_active: true, estimated_hours_per_month: 2.5, payroll_headcount, created_at: '2026-10-29T00:00:00Z',
+      is_active: true, estimated_hours_per_month: 2.5, is_payroll, created_at: '2026-10-29T00:00:00Z',
     }));
     let failNext = false;
     await context.route('**/*', async route => {
@@ -51,42 +51,36 @@ try {
     const dialog = page.getByRole('dialog');
     await expect(dialog.getByLabel(text.payrollHeadcount)).toBeHidden();
     await dialog.getByRole('checkbox', { name: text.payrollProject }).check();
-    const count = dialog.getByLabel(text.payrollHeadcount);
-    await expect(count).toHaveValue('1');
-    for (const value of ['', '0', '-1', '1.5']) {
-      await count.fill(value);
-      await expect(dialog.getByRole('button', { name: text.saveChanges })).toBeDisabled();
-      await expect(count).toHaveAttribute('aria-invalid', 'true');
-    }
-    await count.fill('12');
+    await expect(dialog.getByLabel(text.payrollHeadcount)).toBeHidden();
+    await expect(dialog.getByText(text.payrollHint)).toBeVisible();
     await page.screenshot({ path: `${output}/${language}-${width}-edit.png`, fullPage: true });
     failNext = true;
     await dialog.getByRole('button', { name: text.saveChanges }).click();
     await expect(dialog.getByRole('button', { name: text.saveChanges })).toBeEnabled();
-    await expect(count).toHaveValue('12');
+    await expect(dialog.getByRole('checkbox', { name: text.payrollProject })).toBeChecked();
     assert.equal(writes.length, 1);
     await dialog.getByRole('button', { name: text.saveChanges }).click();
     await expect(dialog).toBeHidden();
-    await expect(card).toContainText('12');
-    assert.equal(writes.at(-1).payroll_headcount, 12);
+    await expect(card).toContainText(text.payrollProject);
+    assert.equal(writes.at(-1).is_payroll, true);
     await card.getByRole('button', { name: text.editProject, exact: true }).click();
-    await expect(dialog.getByLabel(text.payrollHeadcount)).toHaveValue('12');
+    await expect(dialog.getByRole('checkbox', { name: text.payrollProject })).toBeChecked();
     await dialog.getByRole('checkbox', { name: text.payrollProject }).uncheck();
     await expect(dialog.getByLabel(text.payrollHeadcount)).toBeHidden();
     await dialog.getByRole('button', { name: text.saveChanges }).click();
     await expect(dialog).toBeHidden();
-    assert.equal(writes.at(-1).payroll_headcount, null);
+    assert.equal(writes.at(-1).is_payroll, false);
     await expect(card.getByText(language === 'hu' ? /Bérszámfejtés/ : /Payroll/)).toHaveCount(0);
     await page.getByRole('button', { name: text.newProjectButton, exact: true }).click();
     await page.locator('form').getByRole('button', { name: text.projectClientLabel, exact: true }).click();
     await page.getByRole('option', { name: 'Test client', exact: true }).click();
     await page.locator('#new-project-name').fill('New payroll project');
     await page.locator('#new-project-payroll-enabled').check();
-    await page.locator('#new-project-payroll-headcount').fill('7');
+    await expect(page.locator('#new-project-payroll-headcount')).toHaveCount(0);
     await page.getByRole('button', { name: common.add, exact: true }).click();
     const added = page.locator('article').filter({ has: page.getByRole('heading', { name: 'New payroll project', exact: true }) });
-    await expect(added).toContainText('7');
-    assert.equal(writes.at(-1).payroll_headcount, 7);
+    await expect(added).toContainText(text.payrollProject);
+    assert.equal(writes.at(-1).is_payroll, true);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
     await page.screenshot({ path: `${output}/${language}-${width}-projects.png`, fullPage: true });
     assert.deepEqual(errors, []);

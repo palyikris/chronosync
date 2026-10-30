@@ -1,5 +1,4 @@
 import { supabase } from "../lib/supabaseClient";
-import { payrollHeadcountSchema } from "../types/client-project";
 import {
   type Client,
   type CreateClientPayload,
@@ -145,9 +144,8 @@ export async function createProject(
   clientId: string,
   name: string,
   estimatedHoursPerMonth: number,
-  payrollHeadcount: number | null = null,
+  isPayroll = false,
 ): Promise<Project> {
-  const headcount = payrollHeadcountSchema.parse(payrollHeadcount);
   const { data, error } = await supabase
     .from("projects")
     .insert({
@@ -155,7 +153,7 @@ export async function createProject(
       client_id: clientId,
       name,
       estimated_hours_per_month: estimatedHoursPerMonth,
-      payroll_headcount: headcount,
+      is_payroll: isPayroll,
     })
     .select("*, clients(name)")
     .single();
@@ -167,15 +165,14 @@ export async function updateProject(
   projectId: string,
   name: string,
   estimatedHoursPerMonth: number,
-  payrollHeadcount: number | null,
+  isPayroll: boolean,
 ): Promise<Project> {
-  const headcount = payrollHeadcountSchema.parse(payrollHeadcount);
   const { data, error } = await supabase
     .from("projects")
     .update({
       name,
       estimated_hours_per_month: estimatedHoursPerMonth,
-      payroll_headcount: headcount,
+      is_payroll: isPayroll,
     })
     .eq("id", projectId)
     .select("*, clients(name)")

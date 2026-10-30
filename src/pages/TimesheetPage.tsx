@@ -109,6 +109,7 @@ export const TimesheetPage: React.FC = () => {
   const [formData, setFormData] = useState<TimesheetFormData>({
     work_date: getLocalDateValue(today),
     hours_logged: "",
+    billing_multiplier: 1,
     description: "",
     company_id: "",
     client_id: "",
@@ -425,6 +426,7 @@ export const TimesheetPage: React.FC = () => {
     setFormData({
       work_date: date,
       hours_logged: recent?.hours_logged ?? "",
+      billing_multiplier: 1,
       description: "",
       company_id: targetCompanyId,
       client_id: filteredClient?.id ?? recent?.client_id ?? "",
@@ -478,6 +480,7 @@ export const TimesheetPage: React.FC = () => {
     setFormData({
       work_date: entry.work_date,
       hours_logged: Number(entry.hours_logged),
+      billing_multiplier: entry.billing_multiplier ?? 1,
       description: entry.description || "",
       company_id: entry.company_id,
       client_id: entry.client_id,
@@ -515,6 +518,7 @@ export const TimesheetPage: React.FC = () => {
         setFormData({
           work_date: payload.work_date,
           hours_logged: payload.hours_logged,
+          billing_multiplier: 1,
           description: "",
           company_id: payload.company_id,
           client_id: payload.client_id,
@@ -675,6 +679,10 @@ export const TimesheetPage: React.FC = () => {
     if (!Number.isFinite(parsedHours) || parsedHours <= 0 || parsedHours > 24) {
       return;
     }
+    const isPayroll = allProjects.find(project => project.id === formData.project_id)?.is_payroll;
+    const billingMultiplier = isPayroll ? (formData.billing_multiplier ?? 1) : 1;
+    if (typeof billingMultiplier !== "number" || !Number.isInteger(billingMultiplier) ||
+      billingMultiplier < 1 || billingMultiplier > 2147483647) return;
     setEntryFeedback(null);
 
     if (editEntryId) {
@@ -684,6 +692,7 @@ export const TimesheetPage: React.FC = () => {
         payload: {
           work_date: formData.work_date,
           hours_logged: parsedHours,
+          billing_multiplier: billingMultiplier,
           description: formData.description,
           client_id: formData.client_id,
           project_id: formData.project_id,
@@ -695,6 +704,7 @@ export const TimesheetPage: React.FC = () => {
         payload: {
           ...formData,
           hours_logged: parsedHours,
+          billing_multiplier: billingMultiplier,
           company_id: targetCompanyId,
           target_user_id: targetUserId,
         },
@@ -1007,7 +1017,6 @@ export const TimesheetPage: React.FC = () => {
         onClose={closeModal}
         onSubmit={handleFormSubmit}
         onChange={setFormData}
-        recentProjects={recentProjects}
         shortcutProjects={allProjects}
         favoriteProjects={favoriteProjects}
         favoritesLoading={favorites.isLoading}

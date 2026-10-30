@@ -198,6 +198,7 @@ export async function createTimesheetEntry(
         project_id: validatedPayload.project_id,
         work_date: validatedPayload.work_date,
         hours_logged: validatedPayload.hours_logged,
+        billing_multiplier: validatedPayload.billing_multiplier ?? 1,
         description: validatedPayload.description,
       },
     ])
@@ -341,6 +342,7 @@ export async function cloneEntry(
     project_id: existingEntry.project_id,
     work_date: workDate,
     hours_logged: Number(existingEntry.hours_logged),
+    billing_multiplier: existingEntry.billing_multiplier ?? 1,
     description: existingEntry.description,
   });
 }
@@ -417,6 +419,9 @@ export async function updateTimesheetEntry(
       }),
       ...(validatedPayload.project_id !== undefined && {
         project_id: validatedPayload.project_id,
+      }),
+      ...(validatedPayload.billing_multiplier !== undefined && {
+        billing_multiplier: validatedPayload.billing_multiplier,
       }),
       status: resubmit ? "submitted" : "draft",
       submitted_at: resubmit ? new Date().toISOString() : null,

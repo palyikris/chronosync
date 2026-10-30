@@ -20,6 +20,7 @@ const pa = '00000000-0000-4000-8000-000000000004';
 const cb = '00000000-0000-4000-8000-000000000005';
 const pb = '00000000-0000-4000-8000-000000000006';
 const inactive = '00000000-0000-4000-8000-000000000007';
+const payroll = '00000000-0000-4000-8000-000000000008';
 const errors = [];
 async function app(history = false, language = 'en', savedFavorites = []) {
   const context = await browser.newContext({ viewport: { width: 1366, height: 900 }, timezoneId: 'Europe/Budapest' });
@@ -35,6 +36,7 @@ async function app(history = false, language = 'en', savedFavorites = []) {
   const projects = [
     { id: pa, client_id: ca, company_id: company, name: 'Website', is_active: true },
     { id: pb, client_id: cb, company_id: company, name: 'Support', is_active: true },
+    { id: payroll, client_id: ca, company_id: company, name: 'Payroll', is_active: true, is_payroll: true },
     { id: inactive, client_id: ca, company_id: company, name: 'Archived project', is_active: false },
   ];
   const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Budapest' }).format(new Date());
@@ -94,6 +96,14 @@ async function app(history = false, language = 'en', savedFavorites = []) {
         state.entries.push(saved);
         return json(saved);
       }
+      if (req.method() === 'PATCH') {
+        const payload = req.postDataJSON();
+        state.writes.push(payload);
+        const row = state.entries.find(entry => `eq.${entry.id}` === url.searchParams.get('id'));
+        Object.assign(row, payload);
+        return json(row);
+      }
+      if (url.searchParams.has('id')) return json(state.entries.find(entry => `eq.${entry.id}` === url.searchParams.get('id')));
       // Supabase encodes repeated range filters separately.
       const filters = url.searchParams.getAll('work_date');
       return json(state.entries.filter(entry => filters.every(filter => filter.startsWith('gte.') ? entry.work_date >= filter.slice(4) : filter.startsWith('lt.') ? entry.work_date < filter.slice(3) : true)));
@@ -253,8 +263,9 @@ try {
   const history = await app(true);
   const h = await open(history.page);
   await expect(h.getByRole('spinbutton', { name: labels.totalHours })).toHaveValue('0.5'); checks++;
-  await expect(h.getByRole('group', { name: labels.recentProjects }).getByRole('button')).toHaveCount(2); checks++;
-  await h.getByRole('group', { name: labels.recentProjects }).getByRole('button', { name: /Support/ }).click();
+  await expect(h.getByRole('group', { name: labels.recentProjects })).toHaveCount(0); checks++;
+  await select(history.page, h, labels.client, 'Hungarian client');
+  await select(history.page, h, labels.project, 'Support');
   await expect(h.getByRole('button', { name: labels.client, exact: true })).toContainText('Hungarian client'); checks++;
   await expect(h.getByText(labels.englishDescriptionWarning)).toHaveCount(0); checks++;
   await history.page.screenshot({ animations: 'disabled', path: '/tmp/chronosync-entry-desktop.png' });
@@ -274,6 +285,56 @@ try {
   await expect.poll(() => hu.page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); checks++;
   await hu.page.screenshot({ animations: 'disabled', path: '/tmp/chronosync-entry-hungarian-mobile.png' });
   await hu.context.close();
+  for (const language of ['en', 'hu']) {
+    const {timesheet: text} = JSON.parse(await readFile(new URL(`../../src/locales/${language}.json`, import.meta.url), 'utf8'));
+    const payrollApp = await app(false, language);
+    const {page, state} = payrollApp;
+    if (language === 'hu') await page.setViewportSize({width: 390, height: 660});
+    await page.getByRole('button', {name: text.addEntry, exact: true}).filter({visible: true}).click();
+    const modal = page.getByRole('dialog');
+    await select(page, modal, text.client, 'English client');
+    await select(page, modal, text.project, 'Website');
+    const multiplier = modal.getByRole('spinbutton', {name: text.billingMultiplier, exact: true});
+    await expect(multiplier).toBeHidden(); checks++;
+    await select(page, modal, text.project, 'Payroll');
+    await expect(multiplier).toHaveValue('1'); checks++;
+    await modal.getByRole('spinbutton', {name: text.totalHours}).fill('2.5');
+    await modal.getByRole('textbox', {name: text.taskDescription}).fill('Payroll entry');
+    for (const value of ['', '0', '-1', '1.5', '2147483648']) {
+      await multiplier.fill(value);
+      await expect(modal.getByRole('button', {name: text.saveEntry, exact: true})).toBeDisabled(); checks++;
+    }
+    await multiplier.fill('3');
+    await page.screenshot({path: `/tmp/chronosync-entry-multiplier-${language}.png`});
+    await modal.getByRole('button', {name: text.saveAndAddAnother, exact: true}).click();
+    await expect.poll(() => state.writes.length).toBe(1); checks++;
+    await expect(multiplier).toHaveValue('1'); checks++;
+    assert.equal(state.writes[0].billing_multiplier, 3);
+    assert.equal(state.writes[0].hours_logged, 2.5);
+    await multiplier.fill('7');
+    await modal.getByRole('textbox', {name: text.taskDescription}).fill('Second payroll entry');
+    await modal.getByRole('button', {name: text.saveEntry, exact: true}).click();
+    await expect(modal).toBeHidden(); checks++;
+    assert.equal(state.writes[1].billing_multiplier, 7);
+    await page.reload();
+    const payrollCard = page.locator('article').filter({has: page.getByText('Payroll entry', {exact: true})});
+    await payrollCard.getByRole('button', {name: text.editEntry, exact: true}).click();
+    const savedFactor = state.entries[0].billing_multiplier;
+    await expect(multiplier).toHaveValue(String(savedFactor)); checks++;
+    await page.screenshot({animations: 'disabled', path: `/tmp/chronosync-entry-edit-${language}.png`});
+    await multiplier.fill('12');
+    await modal.getByRole('button', {name: text.saveChanges, exact: true}).click();
+    await expect(modal).toBeHidden(); checks++;
+    assert.equal(state.writes.at(-1).billing_multiplier, 12);
+    await payrollCard.getByRole('button', {name: text.editEntry, exact: true}).click();
+    await expect(multiplier).toHaveValue('12'); checks++;
+    await select(page, modal, text.project, 'Website');
+    await expect(multiplier).toBeHidden(); checks++;
+    await modal.getByRole('button', {name: text.saveChanges, exact: true}).click();
+    await expect(modal).toBeHidden(); checks++;
+    assert.equal(state.writes.at(-1).billing_multiplier, 1);
+    await payrollApp.context.close();
+  }
   check(errors.length === 0, `No browser errors: ${errors.join('; ')}`);
   console.log(`Passed ${checks} entry workflow checks.`);
 } finally {

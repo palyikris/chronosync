@@ -36,6 +36,13 @@ const history: InvoiceHistoryItem = {
 const pause = () => new Promise((resolve) => setTimeout(resolve, 250));
 export function Harness() {
   const mode = new URLSearchParams(window.location.search).get("mode");
+  const selectedReview: ClientInvoiceReview = mode === "payroll" ? {
+    ...review, net_total: 1250, vat_total: 337.5, gross_total: 1587.5,
+    items: [{...review.items[0], is_payroll: true, logged_hours: 2.5,
+      quantity: 12.5, net_total: 1250, vat_total: 337.5, gross_total: 1587.5}],
+    approved_entries: [3, 7].map((billing_multiplier, index) => ({...review.approved_entries[0],
+      id: `entry-${index}`, hours_logged: 1.25, billing_multiplier})),
+  } : review;
   const [open, setOpen] = useState(true);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +59,7 @@ export function Harness() {
         setPending(false);
         if (reconcileCalls.current++ === 0) throw new Error("Provider totals do not match");
         setItems([{...history, status: "issued", invoice_number: "TEST-1"}]);
-      }} /> : <InvoiceReviewModal key={review.review_fingerprint} open={open} review={review} issuing={pending}
+      }} /> : <InvoiceReviewModal key={selectedReview.review_fingerprint} open={open} review={selectedReview} issuing={pending}
       canIssue={mode !== "preview"} error={error} onClose={() => setOpen(false)}
       onIssue={() => {
         setIssuedCalls((calls) => calls + 1);
