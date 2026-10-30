@@ -22,6 +22,7 @@ export interface Project {
   company_id: string;
   name: string;
   estimated_hours_per_month: number;
+  payroll_headcount: number | null;
   is_active: boolean;
   created_at: string;
 }
@@ -38,12 +39,15 @@ export const createClientPayloadSchema = z
   })
   .strict();
 
+export const payrollHeadcountSchema = z.number().int().min(1).max(2147483647).nullable();
+
 export const createProjectPayloadSchema = z
   .object({
     name: trimmedNonEmptyStringSchema("Project name is required", 120),
     client_id: uuidSchema,
     company_id: uuidSchema,
     estimated_hours_per_month: z.number().nonnegative(),
+    payroll_headcount: payrollHeadcountSchema.optional(),
   })
   .strict();
 

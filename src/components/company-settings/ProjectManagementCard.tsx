@@ -13,6 +13,7 @@ import {
   ToggleLeft,
   ToggleRight,
   Trash2,
+  Users,
   X,
 } from "lucide-react";
 import { Button } from "../shared/Button";
@@ -34,6 +35,8 @@ import { isIndexedPriceMissing } from "../../utils/projectPricing";
 import { ProjectPricingModal } from "./ProjectPricingModal";
 import type { ProjectPricing } from "../../types/project-pricing";
 import { usePricingYear } from "../../hooks/usePricingYear";
+import { payrollHeadcountSchema } from "../../types/client-project";
+import { ProjectPayrollFields } from "./ProjectPayrollFields";
 
 const normalizeEstimatedHours = (value: string) => {
   if (value === "") return 0;
@@ -66,6 +69,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   const [newProjectName, setNewProjectName] = useState("");
   const [newProjectClientId, setNewProjectClientId] = useState("");
   const [newProjectEstimatedHours, setNewProjectEstimatedHours] = useState(0);
+  const [newProjectPayrollHeadcount, setNewProjectPayrollHeadcount] = useState<number | null>(null);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deletingProjectId, setDeletingProjectId] = useState<string | null>(
     null,
@@ -112,7 +116,8 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
 
   const handleCreate = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!newProjectName.trim() || !newProjectClientId) return;
+    if (!newProjectName.trim() || !newProjectClientId ||
+      !payrollHeadcountSchema.safeParse(newProjectPayrollHeadcount).success) return;
 
     try {
       setLoading(true);
@@ -121,10 +126,12 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
         newProjectClientId,
         newProjectName.trim(),
         newProjectEstimatedHours,
+        newProjectPayrollHeadcount,
       );
       setNewProjectName("");
       setNewProjectClientId("");
       setNewProjectEstimatedHours(0);
+      setNewProjectPayrollHeadcount(null);
       onRefresh();
     } catch (error) {
       alert(
@@ -138,7 +145,8 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   };
 
   const handleUpdate = async () => {
-    if (!editingProject || !editingProject.name.trim()) return;
+    if (!editingProject || !editingProject.name.trim() ||
+      !payrollHeadcountSchema.safeParse(editingProject.payroll_headcount ?? null).success) return;
 
     try {
       setLoading(true);
@@ -146,6 +154,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
         editingProject.id,
         editingProject.name.trim(),
         editingProject.estimated_hours_per_month ?? 0,
+        editingProject.payroll_headcount ?? null,
       );
       setEditingProject(null);
       onRefresh();
@@ -295,7 +304,8 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
               <Button
                 type="submit"
                 disabled={
-                  !newProjectClientId || !newProjectName.trim() || loading
+                  !newProjectClientId || !newProjectName.trim() || loading ||
+                  !payrollHeadcountSchema.safeParse(newProjectPayrollHeadcount).success
                 }
                 className="gap-1 rounded-xl px-4"
                 icon={<Plus className="h-4 w-4" />}
@@ -303,6 +313,8 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                 {t("common.add")}
               </Button>
             </div>
+            <ProjectPayrollFields id="new-project-payroll" headcount={newProjectPayrollHeadcount}
+              onChange={setNewProjectPayrollHeadcount} />
             <p className="text-xs text-muted-strong">
               {selectedClientForNewProject
                 ? t("companySettings.creatingUnder", {
@@ -466,6 +478,12 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                             {t("projectPricing.missingBadge", { year: pricingYear })}
                           </span>
                         )}
+                        {project.payroll_headcount != null && (
+                          <span className="inline-flex items-center gap-1 rounded-full border border-primary-strong/20 bg-primary/20 px-2 py-0.5 text-xs font-semibold text-primary-strong">
+                            <Users className="h-3 w-3" aria-hidden="true" />
+                            {t("companySettings.payrollBadge", { count: project.payroll_headcount })}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -607,6 +625,8 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                 })
               }
             />
+            <ProjectPayrollFields id="edit-project-payroll" headcount={editingProject.payroll_headcount ?? null}
+              onChange={payroll_headcount => setEditingProject({ ...editingProject, payroll_headcount })} />
             <div className="flex justify-end gap-2">
               <Button
                 variant="secondary"
@@ -618,7 +638,8 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
               </Button>
               <Button
                 onClick={handleUpdate}
-                disabled={loading}
+                disabled={loading || !editingProject.name.trim() ||
+                  !payrollHeadcountSchema.safeParse(editingProject.payroll_headcount ?? null).success}
                 className="rounded-xl"
                 icon={<Check className="h-4 w-4" />}
               >

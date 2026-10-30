@@ -144,8 +144,19 @@ export const InvoiceReviewModal: React.FC<InvoiceReviewModalProps> = ({
                 <th key={key} className="px-3 py-2 font-medium">{t(`clientBilling.${key}`)}</th>)}
             </tr></thead>
             <tbody className="divide-y divide-border">{items.map(item => <tr key={`${item.project_id}-${item.pricing_year}`}>
-              <td className="px-3 py-2 font-medium">{item.project_name}</td>
-              <td className="whitespace-nowrap px-3 py-2">{item.quantity} {item.unit}</td>
+              <td className="px-3 py-2 font-medium">
+                {item.project_name}
+                {item.payroll_headcount != null && <span className="mt-1 block text-xs text-primary-strong">
+                  {t("companySettings.payrollBadge", { count: item.payroll_headcount })}
+                </span>}
+              </td>
+              <td className="whitespace-nowrap px-3 py-2">
+                {item.quantity} {item.unit}
+                {item.payroll_headcount != null && item.logged_hours != null &&
+                  <span className="mt-1 block text-xs text-muted-strong">
+                    {t("companySettings.payrollCalculation", { hours: item.logged_hours, count: item.payroll_headcount })}
+                  </span>}
+              </td>
               <td className="whitespace-nowrap px-3 py-2">{new Intl.NumberFormat(undefined, { maximumFractionDigits: 4 }).format(item.net_unit_price)} {item.currency}</td>
               <td className="whitespace-nowrap px-3 py-2">{formatMoney(item.net_total, item.currency)}</td>
             </tr>)}</tbody>

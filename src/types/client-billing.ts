@@ -166,6 +166,8 @@ export interface InvoiceHistoryItem {
 export interface InvoiceReviewProjectLine {
   project_id: string;
   project_name: string;
+  payroll_headcount?: number | null;
+  logged_hours?: number | null;
   pricing_year: number;
   pricing_updated_at: string;
   quantity: number;
