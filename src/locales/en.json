@@ -1,4 +1,26 @@
 {
+  "pwa": {
+    "installTitle": "Keep ChronoSync one tap away",
+    "installDescription": "Add the app to your home screen for quick access to your time and team.",
+    "install": "Install app",
+    "installing": "Installing…",
+    "showInstructions": "How to install",
+    "notNow": "Not now",
+    "dismiss": "Dismiss installation recommendation",
+    "gotIt": "Got it",
+    "guideDescription": "Install ChronoSync from your browser. It opens in its own window, right from your home screen.",
+    "iosStep1": "1. Open your browser’s Share menu. It may be inside the More (•••) menu.",
+    "iosStep2": "2. Choose Add to Home Screen, keep Open as Web App enabled if shown, then tap Add.",
+    "iosHint": "Can’t find Add to Home Screen? Open this page in Safari and use the Share menu.",
+    "androidStep1": "1. Open your browser’s menu (⋮).",
+    "androidStep2": "2. Choose Install app or Add to Home screen, then confirm.",
+    "androidHint": "If the install option is missing, open this page in Chrome. An internet connection is required to use ChronoSync.",
+    "updateTitle": "A new version is ready",
+    "updateDescription": "Save your work, then reload to get the latest ChronoSync improvements.",
+    "reload": "Reload app",
+    "updating": "Updating…",
+    "updateError": "The update could not finish. Please try again."
+  },
   "projectPricing": {
     "edit": "Edit pricing",
     "editTitle": "Edit {{year}} project pricing",

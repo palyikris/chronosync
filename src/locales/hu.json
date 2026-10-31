@@ -1,4 +1,26 @@
 {
+  "pwa": {
+    "installTitle": "A ChronoSync egy érintésre",
+    "installDescription": "Add az alkalmazást a kezdőképernyődhöz, hogy gyorsan elérd a munkaidődet és a csapatodat.",
+    "install": "Telepítés",
+    "installing": "Telepítés…",
+    "showInstructions": "Telepítési útmutató",
+    "notNow": "Most nem",
+    "dismiss": "Telepítési ajánlás bezárása",
+    "gotIt": "Értem",
+    "guideDescription": "Telepítsd a ChronoSyncet a böngésződből. A kezdőképernyőről, saját ablakban nyílik meg.",
+    "iosStep1": "1. Nyisd meg a böngésző Megosztás menüjét. Lehet, hogy a Továbbiak (•••) menüben találod.",
+    "iosStep2": "2. Válaszd a Főképernyőhöz adás lehetőséget, hagyd bekapcsolva a megnyitást webalkalmazásként, ha megjelenik, majd koppints a Hozzáadás gombra.",
+    "iosHint": "Nem találod a Főképernyőhöz adás lehetőséget? Nyisd meg ezt az oldalt a Safariban, és használd a Megosztás menüt.",
+    "androidStep1": "1. Nyisd meg a böngésző menüjét (⋮).",
+    "androidStep2": "2. Válaszd az Alkalmazás telepítése vagy a Hozzáadás a kezdőképernyőhöz lehetőséget, majd erősítsd meg.",
+    "androidHint": "Ha nincs telepítési lehetőség, nyisd meg ezt az oldalt a Chrome-ban. A ChronoSync használatához internetkapcsolat szükséges.",
+    "updateTitle": "Új verzió érhető el",
+    "updateDescription": "Mentsd a munkádat, majd töltsd újra az alkalmazást a ChronoSync legújabb fejlesztéseihez.",
+    "reload": "Alkalmazás újratöltése",
+    "updating": "Frissítés…",
+    "updateError": "A frissítés nem fejeződött be. Próbáld újra."
+  },
   "projectPricing": {
     "edit": "Díjazás szerkesztése",
     "editTitle": "{{year}}. évi projektdíj szerkesztése",

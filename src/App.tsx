@@ -1,3 +1,4 @@
+import { PwaSupport } from "./components/shared/PwaSupport";
 import React, { lazy, Suspense } from "react";
 import { PageLoading } from "./components/shared/PageLoading";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
@@ -63,6 +64,7 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <PwaSupport />
         <Suspense fallback={<PageLoading />}>
           <Routes>
             {import.meta.env.DEV ? (

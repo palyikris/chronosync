@@ -43,6 +43,16 @@ Use the npm scripts defined in `package.json`:
 - `npm run preview` — locally preview the built production bundle
 - `npm run lint` — run ESLint
 
+## Installable app (PWA)
+
+The production build includes a web app manifest, home-screen icons, and a service worker. Serve it over HTTPS (localhost also works). Installed copies open `/app`, which uses the existing sign-in and role-based routing.
+
+On mobile, a dismissible recommendation offers the native install dialog where supported, or browser-specific home-screen instructions. Dismissal hides the recommendation for seven days. It is hidden in standalone mode and during authentication action flows. English and Hungarian are supported.
+
+The app requires an internet connection. The worker does not cache HTML, API responses, or authentication traffic. It checks for releases at startup, every 30 minutes while visible and online, on returning to the app, and on reconnect. A persistent reload action lets users save their work before updating; other tabs are never forcibly reloaded. Vercel headers revalidate HTML, the manifest, and the worker while keeping Vite's hashed assets immutable.
+
+To check a production build locally, run `npm run build` and `npm run preview`. PWA registration is disabled in the development server. Run `node tests/pwa-updates.test.mjs` for lifecycle checks and `node tests/pwa-ui/smoke.mjs` with Playwright available for installation and update browser checks.
+
 ## Tech stack
 
 - React 19 + TypeScript

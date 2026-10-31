@@ -6,6 +6,19 @@ import App from "./App";
 import "./index.css";
 import "./lib/i18n";
 
+// A stale open tab can request a removed lazy chunk after a deployment.
+// Recover once per build, without looping when the connection is unavailable.
+window.addEventListener('vite:preloadError', (event) => {
+  if (!import.meta.env.PROD || !navigator.onLine) return;
+  const recoveryKey = `chronosync:chunk-recovery:${__APP_BUILD_ID__}`;
+  try {
+    if (sessionStorage.getItem(recoveryKey)) return;
+    sessionStorage.setItem(recoveryKey, '1');
+  } catch { return; }
+  event.preventDefault();
+  window.location.reload();
+});
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
