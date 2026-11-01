@@ -55,11 +55,11 @@
 .chrono-workbench-grid { display: grid; grid-template-columns: 1.25fr 1fr; align-items: center; gap: 9%; max-width: 1200px; margin: 45px auto 0; }
 .chrono-document-workspace { min-width: 0; }
 .chrono-document-stage { position: relative; height: 430px; margin: 0 -35px; }
-.chrono-document-stage::before { position: absolute; content: ""; width: 70%; aspect-ratio: 1; border-radius: 50%; background: #e7edda; left: 15%; top: 4%; opacity: .6; }
-.chrono-document-stage::after { position: absolute; content: "+"; top: 25%; left: 7%; color: #b0bea0; font-size: 21px; font-family: monospace; }
+.chrono-document-stage::before { position: absolute; content: ""; width: 70%; aspect-ratio: 1; border-radius: 50%; background: #e7edda; left: 15%; top: 4%; opacity: .6; pointer-events: none; }
+.chrono-document-stage::after { position: absolute; content: "+"; top: 25%; left: 7%; color: #b0bea0; font-size: 21px; font-family: monospace; pointer-events: none; }
 .chrono-document-figure { position: absolute; z-index: 2; left: 35px; top: 6px; font-size: 7px; letter-spacing: .06em; color: #82946c; }
 .chrono-document-seal { position: absolute; z-index: 10; right: 8%; bottom: 16%; display: flex; align-items: center; gap: 5px; padding: 9px 12px; background: #e7f0d5db; border: 1px solid #9fb880; color: #668346; border-radius: 4px; font: 10px Consolas, monospace; transform: rotate(-7deg); backdrop-filter: blur(8px); }
-.chrono-document-tabs { display: flex; justify-content: center; gap: 6px; padding: 4px; margin: 3px auto 0; border: 1px solid #aabd9252; border-radius: 9px; background: #ecefe2; width: fit-content; max-width: 100%; }
+.chrono-document-tabs { position: relative; z-index: 1; display: flex; justify-content: center; gap: 6px; padding: 4px; margin: 3px auto 0; border: 1px solid #aabd9252; border-radius: 9px; background: #ecefe2; width: fit-content; max-width: 100%; }
 .chrono-document-tabs button { min-width: 0; overflow-wrap: anywhere; border: 0; display: flex; align-items: center; justify-content: center; gap: 6px; background: transparent; color: #6d805c; font-size: 10px; line-height: 1.5; padding: 10px 12px; border-radius: 6px; transition: background .3s, box-shadow .3s; }
 .chrono-document-tabs button[aria-pressed="true"] { background: #fffef7; color: #3f5b2e; box-shadow: 0 2px 6px #3a542c0d; }
 .chrono-document-description { text-align: center; min-height: 112px; padding: 23px 12px 0; }
