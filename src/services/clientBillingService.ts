@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { supabase } from "../lib/supabaseClient";
 import i18n from "../lib/i18n";
+import { apiBaseUrl, serviceFetch as fetch } from "../lib/serviceEnvironment";
 import {
   INVOICE_LANGUAGES,
   TAX_SUBJECTS,
@@ -151,7 +152,6 @@ interface DownloadClientInvoicePreviewParams {
 }
 
 const getInvoicePreviewApiUrl = () => {
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
   if (!apiBaseUrl) {
     throw new Error(i18n.t("clientBilling.previewApiNotConfigured"));
   }
@@ -159,7 +159,6 @@ const getInvoicePreviewApiUrl = () => {
 };
 
 const getInvoiceApiBaseUrl = () => {
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
   if (!apiBaseUrl) {
     throw new Error(i18n.t("clientBilling.previewApiNotConfigured"));
   }

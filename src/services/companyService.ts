@@ -1,5 +1,6 @@
 // src/services/companyService.ts
 import { supabase } from "../lib/supabaseClient";
+import { apiBaseUrl, serviceFetch as fetch } from "../lib/serviceEnvironment";
 import {
   type Company,
   type CreateCompanyInput,
@@ -13,7 +14,6 @@ import type {
 const COMPANY_COLUMNS = "id, name, billing_email, szamlazz_test_mode, is_active, is_deleted, deleted_at, leave_client_id, leave_project_id, created_at";
 
 const getInvoiceApiUrl = () => {
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
   if (!apiBaseUrl) throw new Error("Invoice settings API is not configured.");
   return `${apiBaseUrl.replace(/\/$/, "")}/company/invoice-settings`;
 };

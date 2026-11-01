@@ -1,0 +1,166 @@
+/* The second pass keeps the sage / ivory system and gives the product room to speak. */
+.chrono-nav[data-scrolled="true"] { position: fixed; height: 68px; background: #f8f7f0ed; border-color: #52653c24; box-shadow: 0 4px 20px #30402306; }
+.chrono-site section { scroll-margin-top: 84px; }
+.chrono-hero-intro { font-size: 15px; line-height: 1.8; max-width: 355px; }
+.chrono-hero-copy > .chrono-eyebrow { font-size: 8px; max-width: 440px; }
+.chrono-hero-actions .chrono-button { gap: 28px; }
+.chrono-skip-animation { display: inline-flex; gap: 8px; align-items: center; margin-top: 22px; font-size: 10px; color: #52663c !important; }
+.chrono-skip-animation:hover { text-decoration: underline; text-underline-offset: 4px; }
+.chrono-timer-tag { width: 236px; }
+.chrono-timer-tag > div > span { max-width: 148px; font-size: 8px; line-height: 1.4; }
+.chrono-scene-mount { position: absolute; inset: 0; }
+.chrono-notebook { width: 96%; }
+.chrono-notebook-page { backface-visibility: hidden; transform-style: preserve-3d; padding-left: 32px; padding-right: 30px; }
+.chrono-notebook-page--right { padding-left: 36px; }
+.chrono-notebook-date { font-size: 8px; letter-spacing: .03em; }
+.chrono-notebook h3 { font-size: 26px; max-width: 280px; }
+.chrono-feature { gap: 12px; margin-bottom: 21px; }
+.chrono-feature-tag { font-size: 8px; color: #6a7757; }
+.chrono-feature h4 { font-size: 17px; margin-top: 5px; margin-bottom: 8px; }
+.chrono-feature p { font-size: 13px; line-height: 1.65; color: #59694b; max-width: 335px; }
+.chrono-notebook-header > p:last-child, .chrono-laptop-header > p:last-child { color: #5f6c51; font-size: 13px; }
+.chrono-story-sticky { padding-top: 84px; }
+.chrono-story-header h2 { font-size: clamp(37px, 3.5vw, 54px); }
+.chrono-laptop-header { top: 84px; }
+.chrono-object-stage { margin-top: 25px; height: clamp(410px, 49svh, 520px); }
+.chrono-notebook-page--right .chrono-feature:last-of-type { margin-bottom: 0; }
+.chrono-sticky-note { width: 160px; height: 100px; font-size: 20px; bottom: 22px; }
+.chrono-demo-controls { gap: 10px; }
+.chrono-demo-controls > p { font-size: 13px; color: #5e704a; }
+.chrono-demo-controls > .chrono-mono { font-size: 8px; color: #7d8a6a; }
+.chrono-demo-controls > .chrono-text-link { margin-top: 3px; font-size: 12px; }
+.chrono-chapters { --read-progress: 0; position: fixed; z-index: 35; right: 10px; top: 50%; transform: translate(12px, -50%); display: flex; flex-direction: column; align-items: center; padding: 10px 5px; width: 86px; border-radius: 32px; border: 1px solid #8c9e6f33; background: #fbfcf3d9; backdrop-filter: blur(16px); box-shadow: 0 4px 20px #44552b0a; opacity: 0; pointer-events: none; transition: opacity .35s, transform .35s; }
+.chrono-chapters.is-visible { opacity: 1; transform: translate(0, -50%); pointer-events: auto; }
+.chrono-chapter-clock { width: 39px; height: 39px; position: relative; margin-bottom: 7px; color: #7a8f60; }
+.chrono-chapter-clock > svg { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: #91a27445; stroke-width: 1.2; }
+.chrono-chapter-clock > svg path { stroke: #6e8550; stroke-width: 1.4; stroke-linecap: round; }
+.chrono-chapter-clock .chrono-chapter-progress { transform: rotate(-90deg); transform-origin: 22px 22px; stroke: #64823f; stroke-width: 2; stroke-dasharray: 113.1; stroke-dashoffset: calc(113.1 * (1 - var(--read-progress))); }
+.chrono-chapter-clock > span { display: none; }
+.chrono-chapters a { position: relative; display: flex; align-items: center; gap: 7px; min-height: 43px; padding: 7px 4px; font-size: 9px; color: #879279; letter-spacing: -.01em; width: 100%; }
+.chrono-chapters a i { width: 4px; height: 4px; border: 1px solid #96a281; border-radius: 50%; flex-shrink: 0; }
+.chrono-chapters a[aria-current] { color: #344b25; font-weight: 600; }
+.chrono-chapters a[aria-current] i { background: #658346; border-color: #658346; box-shadow: 0 0 0 3px #92ae6a1c; }
+.chrono-chapters a:hover { color: #344b25; }
+
+.chrono-guided-demo { padding: 95px max(35px, 7vw) 100px; perspective: 1600px; background: #f5f3e9; }
+.chrono-guided-demo .chrono-section-heading > p:last-child { max-width: 570px; font-size: 14px; line-height: 1.8; }
+.chrono-demo-window { position: relative; max-width: 1180px; margin: 45px auto 0; border: 1px solid #a8b79280; border-radius: 16px; overflow: hidden; background: #f8faf2; box-shadow: 0 25px 65px #34442c10, 0 2px 5px #34442c0a; }
+.chrono-demo-chrome { min-height: 48px; background: #e8edde; border-bottom: 1px solid #bcc9ab60; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.chrono-window-dots { display: flex; gap: 5px; }.chrono-window-dots i { width: 7px; height: 7px; border-radius: 50%; background: #bdc9ad; }.chrono-window-dots i:nth-child(2) { background: #cbd5bb; }.chrono-window-dots i:last-child { background: #9cb381; }
+.chrono-demo-chrome > span:nth-child(2) { display: flex; gap: 8px; align-items: center; color: #758361; font: 9px Consolas, monospace; letter-spacing: .025em; }
+.chrono-demo-chrome button { padding: 5px; border: 0; background: transparent; font-size: 10px; color: #6c7c5a; display: flex; align-items: center; gap: 6px; }
+.chrono-demo-guide { display: flex; align-items: center; gap: 14px; padding: 17px 21px; border-top: 1px solid #bbcba34a; background: #eaf0df; }.chrono-guide-count { display: grid; place-items: center; flex-shrink: 0; min-width: 34px; height: 26px; background: #dce8c7; border-radius: 6px; color: #627d42; font: 9px Consolas, monospace; }.chrono-demo-guide p { font-size: 11px; line-height: 1.7; color: #6e8254; }
+
+.chrono-proof { padding: 90px max(35px, 8vw) 100px; background: #f8f7f0; }.chrono-proof .chrono-section-heading > p:last-child { max-width: 510px; font-size: 14px; }
+.chrono-proof-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 8%; margin: 55px auto 0; max-width: 1090px; align-items: center; }.chrono-proof-document { min-width: 0; }.chrono-proof-paper { position: relative; padding: 27px 31px 30px; border: 1px solid #bac5aa66; background: #fffef7; transform: rotate(-2deg); box-shadow: 0 16px 40px #40502b0c, 3px 4px 0 #e9ecdfff; border-radius: 3px; }
+.chrono-proof-paper-brand { display: flex; align-items: center; gap: 6px; color: #658047; font-size: 15px; font-weight: 500; }.chrono-proof-paper-brand .chrono-mono { margin-left: auto; font-size: 6px; font-weight: 400; color: #8d9b7a; }.chrono-proof-paper h3 { font-family: Georgia, serif; font-style: italic; font-size: 25px; font-weight: 400; margin: 25px 0 20px; }.chrono-proof-client { display: flex; flex-direction: column; gap: 6px; margin-bottom: 24px; }.chrono-proof-client strong { font-size: 13px; font-weight: 500; }.chrono-proof-client > span { font-size: 10px; color: #8a9778; }.chrono-proof-rows > div { display: grid; grid-template-columns: 52px 1fr 28px 13px; gap: 10px; font-size: 10px; padding: 12px 0; border-top: 1px solid #b7c69f3f; align-items: center; }.chrono-proof-rows > div > span:first-child { font: 8px Consolas, monospace; color: #94a17e; }.chrono-proof-rows strong { color: #708e4e; font-weight: 500; }.chrono-proof-rows svg { color: #9bb77a; }.chrono-proof-total { display: flex; align-items: center; justify-content: space-between; margin: 20px 0 12px !important; padding-top: 20px; border-top: 1px solid #b6c69a66; font-size: 11px; }.chrono-proof-total strong { font-size: 29px; font-weight: 500; letter-spacing: -.05em; }.chrono-proof-paper > small { display: block; font-size: 8px; color: #91a078; padding-right: 80px; line-height: 1.7; }.chrono-proof-stamp { display: flex; align-items: center; gap: 5px; font-size: 9px; color: #789a52; position: absolute; bottom: 17px; right: 18px; border: 1px solid #9cbf7173; border-radius: 4px; padding: 6px 8px; transform: rotate(-5deg); }
+.chrono-proof-downloads { display: flex; flex-wrap: wrap; gap: 17px; margin-top: 30px; }.chrono-proof-downloads a { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; color: #6e8554; padding-bottom: 6px; border-bottom: 1px solid #acc38c66; }.chrono-proof-downloads a:hover { color: #364e22; }.chrono-proof-disclaimer { font-size: 9px; line-height: 1.8; color: #95a080; margin-top: 16px !important; }
+.chrono-proof-roles > h3 { font-family: Georgia, serif; font-style: italic; font-size: 32px; font-weight: 400; letter-spacing: -.04em; max-width: 330px; margin-bottom: 30px; }.chrono-proof-roles article { display: flex; align-items: flex-start; gap: 15px; padding: 22px 0; border-bottom: 1px solid #a6b58c47; }.chrono-proof-roles article > span { width: 39px; height: 39px; background: #eaf0de; border: 1px solid #bdcea552; border-radius: 10px; color: #809c5b; display: grid; place-items: center; flex-shrink: 0; }.chrono-proof-roles h4 { font-size: 15px; font-weight: 500; margin: 2px 0 8px; }.chrono-proof-roles article p { font-size: 12px; line-height: 1.8; color: #79896a; }.chrono-proof-roles > .chrono-text-link { margin-top: 25px; font-size: 12px; }
+.chrono-section-heading > p:last-child { font-size: 14px; max-width: 410px; }.chrono-plan-notice { color: #6f7f59; font-size: 11px; }.chrono-plan-description { font-size: 12px; line-height: 1.7; }.chrono-plan li { font-size: 12px; line-height: 1.6; }.chrono-plan-recommended { font-size: 6px; }.chrono-faq summary { font-size: 14px; }.chrono-faq details p { font-size: 13px; line-height: 1.85; }
+
+.chrono-access { position: relative; padding: 85px max(35px, 8vw); background: #d4e5b6; border-top: 1px solid #99b2764d; display: grid; grid-template-columns: 1fr 1.05fr; gap: 8%; overflow: hidden; }
+.chrono-access-intro { position: relative; }.chrono-access-intro > .chrono-eyebrow { font-size: 8px; color: #788c5a; }.chrono-access h2 { font-size: clamp(43px, 5vw, 72px); line-height: 1.05; letter-spacing: -.06em; margin: 25px 0 23px; }.chrono-access-intro > p:not(.chrono-eyebrow):not(.chrono-access-login) { max-width: 350px; font-size: 13px; color: #72865a; line-height: 1.9; }.chrono-access-orbit { width: 160px; height: 160px; display: block; margin-top: 35px; transform: rotate(-12deg); }.chrono-access-orbit svg { fill: none; stroke: #88a65e; stroke-width: 1; width: 100%; height: 100%; }.chrono-access-orbit svg > path { stroke-width: 2; stroke-linecap: round; }.chrono-access-login { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 27px !important; font-size: 11px; color: #798d5e; }.chrono-access-login a { display: inline-flex; align-items: center; gap: 5px; color: #3f5a28; }
+.chrono-access-form { padding: 30px; border: 1px solid #c4d6a5; border-radius: 13px; background: #f8faefd9; box-shadow: 0 10px 40px #67813c0b; align-self: start; }.chrono-access-form label { display: flex; flex-wrap: wrap; font-size: 10px; color: #6e8056; margin-bottom: 17px; gap: 8px; }.chrono-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }.chrono-access-form label > span { margin-left: auto; font-size: 9px; color: #95a37f; }.chrono-access-form input:not([type="checkbox"]), .chrono-access-form select, .chrono-access-form textarea { width: 100%; background: #fffff8; border: 1px solid #b5c89a7a; border-radius: 6px; min-height: 42px; color: #415b2c; padding: 10px 12px; font-size: 12px; box-shadow: 0 1px 3px #576b3705; }.chrono-access-form input:hover, .chrono-access-form select:hover, .chrono-access-form textarea:hover { border-color: #90a66f; }.chrono-access-form textarea { resize: vertical; min-height: 75px; }.chrono-access-form .chrono-form-consent { display: flex; flex-wrap: nowrap; align-items: flex-start; gap: 8px; line-height: 1.7; font-size: 10px; margin: 5px 0 19px; }.chrono-form-consent input { width: 14px; height: 14px; flex-shrink: 0; accent-color: #6b8948; margin-top: 1px; }.chrono-access-form > .chrono-button { width: 100%; justify-content: center; padding: 14px 17px; font-size: 12px; gap: 8px; }.chrono-form-note { font-size: 9px; line-height: 1.8; color: #889b6d; margin-top: 13px !important; }.chrono-selected-plan { display: inline-flex; align-items: center; gap: 7px; font-size: 10px; padding: 7px 10px; background: #e4edce; border-radius: 5px; color: #6f894a; margin-bottom: 20px; }
+.chrono-request-result { margin-top: 20px; padding: 17px; background: #edf3e0; border: 1px solid #b3cb9061; border-radius: 7px; }.chrono-request-result > strong { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 500; color: #5e7b3b; }.chrono-request-result > p { font-size: 11px; line-height: 1.8; margin-top: 9px; color: #788d5b; }.chrono-request-result > a { font-size: 12px; color: #49672e; }.chrono-request-result dl { margin: 15px 0 0; border-top: 1px solid #bacf9b66; padding-top: 10px; }.chrono-request-result dl > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 7px; font-size: 10px; padding: 5px 0; }.chrono-request-result dt { color: #8b9c74; }.chrono-request-result dd { margin: 0; color: #5c7541; overflow-wrap: anywhere; }
+.chrono-static .chrono-demo-window { transform: none; }.chrono-static .chrono-notebook-page { transform: none; }
+@media (min-width: 900px) and (max-height: 800px) {
+  .chrono-story-sticky { padding-top: 81px; }.chrono-story-header h2 { font-size: 37px; }.chrono-story-header > .chrono-eyebrow { margin-bottom: 10px; }.chrono-notebook-header > p:last-child, .chrono-laptop-header > p:last-child { margin-top: 10px; font-size: 11px; }.chrono-laptop-header { top: 81px; }.chrono-object-stage { height: 365px; margin-top: 20px; }.chrono-notebook-page { padding: 22px 28px; }.chrono-notebook-page--right { padding-top: 32px; padding-left: 32px; }.chrono-feature { margin-bottom: 15px; }.chrono-feature h4 { font-size: 15px; margin-bottom: 6px; }.chrono-feature p { font-size: 12px; line-height: 1.55; }.chrono-notebook h3 { font-size: 23px; }.chrono-crossed { margin: 12px 0 15px; }.chrono-sticky-note { width: 143px; height: 85px; font-size: 17px; padding-top: 16px; bottom: 15px; }.chrono-analog-label { margin-top: 37px; }.chrono-demo-controls { bottom: 17px; gap: 8px; }.chrono-demo-controls > p { font-size: 11px; }
+}
+@media (max-width: 1150px) { .chrono-chapters { width: 35px; right: 8px; padding: 7px 2px; }.chrono-chapter-clock { width: 28px; height: 28px; }.chrono-chapters a { justify-content: center; min-height: 35px; }.chrono-chapters a > span { position: absolute; right: 37px; background: #fbfcf2ee; border: 1px solid #bbcba54a; padding: 6px 9px; border-radius: 4px; opacity: 0; pointer-events: none; white-space: nowrap; }.chrono-chapters a:hover > span, .chrono-chapters a:focus-visible > span { opacity: 1; }.chrono-proof-grid { gap: 6%; }.chrono-proof-paper { padding-left: 23px; padding-right: 23px; }.chrono-access { gap: 6%; padding-left: 6%; padding-right: 6%; } }
+@media (max-width: 899px) {
+  .chrono-nav[data-scrolled="true"] { height: 65px; }.chrono-nav-links { gap: 17px; }.chrono-nav-links > a { font-size: 10px; }.chrono-nav-actions .chrono-button { font-size: 10px; padding: 10px 12px; }.chrono-hero-intro { font-size: 13px; }.chrono-timer-tag { width: 200px; }.chrono-timer-tag > div > span { font-size: 7px; max-width: 123px; }.chrono-story-sticky { padding-top: 75px; }.chrono-notebook { width: min(100%, 780px); height: 500px; }.chrono-notebook-page { padding: 27px 25px; transform: none !important; }.chrono-notebook-page--right { padding-left: 29px; padding-top: 40px; }.chrono-notebook-date { font-size: 7px; }.chrono-feature { gap: 10px; margin-bottom: 23px; }.chrono-feature h4 { font-size: 16px; }.chrono-feature p { font-size: 12px; line-height: 1.75; }.chrono-feature-tag { font-size: 7px; }.chrono-notebook h3 { font-size: 24px; }.chrono-laptop-header { top: auto; }.chrono-laptop-stage { height: 430px; }.chrono-demo-controls { bottom: auto; }
+  .chrono-guided-demo { padding: 70px 30px 75px; }.chrono-guided-demo .chrono-section-heading > p:last-child { font-size: 13px; max-width: 520px; }
+  .chrono-proof { padding: 70px 35px; }.chrono-proof-grid { gap: 35px; grid-template-columns: 1fr 1fr; }.chrono-proof-paper-brand { font-size: 12px; }.chrono-proof-paper-brand .chrono-mono { font-size: 5px; }.chrono-proof-paper h3 { font-size: 23px; }.chrono-proof-rows > div { font-size: 8px; grid-template-columns: 40px 1fr 24px 12px; gap: 6px; }.chrono-proof-paper > small { font-size: 7px; }.chrono-proof-stamp { bottom: 15px; right: 13px; font-size: 7px; padding: 4px; }.chrono-proof-roles > h3 { font-size: 28px; }.chrono-proof-roles article { gap: 12px; }.chrono-proof-roles h4 { font-size: 14px; }.chrono-proof-roles article p { font-size: 11px; }.chrono-proof-downloads { flex-direction: column; gap: 15px; align-items: flex-start; }.chrono-access { grid-template-columns: 1fr 1.15fr; gap: 6%; padding: 65px 30px; }.chrono-access-form { padding: 23px; }.chrono-form-row { gap: 11px; }.chrono-access h2 { font-size: 43px; }.chrono-access-intro > p:not(.chrono-eyebrow):not(.chrono-access-login) { font-size: 12px; }
+}
+@media (max-width: 650px) {
+  .chrono-site section { scroll-margin-top: 79px; }.chrono-nav-links { top: 65px; }.chrono-nav-links > a { font-size: 14px; }.chrono-hero-copy > .chrono-eyebrow { font-size: 5.6px; max-width: 330px; }.chrono-hero-intro { font-size: 12px; max-width: 300px; }.chrono-hero-actions { gap: 17px; }.chrono-hero-actions .chrono-button { font-size: 11px; padding: 13px 16px; gap: 15px; }.chrono-hero-actions .chrono-text-link { font-size: 10px; }.chrono-skip-animation { font-size: 9px; margin-top: 15px; }.chrono-timer-tag { width: 171px; }.chrono-timer-tag > div > span { max-width: 105px; font-size: 6px; }.chrono-clock-stage { height: 333px; bottom: 42px; }
+  .chrono-story-sticky { padding-top: 75px; }.chrono-notebook { height: auto; }.chrono-notebook-page { padding: 28px 25px 0 40px; }.chrono-notebook-page--right { padding-top: 0; padding-bottom: 148px; }.chrono-notebook h3 { font-size: 26px; }.chrono-feature { margin-bottom: 26px; gap: 12px; }.chrono-feature h4 { font-size: 17px; margin-bottom: 9px; }.chrono-feature p { font-size: 13px; line-height: 1.8; }.chrono-feature-tag { font-size: 8px; }.chrono-sticky-note { height: 108px; width: 171px; bottom: 20px; font-size: 21px; }.chrono-laptop-stage { height: 300px; }.chrono-demo-controls { gap: 11px; }.chrono-demo-controls > p { font-size: 11px; }.chrono-demo-controls > .chrono-text-link { font-size: 11px; }
+  .chrono-chapters { width: calc(100% - 28px); max-width: 390px; left: 50%; top: auto; bottom: max(12px, env(safe-area-inset-bottom)); right: auto; flex-direction: row; border-radius: 50px; transform: translate(-50%, 12px); padding: 5px 12px; gap: 5px; box-shadow: 0 5px 22px #45552d18; }.chrono-chapters.is-visible { transform: translate(-50%, 0); }.chrono-chapter-clock { width: 31px; height: 31px; flex-shrink: 0; margin: 0 6px 0 0; }.chrono-chapters a { min-height: 39px; flex: 1; gap: 6px; padding: 5px 2px; font-size: 9px; }.chrono-chapters a > span { position: static; background: none; border: 0; padding: 0; opacity: 1; white-space: nowrap; }.chrono-chapters a i { width: 3px; height: 3px; }.chrono-motion-toggle { bottom: 76px; left: 11px; }.chrono-footer { padding-bottom: 94px; }
+  .chrono-guided-demo { padding: 60px 19px 65px; }.chrono-guided-demo .chrono-section-heading > p:last-child { font-size: 12px; line-height: 1.9; }.chrono-demo-window { margin-top: 30px; border-radius: 11px; }.chrono-demo-chrome { padding: 10px 12px; gap: 8px; min-height: 42px; }.chrono-window-dots { display: none; }.chrono-demo-chrome > span:nth-child(2) { font-size: 6px; gap: 6px; }.chrono-demo-chrome button { font-size: 8px; }.chrono-demo-chrome button svg { width: 11px; }.chrono-demo-guide { padding: 13px; gap: 10px; }.chrono-demo-guide p { font-size: 10px; line-height: 1.7; }.chrono-guide-count { min-width: 30px; font-size: 8px; }
+  .chrono-proof { padding: 60px 24px; }.chrono-proof .chrono-section-heading > p:last-child { font-size: 12px; }.chrono-proof-grid { grid-template-columns: 1fr; gap: 48px; margin-top: 38px; }.chrono-proof-paper { padding: 26px; max-width: 430px; margin: auto; }.chrono-proof-paper-brand { font-size: 15px; }.chrono-proof-paper-brand .chrono-mono { font-size: 5px; }.chrono-proof-paper h3 { font-size: 27px; }.chrono-proof-rows > div { font-size: 10px; grid-template-columns: 40px 1fr 27px 13px; }.chrono-proof-paper > small { font-size: 8px; }.chrono-proof-stamp { font-size: 8px; padding: 5px 7px; }.chrono-proof-downloads { flex-direction: row; gap: 20px; }.chrono-proof-downloads a { font-size: 10px; }.chrono-proof-roles > h3 { font-size: 31px; max-width: 300px; }.chrono-proof-roles h4 { font-size: 15px; }.chrono-proof-roles article p { font-size: 12px; }.chrono-proof-disclaimer { font-size: 9px; }
+  .chrono-section-heading > p:last-child { font-size: 12px; }.chrono-plan-notice { font-size: 9px; }.chrono-plan li { font-size: 12px; }.chrono-plan-description { font-size: 12px; }.chrono-plan-recommended { font-size: 7px; }.chrono-faq summary { font-size: 12px; }.chrono-faq details p { font-size: 12px; }
+  .chrono-access { grid-template-columns: 1fr; gap: 34px; padding: 60px 23px; }.chrono-access h2 { font-size: clamp(43px, 11vw, 60px); }.chrono-access-intro > .chrono-eyebrow { font-size: 7px; }.chrono-access-intro > p:not(.chrono-eyebrow):not(.chrono-access-login) { font-size: 13px; max-width: 320px; }.chrono-access-orbit { display: none; }.chrono-access-login { margin-top: 20px !important; }.chrono-access-form { padding: 23px 20px; }.chrono-form-row { grid-template-columns: 1fr; gap: 0; }.chrono-access-form label { font-size: 11px; margin-bottom: 17px; }.chrono-access-form input:not([type="checkbox"]), .chrono-access-form select, .chrono-access-form textarea { font-size: 16px; min-height: 45px; padding: 10px 11px; }.chrono-access-form .chrono-form-consent { font-size: 10px; line-height: 1.8; }.chrono-access-form > .chrono-button { padding: 15px 12px; font-size: 12px; }.chrono-form-note { font-size: 10px; }.chrono-request-result > p { font-size: 11px; }.chrono-request-result dl > div { font-size: 11px; }
+}
+
+/* The product inside the frame is rendered by the real application components. */
+.chrono-guided-demo { padding-inline: max(22px, 3.5vw); }
+.chrono-real-demo { max-width: 1360px; }
+.chrono-demo-window-actions { display: flex; align-items: center; gap: 20px; }
+.chrono-demo-window-actions a { display: flex; align-items: center; gap: 5px; color: #4a6039; font-size: 11px; text-decoration: none; }
+.chrono-real-demo-nav { display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: #f7f9f1; border-bottom: 1px solid #aabb934d; }
+.chrono-real-demo-nav button { display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 7px 12px; border: 1px solid transparent; border-radius: 7px; background: transparent; color: #526344; font-size: 12px; }
+.chrono-real-demo-nav button[aria-current] { background: #e7efd9; border-color: #b8ca9d; color: #3f592c; }
+.chrono-real-demo-nav button:disabled { opacity: .55; }
+.chrono-real-demo-nav button > span { display: grid; place-items: center; width: 23px; height: 23px; border-radius: 50%; background: #dce8cb; font: 9px Consolas, monospace; }
+.chrono-real-demo .chrono-demo-guide { min-height: 68px; border-top: 0; border-bottom: 1px solid #bccbaa80; }
+.chrono-real-demo .chrono-demo-guide p { font-size: 12px; color: #4f6440; max-width: 900px; }
+.chrono-real-demo-frame { display: block; width: 100%; height: 810px; border: 0; background: #eef1e5; }
+.chrono-real-demo-note { padding: 13px 20px; border-top: 1px solid #bccbaa80; font-size: 11px; line-height: 1.7; color: #56634b; background: #f1f4e8; }
+@media (max-width: 600px) {
+  .chrono-guided-demo { padding-inline: 12px; }
+  .chrono-real-demo .chrono-demo-chrome { flex-wrap: wrap; gap: 10px; }
+  .chrono-real-demo .chrono-demo-chrome > span:nth-child(2) { font-size: 8px; }
+  .chrono-demo-window-actions { margin-left: auto; gap: 12px; }
+  .chrono-demo-window-actions a, .chrono-demo-window-actions button { font-size: 10px; }
+  .chrono-real-demo-nav { padding: 9px 8px; gap: 3px; }
+  .chrono-real-demo-nav button { flex: 1; justify-content: center; flex-wrap: wrap; gap: 5px; padding: 7px 3px; font-size: 10px; }
+  .chrono-real-demo .chrono-demo-guide { padding: 12px; align-items: flex-start; }
+  .chrono-real-demo .chrono-demo-guide p { font-size: 11px; }
+  .chrono-real-demo-frame { height: 730px; }
+  .chrono-real-demo-note { padding: 12px; font-size: 10px; }
+}
+
+@media (min-width: 1151px) { .chrono-guided-demo { padding-right: 110px; } }
+/* Keep the marketing controls clear of the product's native dialogs. */
+.chrono-site[data-demo-active="true"] .chrono-chapters,
+.chrono-site[data-demo-active="true"] .chrono-motion-toggle { visibility: hidden; }
+
+/* The clock opens a window onto a matching notebook, then hands off to normal flow. */
+.chrono-hero { height: 225svh; background: transparent; }
+.chrono-hero-sticky { background: #f5f3e9; }
+.chrono-hero-surface { position: absolute; z-index: 2; inset: 0; display: flex; align-items: center; padding: inherit; overflow: hidden; isolation: isolate; background: var(--chrono-green); will-change: clip-path; }
+.chrono-hero-sticky::after { display: none; }
+.chrono-hero-surface::after { position: absolute; z-index: -1; content: ""; width: 53vw; height: 53vw; max-width: 800px; max-height: 800px; right: -6vw; top: 5%; border-radius: 50%; background: radial-gradient(circle, #e4efbd80 0%, #d4e7ae45 45%, transparent 70%); }
+.chrono-transition-preview { position: absolute; z-index: 0; inset: 0; height: 100%; background: #f5f3e9; pointer-events: none; overflow: hidden; }
+.chrono-transition-preview h2 { line-height: 1.08; letter-spacing: -.055em; }
+.chrono-hero-sticky > .chrono-invoice { z-index: 4; pointer-events: none; }
+.chrono-sweep-hand { position: absolute; z-index: 5; inset: 0; width: 100%; height: 100%; overflow: hidden; opacity: 0; pointer-events: none; }
+.chrono-sweep-hand line { stroke-linecap: round; }
+.chrono-sweep-hand-shadow { stroke: #2f4825; stroke-width: 11px; opacity: .09; }
+.chrono-sweep-hand-edge { stroke: #526d35; stroke-width: 3px; }
+.chrono-sweep-hand circle { fill: #e9edda; stroke: #6c8252; stroke-width: 1.5px; }
+.chrono-story { margin-top: calc(-1 * var(--chrono-hero-stage-height, 100svh)); }
+.chrono-hero-surface .chrono-clock-fallback { left: 50%; top: 50%; transform: translate(-50%, -50%); }
+.chrono-hero-surface .chrono-clock-fallback > span { transform: rotate(var(--chrono-minute-angle, -60deg)); opacity: var(--chrono-minute-opacity, 1); }
+.chrono-hero-surface .chrono-clock-fallback > i { transform: rotate(60deg); }
+.chrono-notebook-invoice { position: absolute; left: 30px; bottom: 22px; width: 155px; padding: 11px 13px 10px; color: #53683c; background: #fafbf1; border: 1px solid #a8b98b63; box-shadow: 2px 4px 0 #c8d3b540; transform: rotate(-4deg); }
+.chrono-notebook-invoice > .chrono-mono { display: flex; gap: 5px; align-items: center; font-size: 6px; letter-spacing: .08em; }
+.chrono-notebook-invoice > span:nth-child(2) { display: block; font-size: 9px; margin-top: 6px; }
+.chrono-notebook-invoice strong { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 3px; font-size: 20px; font-weight: 500; letter-spacing: -.05em; }
+.chrono-notebook-invoice strong span { font: 6px Consolas, monospace; letter-spacing: 0; white-space: nowrap; }
+.chrono-notebook-invoice small { display: flex; align-items: center; gap: 4px; margin-top: 5px; font-size: 6px; }
+.chrono-static .chrono-transition-preview, .chrono-static .chrono-sweep-hand { display: none; }
+.chrono-static .chrono-story { margin-top: 0; }
+.chrono-static .chrono-hero-surface { clip-path: none !important; }
+@media (min-width: 900px) and (max-height: 780px) {
+  .chrono-notebook-invoice { bottom: 17px; width: 145px; padding: 8px 11px; }
+  .chrono-notebook-invoice strong { font-size: 19px; }
+}
+@media (max-width: 899px) {
+  .chrono-transition-preview { position: absolute; padding-top: 75px; }
+  .chrono-transition-preview .chrono-analog-label { display: none; }
+  .chrono-notebook-invoice { width: 135px; left: 24px; bottom: 24px; }
+  .chrono-notebook-invoice strong { font-size: 18px; }
+  .chrono-notebook-invoice strong span { font-size: 5px; }
+}
+@media (max-width: 650px) {
+  .chrono-hero-surface { display: block; }
+  .chrono-hero-surface::after { width: 100%; height: 450px; top: auto; bottom: 10px; }
+  .chrono-transition-preview { padding: 75px 22px 50px; }
+  .chrono-transition-preview .chrono-notebook { margin-top: 36px; }
+  .chrono-notebook-invoice { position: relative; left: auto; bottom: auto; margin-top: 18px; width: 155px; padding: 11px 13px; }
+  .chrono-notebook-invoice strong { font-size: 20px; }
+  .chrono-notebook-invoice strong span { font-size: 6px; }
+  .chrono-sweep-hand-shadow { stroke-width: 8px; }
+  .chrono-sweep-hand-edge { stroke-width: 2.5px; }
+}

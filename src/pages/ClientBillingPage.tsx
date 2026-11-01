@@ -280,8 +280,9 @@ const SwitchRow: React.FC<{
   </label>
 );
 
-export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
+export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { start: string; end: string } }> = ({
   preview = false,
+  initialPeriod,
 }) => {
   const { t } = useTranslation();
   const { profile: userProfile } = useAuth();
@@ -294,7 +295,7 @@ export const ClientBillingPage: React.FC<{ preview?: boolean }> = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [draft, setDraft] = useState<ClientBillingProfileUpsert | null>(null);
   const [isDirty, setIsDirty] = useState(false);
-  const [invoicePeriod, setInvoicePeriod] = useState(getPreviousCalendarMonth);
+  const [invoicePeriod, setInvoicePeriod] = useState(initialPeriod ?? getPreviousCalendarMonth);
   const [result, setResult] = useState<{
     kind: "success" | "error";
     message: string;

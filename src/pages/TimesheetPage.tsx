@@ -72,13 +72,13 @@ const getViewPreference = (): TimesheetViewMode => {
   return "calendar";
 };
 
-export const TimesheetPage: React.FC = () => {
+export const TimesheetPage: React.FC<{ initialDate?: string }> = ({ initialDate }) => {
   const { profile, user } = useAuth();
   const favorites = useFavoriteProjects();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
 
-  const today = new Date();
+  const today = initialDate ? new Date(`${initialDate}T12:00:00`) : new Date();
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
 
   // Date State Management (Defaulting to Current Month)
