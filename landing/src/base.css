@@ -1,0 +1,12 @@
+*, ::before, ::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; tab-size: 4; scroll-behavior: auto; }
+body { margin: 0; min-width: 320px; font-family: "Inter Variable", sans-serif; line-height: 1.5; font-feature-settings: "cv02", "cv03", "cv04", "cv11"; -webkit-font-smoothing: antialiased; background: #f8f7f0; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button, a, summary { -webkit-tap-highlight-color: transparent; }
+button, summary { cursor: pointer; }
+button:disabled { cursor: default; }
+button { letter-spacing: inherit; }
+img, svg, canvas { display: block; vertical-align: middle; }
+img { max-width: 100%; height: auto; }
+textarea { resize: vertical; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }

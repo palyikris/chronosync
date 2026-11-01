@@ -1,0 +1,33 @@
+export const studioContent = {
+  en: {
+    engineLabel: "04 / THE CHRONOSYNC EFFECT", engineTitle: "From time", engineTitleEm: "to invoice.",
+    engineIntro: "Every entry stays connected to its project. Every approval brings the next step into place.",
+    engineStages: ["Hours captured.", "Work approved.", "Month-end, organized."],
+    engineDetails: ["A place for every minute", "A clear handoff to billing", "The details travel together"],
+    engineMeta: "ONE PROJECT. ONE CONTINUOUS THREAD.", engineHint: "SCROLL TO CONNECT THE DOTS", engineSample: "ILLUSTRATIVE WORKFLOW / ACME STUDIO",
+    proofLabel: "05 / THE WORK, ALL WRAPPED UP", proofTitle: "Ready for", proofTitleEm: "month-end.",
+    proofIntro: "Open the folder. The same project hours, ready to review and take with you.",
+    documents: ["Project summary", "Invoice preview", "Time entries"], documentHint: "SELECT A DOCUMENT TO BRING IT FORWARD", documentMeta: "4 ENTRIES / 24 HOURS / ONE PROJECT",
+    documentDetails: ["Project hours and value, ready for review.", "Approved time, priced for invoice review.", "Individual entries, ready to export."],
+    rolesLabel: "EVERY STEP, WITH THE RIGHT PERSON", pricingLabel: "06 / FIND YOUR RHYTHM", pricingSide: "A little structure for your next chapter. A workspace that fits the way you work.",
+    pricingFoot: "Your hours. Your people. Your pace.", planObjects: ["A little clarity", "A shared rhythm", "The whole picture"],
+    faqLabel: "THE REFERENCE FOLDER", faqTitle: "Questions, answered.", faqTitleEm: "Clear answers.", faqMeta: "CHRONOSYNC / FIELD NOTES", faqFile: "OPEN FILE",
+    accessMark: "EVERYTHING, COMING TOGETHER.", accessFigure: "FIG. 03 / YOUR NEXT WORKFLOW", footerNote: "Made for the work that matters.",
+  },
+  hu: {
+    engineLabel: "04 / A CHRONOSYNC HATÁSA", engineTitle: "Az időtől", engineTitleEm: "a számláig.",
+    engineIntro: "Minden bejegyzés a projektjéhez kapcsolódik. Minden jóváhagyás a helyére teszi a következő lépést.",
+    engineStages: ["Az órák rögzítve.", "A munka jóváhagyva.", "A hónap lezárva, rendben."],
+    engineDetails: ["Minden percnek megvan a helye", "Tiszta átadás a számlázásnak", "A részletek együtt maradnak"],
+    engineMeta: "EGY PROJEKT. EGY FOLYAMATOS SZÁL.", engineHint: "GÖRGESS, ÉS ÁLLÍTSD ÖSSZE", engineSample: "SZEMLÉLTETŐ FOLYAMAT / ACME STUDIO",
+    proofLabel: "05 / A MUNKA, EGY HELYEN", proofTitle: "Minden kész", proofTitleEm: "a hónapzáráshoz.",
+    proofIntro: "Nyisd ki a mappát. Ugyanazok a projektórák, ellenőrzésre és letöltésre készen.",
+    documents: ["Projektösszesítő", "Számlaelőnézet", "Időbejegyzések"], documentHint: "VÁLASSZ EGY DOKUMENTUMOT", documentMeta: "4 BEJEGYZÉS / 24 ÓRA / EGY PROJEKT",
+    documentDetails: ["Projektórák és érték, ellenőrzésre készen.", "Jóváhagyott idő, árazva a számlaellenőrzéshez.", "Az egyes bejegyzések, exportálásra készen."],
+    rolesLabel: "TISZTA ÁTADÁS, KEVESEBB EGYEZTETÉS", pricingLabel: "06 / TALÁLD MEG A RITMUSOD", pricingSide: "Egy kis rendszer a következő fejezethez. A munkádhoz illő munkatér.",
+    pricingFoot: "Az időd. A csapatod. A ritmusod.", planObjects: ["Egy kis tisztánlátás", "Közös ritmus", "A teljes kép"],
+    faqLabel: "A TUDNIVALÓK MAPPÁJA", faqTitle: "Kérdések és válaszok.", faqTitleEm: "Tiszta válaszok.", faqMeta: "CHRONOSYNC / JEGYZETEK", faqFile: "NYITOTT LAP",
+    accessMark: "MINDEN A HELYÉRE KERÜL.", accessFigure: "03. ÁBRA / A KÖVETKEZŐ MUNKAFOLYAMATOD", footerNote: "Az igazán fontos munkához.",
+  },
+};
+export type StudioCopy = typeof studioContent.en;

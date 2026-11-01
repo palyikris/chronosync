@@ -1,18 +1,21 @@
 import { createClient } from "@supabase/supabase-js";
 import i18n from "./i18n";
+import { isDemoDocument, serviceFetch, supabaseEndpoint, supabasePublicKey } from "./serviceEnvironment";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const supabaseUrl = supabaseEndpoint;
+const supabaseAnonKey = supabasePublicKey;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(i18n.t("errors.missingSupabaseEnv"));
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  global: { fetch: serviceFetch },
   auth: {
     flowType: "pkce",
     detectSessionInUrl: false,
-    persistSession: true,
-    autoRefreshToken: true,
+    persistSession: !isDemoDocument,
+    autoRefreshToken: !isDemoDocument,
+    ...(isDemoDocument ? { storageKey: "chronosync-demo-session" } : {}),
   },
 });

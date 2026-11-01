@@ -25,7 +25,15 @@ VITE_SUPABASE_PUBLISHABLE_KEY=your-supabase-anon-key
 npm run dev
 ```
 
-Open the Vite URL shown in the terminal (usually http://localhost:5173).
+Open the app at http://127.0.0.1:5174.
+
+## Website and application
+
+The marketing website is a separate project in [`landing/`](landing/README.md), intended for `domain.com`. This application's root serves the authenticated app for `app.domain.com`; signed-out visitors are redirected to `/login`. Its public `/demo` route still uses the real app components with fictional data.
+
+Run `npm run dev:site` for the website at http://127.0.0.1:5173, alongside `npm run dev` for the app. Run `npm run build:site` to build only the website. Deploy `landing/` and the repository root as separate projects, each with its own `dist` output.
+
+Set `VITE_CHRONOSYNC_APP_URL` on the website and `VITE_MARKETING_SITE_URL` on the app to their respective production URLs. Details and placeholder configuration are documented in `landing/README.md`.
 
 ## Required environment variables
 

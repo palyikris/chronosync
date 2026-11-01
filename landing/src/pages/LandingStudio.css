@@ -1,0 +1,231 @@
+/* One material language: ivory paper, sage enamel, brushed metal, dark olive. */
+.chrono-studio-slot, .chrono-studio-scene { position: absolute; inset: 0; }
+.chrono-studio-scene canvas { display: block; position: relative; z-index: 1; width: 100%; height: 100%; }
+.chrono-studio-slot { pointer-events: none; }
+.chrono-studio-canvas { position: fixed; inset: 0; z-index: 8; width: 100vw; height: 100vh; pointer-events: none; }
+.chrono-studio-scene[data-ready="true"] > .chrono-studio-fallback { opacity: 0; }
+.chrono-studio-fallback { position: absolute; inset: 12% 15%; transition: opacity .2s; perspective: 600px; }
+.chrono-studio-fallback > span, .chrono-studio-fallback > i, .chrono-studio-fallback > b { position: absolute; display: block; border: 1px solid #849a6566; background: #edf0df; box-shadow: 8px 12px 20px #30462c0d; }
+.chrono-studio-fallback > span { inset: 10% 20%; border-radius: 8px; transform: rotate(-10deg); }
+.chrono-studio-fallback > i { inset: 18% 12% 2% 28%; border-radius: 8px; transform: rotate(7deg); background: #dce8c7; }
+.chrono-studio-fallback > b { width: 25%; aspect-ratio: 1; top: 32%; left: 40%; border: 8px solid #7c9b58; border-radius: 50%; background: #fafbed; }
+.chrono-studio-fallback--engine > span { width: 20%; height: 40%; top: 30%; left: 2%; }
+.chrono-studio-fallback--engine > b { width: 25%; top: 10%; left: 38%; }
+.chrono-studio-fallback--engine > i { inset: 28% 0 15% 73%; }
+.chrono-notebook-stationery { position: absolute; z-index: 4; inset: 0; pointer-events: none; transform: translateZ(8px); }
+.chrono-desk-pencil { position: absolute; right: -40px; top: 14%; width: 9px; height: 63%; border-radius: 3px 3px 0 0; background: linear-gradient(90deg, #4c6938, #a1b885 45%, #6e8c51 55%, #7c995b); border-top: 14px solid #bdc6af; box-shadow: 5px 5px 5px #32493620; transform: rotate(19deg); }
+.chrono-desk-pencil::after { content: ""; position: absolute; top: 100%; left: 0; width: 9px; height: 19px; background: linear-gradient(#d4bf96 68%, #324936 68%); clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.chrono-desk-clip { position: absolute; left: -37px; top: 3%; width: 23px; height: 61px; border: 3px solid #afbaa1; border-radius: 15px; box-shadow: 1px 1px 0 #f8f9ee inset, 2px 3px 4px #32493615; transform: rotate(-14deg); }
+.chrono-desk-clip::after { content: ""; position: absolute; inset: 5px 4px 10px; border: 2px solid #b7c1aa; border-bottom: 0; border-radius: 10px 10px 0 0; }
+.chrono-feature h4 { position: relative; width: fit-content; isolation: isolate; }
+.chrono-feature-ink { position: absolute; z-index: -1; left: -2px; bottom: -2px; width: 100%; height: 5px; background: #bdd28e65; transform: rotate(-1deg); transform-origin: left; border-radius: 50%; }
+.chrono-sticky-note { transform-origin: 50% 4%; transition: box-shadow .4s, translate .4s; }
+@media (hover: hover) { .chrono-notebook:hover .chrono-sticky-note { box-shadow: 4px 12px 14px #55693220; translate: 0 -3px; } }
+
+.chrono-engine { --sync-progress: 0; position: relative; height: 155svh; min-height: 1050px; background: #e9edde; border-top: 1px solid #ced8bd; }
+.chrono-engine-sticky { position: sticky; top: 0; height: 100svh; min-height: 690px; display: flex; flex-direction: column; padding: 96px clamp(30px, 7vw, 120px) 28px; overflow: hidden; }
+.chrono-engine-heading { display: grid; grid-template-columns: 1.5fr 1fr; align-items: end; gap: 9%; position: relative; z-index: 2; }
+.chrono-engine-heading .chrono-eyebrow { color: #647954; font-size: 9px; margin-bottom: 18px; }
+.chrono-engine-heading h2 { font-size: clamp(52px, 5.5vw, 88px); line-height: .99; letter-spacing: -.065em; }
+.chrono-engine-heading h2 > span { display: block; }
+.chrono-engine-heading h2 em { color: #66814b; }
+.chrono-engine-heading > p { max-width: 300px; font-size: 13px; line-height: 1.85; color: #5b7050; padding-bottom: 4px; }
+.chrono-engine-heading > p > span { display: flex; align-items: center; gap: 12px; font-size: 8px; color: #647d50; margin-top: 24px; }
+.chrono-engine-stage { position: relative; flex: 1; min-height: 250px; margin: 3px -35px 0; }
+.chrono-engine-grid { position: absolute; inset: 5% 0 -5%; background: linear-gradient(#718d4f18 1px, transparent 1px), linear-gradient(90deg, #718d4f18 1px, transparent 1px); background-size: 52px 52px; transform: perspective(600px) rotateX(68deg) translateY(35%); mask-image: radial-gradient(ellipse, #0008, transparent 68%); }
+.chrono-engine-coordinate { position: absolute; right: 4%; top: 28%; writing-mode: vertical-rl; font-size: 8px; color: #849777; }
+.chrono-engine-steps { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; padding: 24px 0 29px; border-top: 1px solid #b5c3a365; }
+.chrono-engine-steps::before { position: absolute; top: -1px; left: 0; width: 100%; height: 2px; background: #6d8b4c; content: ""; transform-origin: left; transform: scaleX(var(--sync-progress)); }
+.chrono-engine-step { display: flex; align-items: center; gap: 13px; opacity: .48; transition: opacity .45s; }
+.chrono-engine-step-icon { flex-shrink: 0; width: 43px; height: 43px; border: 1px solid #91a9796b; border-radius: 50%; display: grid; place-items: center; color: #587440; background: #f7f8ef80; transition: background .45s, transform .45s; }
+.chrono-engine-step small { display: block; font-size: 8px; color: #6e865c; margin-bottom: 7px; }
+.chrono-engine-step h3 { font-size: clamp(15px, 1.5vw, 21px); line-height: 1.2; font-weight: 500; letter-spacing: -.04em; }
+.chrono-engine-step p { font-size: 10px; color: #6b7f5b; margin-top: 7px; line-height: 1.5; }
+.chrono-engine-step-arrow { margin-left: auto; color: #869b73; }
+.chrono-engine[data-phase="0"] .chrono-engine-step:nth-child(1), .chrono-engine[data-phase="1"] .chrono-engine-step:nth-child(-n+2), .chrono-engine[data-phase="2"] .chrono-engine-step { opacity: 1; }
+.chrono-engine[data-phase="0"] .chrono-engine-step:nth-child(1) .chrono-engine-step-icon, .chrono-engine[data-phase="1"] .chrono-engine-step:nth-child(2) .chrono-engine-step-icon, .chrono-engine[data-phase="2"] .chrono-engine-step:nth-child(3) .chrono-engine-step-icon { background: #ccdeae; transform: rotate(-8deg); }
+.chrono-engine-bottom { display: flex; justify-content: space-between; gap: 25px; color: #7d8e6c; font-size: 7px; }
+
+.chrono-workbench { padding: 110px clamp(25px, 8vw, 135px) 105px; background: #f8f7f0; }
+.chrono-workbench-heading { text-align: center; }
+.chrono-workbench-heading .chrono-eyebrow { justify-content: center; color: #7a8a68; font-size: 9px; margin-bottom: 22px; }
+.chrono-workbench h2 { font-size: clamp(40px, 4.7vw, 72px); line-height: 1.06; letter-spacing: -.06em; }
+.chrono-workbench h2 em { color: #72865b; }
+.chrono-workbench-heading > p:last-child { max-width: 420px; margin: 22px auto 0; color: #6c785f; font-size: 13px; line-height: 1.8; }
+.chrono-workbench-grid { display: grid; grid-template-columns: 1.25fr 1fr; align-items: center; gap: 9%; max-width: 1200px; margin: 45px auto 0; }
+.chrono-document-workspace { min-width: 0; }
+.chrono-document-stage { position: relative; height: 430px; margin: 0 -35px; }
+.chrono-document-stage::before { position: absolute; content: ""; width: 70%; aspect-ratio: 1; border-radius: 50%; background: #e7edda; left: 15%; top: 4%; opacity: .6; }
+.chrono-document-stage::after { position: absolute; content: "+"; top: 25%; left: 7%; color: #b0bea0; font-size: 21px; font-family: monospace; }
+.chrono-document-figure { position: absolute; z-index: 2; left: 35px; top: 6px; font-size: 7px; letter-spacing: .06em; color: #82946c; }
+.chrono-document-seal { position: absolute; z-index: 10; right: 8%; bottom: 16%; display: flex; align-items: center; gap: 5px; padding: 9px 12px; background: #e7f0d5db; border: 1px solid #9fb880; color: #668346; border-radius: 4px; font: 10px Consolas, monospace; transform: rotate(-7deg); backdrop-filter: blur(8px); }
+.chrono-document-tabs { display: flex; justify-content: center; gap: 6px; padding: 4px; margin: 3px auto 0; border: 1px solid #aabd9252; border-radius: 9px; background: #ecefe2; width: fit-content; max-width: 100%; }
+.chrono-document-tabs button { min-width: 0; overflow-wrap: anywhere; border: 0; display: flex; align-items: center; justify-content: center; gap: 6px; background: transparent; color: #6d805c; font-size: 10px; line-height: 1.5; padding: 10px 12px; border-radius: 6px; transition: background .3s, box-shadow .3s; }
+.chrono-document-tabs button[aria-pressed="true"] { background: #fffef7; color: #3f5b2e; box-shadow: 0 2px 6px #3a542c0d; }
+.chrono-document-description { text-align: center; min-height: 112px; padding: 23px 12px 0; }
+.chrono-document-description > strong { font-size: 14px; font-weight: 500; }
+.chrono-document-description p { font-size: 12px; line-height: 1.8; color: #778467; max-width: 390px; margin: 8px auto; }
+.chrono-document-description > span { font: 9px Consolas, monospace; color: #7c9068; }
+.chrono-workbench .chrono-proof-downloads { justify-content: center; margin-top: 25px; }
+.chrono-workbench .chrono-proof-disclaimer { text-align: center; max-width: 400px; margin: 15px auto 0 !important; color: #7e8b70; }
+.chrono-workbench-roles { align-self: center; padding-top: 10px; }
+.chrono-workbench-roles > .chrono-eyebrow { font-size: 8px; color: #839572; margin-bottom: 17px; }
+.chrono-workbench-roles > h3 { font: italic 38px/1.12 Georgia, serif; letter-spacing: -.04em; max-width: 340px; }
+.chrono-role-trail { --trail-progress: 1; position: relative; padding-top: 33px; }
+.chrono-role-trail::before, .chrono-role-trail::after { position: absolute; content: ""; left: 22px; top: 50px; bottom: 65px; width: 1px; background: #dce3d0; }
+.chrono-role-trail::after { background: #88a566; transform: scaleY(var(--trail-progress)); transform-origin: top; }
+.chrono-role-stop { position: relative; z-index: 1; display: flex; align-items: flex-start; gap: 22px; padding: 0 0 34px; }
+.chrono-role-stop:last-child { padding-bottom: 0; }
+.chrono-role-icon { flex-shrink: 0; width: 45px; height: 45px; display: grid; place-items: center; background: #edf1e3; border: 1px solid #becdae; color: #6f8c50; border-radius: 14px; box-shadow: 0 0 0 7px #f8f7f0; transform: rotate(-5deg); }
+.chrono-role-stop > div > span { display: block; font-size: 8px; color: #8a9c76; margin: 2px 0 7px; }
+.chrono-role-stop h4 { font-size: 17px; font-weight: 500; letter-spacing: -.035em; margin-bottom: 9px; }
+.chrono-role-stop p { font-size: 12px; color: #778568; line-height: 1.9; max-width: 290px; }
+.chrono-workbench-roles > .chrono-text-link { margin: 30px 0 0 67px; font-size: 12px; }
+
+.chrono-studio-pricing { position: relative; isolation: isolate; background: #293d30; color: #f6f6e9; overflow: hidden; padding: 105px clamp(26px, 7vw, 120px) 30px; }
+.chrono-studio-pricing-inner { max-width: 1200px; margin: auto; position: relative; }
+.chrono-pricing-fold { position: absolute; z-index: 2; left: -10%; top: -1px; width: 120%; height: 85px; background: #f8f7f0; border-radius: 0 0 50% 50%; transform-origin: center top; box-shadow: 0 8px 0 #dfe5d514, 0 16px 0 #a8bd9209; pointer-events: none; }
+.chrono-static .chrono-pricing-fold { display: none; }
+.chrono-studio-pricing-heading { display: grid; grid-template-columns: 1.4fr 1fr; align-items: end; gap: 12%; }
+.chrono-studio-pricing-heading .chrono-eyebrow { font-size: 9px; color: #b7c99f; margin-bottom: 25px; }
+.chrono-studio-pricing-heading .chrono-live-dot { background: #b8d790; box-shadow: 0 0 0 4px #bdd9a00a; }
+.chrono-studio-pricing h2 { font-size: clamp(46px, 5.5vw, 84px); line-height: 1.04; letter-spacing: -.065em; }
+.chrono-studio-pricing h2 em { color: #c1d6a7; }
+.chrono-studio-pricing-heading > p { font-size: 14px; line-height: 1.85; color: #bdc9b1; max-width: 300px; margin-bottom: 5px; }
+.chrono-studio-plan-notice { display: flex; gap: 10px; align-items: flex-start; font-size: 10px; color: #b2c2a5; line-height: 1.8; margin: 42px 0 39px !important; }
+.chrono-studio-plan-notice > span { width: 4px; height: 4px; border-radius: 50%; background: #acc48f; margin-top: 7px; flex-shrink: 0; }
+.chrono-pricing-orbits { z-index: -1; position: absolute; width: 900px; height: 900px; right: -430px; top: -390px; border: 1px solid #b1c5971f; border-radius: 50%; pointer-events: none; }
+.chrono-pricing-orbits i { position: absolute; inset: 80px; border: 1px solid #b1c59712; border-radius: 50%; }.chrono-pricing-orbits i:nth-child(2) { inset: -80px; }.chrono-pricing-orbits i:last-child { inset: -160px; }
+.chrono-sculptural-plans { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; align-items: stretch; }
+.chrono-sculptural-plan { position: relative; padding: 22px 26px 31px; border-radius: 12px; background: #f2f3e8; color: #30442e; border: 1px solid #d6dfcb; box-shadow: 0 14px 45px #071b141a; transition: box-shadow .4s; }
+.chrono-sculptural-plan:hover { box-shadow: 0 18px 50px #071b1440; }
+.chrono-sculptural-plan.is-featured { background: #deebc8; border-color: #d4e8b3; margin-top: -13px; margin-bottom: 13px; }
+.chrono-sculptural-plan-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: #6e8853; min-height: 25px; }
+.chrono-sculptural-plan-top > .chrono-mono { font-size: 10px; }
+.chrono-sculptural-plan .chrono-plan-recommended { font-size: 6px; padding: 5px 7px; background: #f8fbe85e; white-space: normal; }
+.chrono-plan-sculpture { height: 180px; margin: 0 -15px 23px; position: relative; }
+.chrono-plan-sculpture > .chrono-mono { position: absolute; bottom: -7px; left: 0; right: 0; text-align: center; font-size: 7px; color: #7c9165; text-transform: uppercase; }
+.chrono-sculptural-plan h3 { font-size: 31px; font-weight: 500; letter-spacing: -.06em; }
+.chrono-sculptural-plan-description { color: #6a7e58; font-size: 12px; line-height: 1.8; min-height: 44px; margin-top: 8px !important; }
+.chrono-sculptural-plan .chrono-plan-price { padding: 24px 0 25px; }
+.chrono-sculptural-plan .chrono-plan-price strong { font-size: 29px; letter-spacing: -.05em; }
+.chrono-sculptural-plan .chrono-plan-price > span { color: #788a67; font-size: 10px; }
+.chrono-sculptural-plan .chrono-button { display: flex; padding: 14px 16px; gap: 10px; font-size: 12px; }
+.chrono-sculptural-plan ul { list-style: none; padding: 22px 0 0; margin: 25px 0 0; border-top: 1px solid #9db48545; display: flex; flex-direction: column; gap: 16px; }
+.chrono-sculptural-plan li { display: flex; align-items: flex-start; gap: 9px; font-size: 12px; line-height: 1.6; color: #5c754a; }
+.chrono-sculptural-plan li svg { color: #759957; margin-top: 2px; }
+.chrono-pricing-bottom { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-top: 42px; color: #a5b894; font-size: 8px; }
+
+.chrono-reference { display: grid; grid-template-columns: .85fr 1.25fr; gap: 10%; padding: 100px clamp(26px, 8vw, 135px); background: #f4f3e9; }
+.chrono-reference-intro .chrono-eyebrow { color: #859372; font-size: 8px; margin-bottom: 22px; }
+.chrono-reference h2 { font-size: clamp(42px, 4.3vw, 66px); line-height: 1.06; letter-spacing: -.06em; }
+.chrono-reference h2 em { color: #7d9063; }
+.chrono-reference-stage { position: relative; height: 260px; margin: 15px -20px 0; }
+.chrono-reference-meta { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; font-size: 7px; color: #82936f; border-top: 1px solid #c2cdb24d; padding-top: 15px; }
+.chrono-reference-files { align-self: center; }
+.chrono-reference-file { position: relative; border-bottom: 1px solid #b9c5a86b; transition: background .35s; }
+.chrono-reference-file:first-child { border-top: 1px solid #b9c5a86b; }
+.chrono-reference-file.is-open { background: #e9eddf80; }
+.chrono-reference-file h3 { font-weight: 400; }
+.chrono-reference-file button { display: flex; align-items: center; gap: 15px; text-align: left; width: 100%; padding: 26px 16px 26px 0; border: 0; background: transparent; color: #3d5233; font-size: 16px; line-height: 1.55; letter-spacing: -.03em; }
+.chrono-reference-tab { display: grid; place-items: center; flex-shrink: 0; width: 33px; height: 29px; background: #e0e6d3; color: #7b8f66; border-radius: 0 4px 4px 0; font-size: 9px; transition: transform .35s, background .35s; }
+.chrono-reference-file.is-open .chrono-reference-tab { transform: translateX(-7px); background: #c6d9a9; color: #547338; box-shadow: 2px 3px 0 #b0c19324; }
+.chrono-reference-file button > svg { margin-left: auto; color: #8b9b78; transition: transform .4s; }
+.chrono-reference-file.is-open button > svg { transform: rotate(45deg); }
+.chrono-reference-answer { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .45s ease, visibility .45s; visibility: hidden; }
+.chrono-reference-answer > div { overflow: hidden; min-height: 0; }
+.chrono-reference-answer p { font-size: 12px; color: #6d805d; line-height: 1.95; padding: 0 28px 26px 48px; }
+.chrono-reference-file.is-open .chrono-reference-answer { grid-template-rows: 1fr; visibility: visible; }
+
+.chrono-studio-access { isolation: isolate; padding-top: 100px; padding-bottom: 90px; }
+.chrono-studio-access::before { content: ""; z-index: -1; position: absolute; left: -250px; bottom: -350px; width: 1050px; height: 1050px; border-radius: 50%; background: radial-gradient(circle, #f0f6d460, #c8dfa92e 50%, transparent 70%); border: 1px solid #90ae6924; box-shadow: 0 0 0 75px #91ae6809, 0 0 0 150px #91ae6805; }
+.chrono-studio-access h2 { font-size: clamp(46px, 5.4vw, 80px); }
+.chrono-studio-access .chrono-access-intro > p:not(.chrono-eyebrow):not(.chrono-access-login) { color: #5c7546; font-size: 13px; }
+.chrono-access-assembly { height: 310px; position: relative; margin: 0 -35px -10px -45px; }
+.chrono-access-assembly > .chrono-mono { position: absolute; bottom: 7px; left: 45px; right: 35px; text-align: center; color: #718c53; font-size: 7px; }
+.chrono-studio-access .chrono-access-form { background: #fafbf1eb; border: 1px solid #d7e4c3; box-shadow: 0 20px 50px #536d3020, 5px 7px 0 #b7ca9a42; border-radius: 9px; margin-top: 18px; padding: 33px; }
+.chrono-studio-access .chrono-access-form label { color: #61794b; font-size: 11px; }
+.chrono-studio-access .chrono-form-note { color: #758b5d; }
+.chrono-studio-access .chrono-access-login { color: #627b4b; font-size: 11px; margin-top: 25px !important; }
+
+.chrono-static .chrono-engine { height: auto; min-height: 0; }
+.chrono-static .chrono-engine-sticky { position: relative; height: 780px; min-height: 0; }
+.chrono-static .chrono-engine-steps::before { transform: scaleX(1); }
+.chrono-static .chrono-reference-answer, .chrono-static .chrono-reference-tab, .chrono-static .chrono-reference-file button > svg { transition: none; }
+
+@media (min-width: 900px) and (max-height: 730px) {
+  .chrono-engine-sticky { padding-top: 86px; min-height: 660px; }
+  .chrono-engine-heading h2 { font-size: 61px; }.chrono-engine-heading .chrono-eyebrow { margin-bottom: 13px; }.chrono-engine-stage { min-height: 230px; }
+  .chrono-engine-steps { padding: 20px 0 25px; }.chrono-engine-step h3 { font-size: 17px; }
+}
+@media (max-width: 1100px) {
+  .chrono-sculptural-plan { padding-inline: 20px; }.chrono-plan-sculpture { height: 155px; }.chrono-sculptural-plan .chrono-plan-recommended { font-size: 5.5px; }.chrono-sculptural-plan h3 { font-size: 28px; }
+  .chrono-reference { gap: 7%; }.chrono-reference-file button { font-size: 14px; }.chrono-reference-answer p { padding-right: 15px; }.chrono-workbench-grid { gap: 6%; }
+  .chrono-workbench-roles > h3 { font-size: 33px; }.chrono-role-stop { gap: 17px; }.chrono-workbench-roles > .chrono-text-link { margin-left: 62px; }
+}
+@media (max-width: 899px) {
+  .chrono-engine-heading { gap: 6%; grid-template-columns: 1.2fr 1fr; }.chrono-engine-heading h2 { font-size: 56px; }.chrono-engine-heading > p { font-size: 12px; }.chrono-engine-stage { margin-inline: -25px; min-height: 280px; }
+  .chrono-engine-step { gap: 9px; }.chrono-engine-step-icon { width: 33px; height: 33px; }.chrono-engine-step-icon svg { width: 16px; }.chrono-engine-step-arrow { display: none; }.chrono-engine-step h3 { font-size: 16px; }.chrono-engine-step p { font-size: 9px; }
+  .chrono-workbench { padding: 80px 35px; }.chrono-workbench-grid { gap: 5%; grid-template-columns: 1.1fr 1fr; }.chrono-document-stage { height: 350px; margin: 0 -25px; }.chrono-document-figure { left: 25px; font-size: 6px; }.chrono-document-tabs { gap: 0; }.chrono-document-tabs button { padding: 10px 8px; font-size: 9px; }.chrono-document-tabs button svg { display: none; }.chrono-workbench .chrono-proof-downloads { gap: 12px; flex-direction: row; }.chrono-workbench .chrono-proof-downloads a { font-size: 10px; }.chrono-role-stop h4 { font-size: 15px; }.chrono-role-stop p { font-size: 11px; }.chrono-workbench-roles > h3 { font-size: 29px; }.chrono-role-icon { width: 37px; height: 37px; border-radius: 11px; }.chrono-role-trail::before, .chrono-role-trail::after { left: 18px; }.chrono-role-stop { gap: 14px; padding-bottom: 27px; }.chrono-workbench-roles > .chrono-text-link { margin-left: 51px; }
+  .chrono-studio-pricing { padding: 80px 30px 30px; }.chrono-studio-pricing-heading { gap: 8%; grid-template-columns: 1.3fr 1fr; }.chrono-studio-pricing-heading > p { font-size: 12px; }.chrono-sculptural-plans { gap: 11px; }.chrono-sculptural-plan { padding: 16px 15px 25px; }.chrono-sculptural-plan-top { min-height: 36px; }.chrono-sculptural-plan .chrono-plan-recommended { font-size: 5px; gap: 3px; padding: 4px; }.chrono-sculptural-plan .chrono-plan-recommended svg { width: 10px; }.chrono-plan-sculpture { height: 140px; margin-inline: -9px; }.chrono-sculptural-plan h3 { font-size: 25px; }.chrono-sculptural-plan-description { font-size: 11px; min-height: 58px; }.chrono-sculptural-plan .chrono-plan-price strong { font-size: 24px; }.chrono-sculptural-plan .chrono-plan-price > span { font-size: 8px; }.chrono-sculptural-plan .chrono-button { font-size: 10px; padding: 12px 10px; }.chrono-sculptural-plan li { font-size: 10px; gap: 6px; }.chrono-sculptural-plan ul { gap: 14px; }.chrono-plan-sculpture > .chrono-mono { font-size: 6px; }
+  .chrono-reference { padding: 80px 35px; gap: 6%; grid-template-columns: .85fr 1.15fr; }.chrono-reference h2 { font-size: 40px; }.chrono-reference-stage { height: 230px; }.chrono-reference-file button { font-size: 13px; gap: 10px; padding-top: 22px; padding-bottom: 22px; }.chrono-reference-answer p { font-size: 11px; padding-left: 43px; }.chrono-reference-meta { font-size: 6px; }
+  .chrono-studio-access { padding-top: 75px; padding-bottom: 75px; }.chrono-studio-access h2 { font-size: 45px; }.chrono-studio-access .chrono-access-form { padding: 25px; }.chrono-access-assembly { height: 280px; }
+}
+@media (max-width: 650px) {
+  .chrono-notebook-stationery { display: none; }
+  .chrono-engine { height: 155svh; min-height: 1050px; }.chrono-engine-sticky { padding: 93px 25px 98px; min-height: 740px; }.chrono-engine-heading { display: block; }.chrono-engine-heading .chrono-eyebrow { font-size: 7px; margin-bottom: 17px; }.chrono-engine-heading h2 { font-size: clamp(46px, 12vw, 65px); }.chrono-engine-heading > p { font-size: 12px; line-height: 1.8; margin-top: 20px; max-width: 305px; }.chrono-engine-heading > p > span { font-size: 6px; margin-top: 14px; }.chrono-engine-stage { min-height: 225px; margin: 0 -18px; }.chrono-engine-coordinate { display: none; }.chrono-engine-steps { gap: 14px; padding: 21px 0; }.chrono-engine-step { display: block; }.chrono-engine-step-icon { width: 30px; height: 30px; margin-bottom: 10px; }.chrono-engine-step small { font-size: 7px; margin-bottom: 6px; }.chrono-engine-step h3 { font-size: 13px; line-height: 1.35; min-height: 36px; }.chrono-engine-step p { display: none; }.chrono-engine-bottom { font-size: 6px; }.chrono-engine-bottom > span:last-child { display: none; }
+  .chrono-workbench { padding: 70px 25px 75px; }.chrono-workbench-heading { text-align: left; }.chrono-workbench-heading .chrono-eyebrow { justify-content: flex-start; font-size: 7px; margin-bottom: 19px; }.chrono-workbench h2 { font-size: clamp(36px, 9vw, 49px); line-height: 1.1; }.chrono-workbench-heading > p:last-child { margin-left: 0; font-size: 12px; max-width: 320px; }.chrono-workbench-grid { grid-template-columns: 1fr; margin-top: 35px; gap: 60px; }.chrono-document-stage { height: 350px; margin: 0 -14px; }.chrono-document-figure { left: 14px; font-size: 6px; top: 0; }.chrono-document-stage::before { top: 7%; }.chrono-document-tabs { width: 100%; gap: 2px; }.chrono-document-tabs button { flex: 1; font-size: 10px; padding: 10px 7px; min-height: 46px; }.chrono-document-description { padding-top: 23px; min-height: 120px; }.chrono-document-description p { font-size: 12px; }.chrono-document-seal { font-size: 9px; padding: 7px 9px; }.chrono-workbench .chrono-proof-downloads { justify-content: flex-start; gap: 18px; margin-top: 20px; }.chrono-workbench .chrono-proof-disclaimer { text-align: left; }.chrono-workbench-roles { padding-top: 0; }.chrono-workbench-roles > .chrono-eyebrow { font-size: 7px; }.chrono-workbench-roles > h3 { font-size: 34px; max-width: 290px; }.chrono-role-stop { gap: 20px; padding-bottom: 33px; }.chrono-role-icon { width: 43px; height: 43px; }.chrono-role-trail::before, .chrono-role-trail::after { left: 21px; }.chrono-role-stop h4 { font-size: 17px; }.chrono-role-stop p { font-size: 12px; max-width: 270px; }.chrono-workbench-roles > .chrono-text-link { margin-left: 63px; }
+  .chrono-studio-pricing { padding: 75px 24px 30px; }.chrono-studio-pricing-heading { display: block; }.chrono-studio-pricing-heading .chrono-eyebrow { font-size: 8px; margin-bottom: 23px; }.chrono-studio-pricing h2 { font-size: clamp(43px, 11vw, 62px); }.chrono-studio-pricing-heading > p { margin-top: 24px; max-width: 280px; font-size: 13px; }.chrono-studio-plan-notice { font-size: 9px; margin: 27px 0 30px !important; }.chrono-sculptural-plans { grid-template-columns: 1fr; gap: 23px; }.chrono-sculptural-plan { padding: 22px 25px 30px; }.chrono-sculptural-plan.is-featured { margin: 0; }.chrono-sculptural-plan-top { min-height: 25px; }.chrono-sculptural-plan .chrono-plan-recommended { font-size: 7px; padding: 6px 9px; gap: 5px; }.chrono-plan-sculpture { height: 190px; margin: -8px 0 22px; }.chrono-plan-sculpture > .chrono-mono { font-size: 7px; }.chrono-sculptural-plan h3 { font-size: 34px; }.chrono-sculptural-plan-description { min-height: 0; font-size: 13px; max-width: 260px; }.chrono-sculptural-plan .chrono-plan-price { padding: 24px 0; }.chrono-sculptural-plan .chrono-plan-price strong { font-size: 30px; }.chrono-sculptural-plan .chrono-plan-price > span { font-size: 10px; }.chrono-sculptural-plan .chrono-button { font-size: 12px; padding: 15px 16px; }.chrono-sculptural-plan li { font-size: 12px; gap: 10px; }.chrono-sculptural-plan ul { gap: 16px; margin-top: 25px; padding-top: 22px; }.chrono-pricing-bottom { flex-wrap: wrap; gap: 14px; font-size: 7px; padding-top: 30px; }.chrono-pricing-bottom > span:nth-child(2) { order: 3; width: 100%; }
+  .chrono-reference { grid-template-columns: 1fr; padding: 70px 25px; gap: 37px; }.chrono-reference-intro .chrono-eyebrow { font-size: 7px; margin-bottom: 20px; }.chrono-reference h2 { font-size: 47px; }.chrono-reference-stage { height: 230px; max-width: 350px; margin: 5px auto -5px; }.chrono-reference-meta { font-size: 6px; }.chrono-reference-file button { font-size: 14px; gap: 12px; padding-top: 24px; padding-bottom: 24px; }.chrono-reference-answer p { font-size: 12px; padding: 0 14px 26px 45px; line-height: 1.9; }
+  .chrono-studio-access { padding: 75px 25px 80px; gap: 34px; }.chrono-studio-access h2 { font-size: clamp(47px, 12vw, 65px); }.chrono-studio-access .chrono-access-intro > p:not(.chrono-eyebrow):not(.chrono-access-login) { font-size: 13px; }.chrono-access-assembly { height: 280px; margin: 0 -15px -10px; }.chrono-access-assembly > .chrono-mono { left: 15px; right: 15px; font-size: 6px; }.chrono-studio-access .chrono-access-login { margin-top: 20px !important; font-size: 11px; }.chrono-studio-access .chrono-access-form { padding: 25px 21px; margin-top: 0; }.chrono-studio-access .chrono-access-form label { font-size: 11px; }
+  .chrono-static .chrono-engine-sticky { height: 800px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chrono-reference-answer, .chrono-reference-tab, .chrono-reference-file, .chrono-reference-file button > svg, .chrono-engine-step, .chrono-engine-step-icon, .chrono-studio-fallback { transition: none; }
+}
+
+/* Keep the content concise and the moving surfaces on the same visual axis. */
+.chrono-hero-bottom { justify-content: center; }
+.chrono-hero-bottom > a { min-width: 40px; min-height: 40px; justify-content: center; }
+.chrono-invoice h3 { padding-top: 15px; }
+.chrono-notebook { filter: none; }
+.chrono-notebook-cover { box-shadow: 1px 2px 0 #56623c, 2px 4px 0 #7c8863, 0 18px 28px #3b462518; }
+.chrono-notebook-page--left { padding-top: 35px; }
+.chrono-notebook-page--right { padding-top: 50px; }
+.chrono-feature { margin-bottom: 28px; }
+.chrono-feature h4 { margin-bottom: 10px; }
+.chrono-crossed { margin-bottom: 27px; }
+.chrono-sticky-note { display: flex; align-items: center; }
+.chrono-engine-heading, .chrono-studio-pricing-heading { display: block; }
+.chrono-motion-toggle { width: 36px; height: 36px; }
+.chrono-engine-heading { text-align: center; }
+.chrono-engine-steps { padding-bottom: 12px; }
+.chrono-document-description { min-height: 60px; padding-top: 13px; }
+.chrono-document-description p { margin-top: 0; }
+.chrono-workbench-roles > h3 { max-width: 280px; }
+.chrono-sculptural-plan-description { min-height: 0; }
+.chrono-plan-sculpture { margin-bottom: 12px; }
+.chrono-studio-pricing { padding-bottom: 65px; }
+.chrono-reference-answer { transition-duration: .25s; }
+.chrono-static .chrono-reference-answer { transition: none; }
+@media (min-width: 900px) {
+  .chrono-story .chrono-notebook { will-change: transform, opacity; }
+  .chrono-object-stage { height: clamp(365px, 54svh, 510px); margin-top: 32px; }
+  .chrono-laptop-stage { inset: -12px -35px -90px; }
+  .chrono-demo-controls { bottom: 26px; }
+}
+@media (max-width: 899px) {
+  .chrono-feature { margin-bottom: 28px; }
+  .chrono-workbench-roles > h3 { max-width: 250px; }
+}
+@media (max-width: 650px) {
+  .chrono-motion-toggle { bottom: 14px; width: 42px; height: 42px; }
+  .chrono-footer { padding-bottom: 35px; }
+  .chrono-notebook-page--left { padding-top: 28px; }
+  .chrono-notebook-page--right { padding-top: 0; }
+  .chrono-reference h2 { font-size: 42px; }
+  .chrono-engine-step h3 { font-size: 13px; }
+  .chrono-studio-access h2 { font-size: clamp(40px, 10vw, 60px); }
+  .chrono-sculptural-plan-description { min-height: 0; }
+  .chrono-workbench-roles > h3 { max-width: 280px; }
+}
