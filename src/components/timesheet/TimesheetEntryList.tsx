@@ -67,13 +67,18 @@ export const TimesheetEntryList: React.FC<TimesheetEntryListProps> = ({
     setIsStatusUpdating(true);
 
     try {
-      await update();
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["timesheets"] }),
-        queryClient.invalidateQueries({ queryKey: ["timesheets-for-review"] }),
-        queryClient.invalidateQueries({ queryKey: ["kpis"] }),
-        queryClient.invalidateQueries({ queryKey: ["adminDashboard"] }),
-      ]);
+      try {
+        await update();
+      } finally {
+        // Refresh even after a conflict or partially applied batch so the next
+        // action uses the persisted status, including concurrent reviews.
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["timesheets"] }),
+          queryClient.invalidateQueries({ queryKey: ["timesheets-for-review"] }),
+          queryClient.invalidateQueries({ queryKey: ["kpis"] }),
+          queryClient.invalidateQueries({ queryKey: ["adminDashboard"] }),
+        ]);
+      }
       onFeedback({
         type: "success",
         message: t("timesheet.statusUpdated"),

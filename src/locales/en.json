@@ -750,6 +750,7 @@
     "saveFailed": "Failed to save the timesheet entry.",
     "deleteFailed": "Failed to delete the timesheet entry.",
     "statusUpdateFailed": "Failed to update the timesheet status.",
+    "statusUpdateConflict": "Some entries could not be updated. Check their current status and try again.",
     "statusUpdated": "Timesheet status updated successfully.",
     "timerStartFailed": "Failed to start the timer.",
     "timerStopFailed": "Failed to stop the timer.",

@@ -71,7 +71,9 @@ await context.route("**/*", async route => {
       patches.push({ payload, ids: rows.map(row => row.id) });
       if (failPatch) return json({ message: "Save failed. Try again." }, 400);
       rows.forEach(row => Object.assign(row, payload));
-      return json(isSingle ? rows[0] : rows);
+      return route.fulfill({ status: 200, contentType: "application/json",
+        headers: { "content-range": `*/${rows.length}`, "access-control-expose-headers": "content-range" },
+        body: JSON.stringify(isSingle ? rows[0] : rows) });
     }
     if (request.method() === "DELETE") {
       rows.forEach(row => entries.splice(entries.indexOf(row), 1));

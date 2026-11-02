@@ -747,6 +747,7 @@
     "saveFailed": "Nem sikerült menteni a munkaidő-bejegyzést.",
     "deleteFailed": "Nem sikerült törölni a munkaidő-bejegyzést.",
     "statusUpdateFailed": "Nem sikerült frissíteni a munkaidő-bejegyzés állapotát.",
+    "statusUpdateConflict": "Néhány bejegyzést nem sikerült frissíteni. Ellenőrizd az aktuális állapotukat, és próbáld újra.",
     "statusUpdated": "A munkaidő-bejegyzés állapota sikeresen frissítve.",
     "timerStartFailed": "Nem sikerült elindítani az időzítőt.",
     "timerStopFailed": "Nem sikerült leállítani az időzítőt.",

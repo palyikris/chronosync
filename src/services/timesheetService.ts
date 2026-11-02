@@ -512,30 +512,40 @@ export async function submitTimesheetEntries(
   entryIds: string[],
 ): Promise<void> {
   if (entryIds.length === 0) return;
+  const uniqueIds = [...new Set(entryIds)];
 
-  const { error } = await supabase
+  const { count, error } = await supabase
     .from("timesheets")
     .update({
       status: "submitted",
       submitted_at: new Date().toISOString(),
-    })
-    .in("id", entryIds);
+    }, { count: "exact" })
+    .in("id", uniqueIds)
+    .eq("status", "draft");
 
   if (error) throw error;
+  if (count !== uniqueIds.length) {
+    throw new Error(i18n.t("timesheet.statusUpdateConflict"));
+  }
 }
 
 export async function revertSubmittedTimesheetEntries(
   entryIds: string[],
 ): Promise<void> {
   if (entryIds.length === 0) return;
+  const uniqueIds = [...new Set(entryIds)];
 
-  const { error } = await supabase
+  const { count, error } = await supabase
     .from("timesheets")
     .update({
       status: "draft",
       submitted_at: null,
-    })
-    .in("id", entryIds);
+    }, { count: "exact" })
+    .in("id", uniqueIds)
+    .eq("status", "submitted");
 
   if (error) throw error;
+  if (count !== uniqueIds.length) {
+    throw new Error(i18n.t("timesheet.statusUpdateConflict"));
+  }
 }

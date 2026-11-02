@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import ts from "typescript";
+import { createClient } from "@supabase/supabase-js";
 import { fetchAllRows } from "../src/utils/fetchAllRows.ts";
 
 // Execute the real service against local API/storage fakes; no hosted writes.
@@ -18,7 +19,7 @@ function serviceFixture(t, options = {}) {
   const reads = [];
   const filters = [];
   const checkedDates = [];
-  const supabase = {
+  const supabase = options.supabase ?? {
     auth: { getUser: async () => ({ data: { user: options.loggedOut ? null : { id: "user-1" } } }) },
     from: table => {
       let mutation;
@@ -223,4 +224,85 @@ test("entry create, edit and duplication persist their own billing multiplier", 
   assert.equal(writes.at(-1).billing_multiplier, 12);
   await service.cloneEntry("entry-1", "2026-10-21");
   assert.equal(writes.at(-1).billing_multiplier, 7);
+});
+
+// Exercise the real Supabase query builder and its Content-Range parsing.
+function statusFixture(t, entries, options = {}) {
+  const requests = [];
+  const supabase = createClient("https://timesheet-test.invalid", "test-key", {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { fetch: async (input, init) => {
+      const url = new URL(input);
+      assert.equal(url.hostname, "timesheet-test.invalid");
+      assert.equal(init.method, "PATCH");
+      const payload = JSON.parse(init.body);
+      requests.push({ url, payload, headers: new Headers(init.headers) });
+      if (options.error) return new Response(JSON.stringify({ message: "Permission denied" }), { status: 403 });
+      const ids = url.searchParams.get("id").slice(4, -1).split(",");
+      const status = url.searchParams.get("status")?.slice(3);
+      const affected = entries.filter(entry => ids.includes(entry.id) && (!status || entry.status === status)
+        && !options.hiddenIds?.includes(entry.id));
+      affected.forEach(entry => Object.assign(entry, payload));
+      return new Response(null, { status: 204, headers: options.missingCount ? {} : { "content-range": `*/${affected.length}` } });
+    } },
+  });
+  return { ...serviceFixture(t, { supabase }), requests };
+}
+
+test("undo confirms a submitted entry was withdrawn and clears its submission timestamp", async t => {
+  const entries = [{ id: "entry-1", status: "submitted", submitted_at: "2026-11-02T10:00:00Z" }];
+  const { service, requests } = statusFixture(t, entries);
+  await service.revertSubmittedTimesheetEntries(["entry-1", "entry-1"]);
+  assert.equal(entries[0].status, "draft");
+  assert.equal(entries[0].submitted_at, null);
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].url.searchParams.get("status"), "eq.submitted");
+  assert.match(requests[0].headers.get("prefer"), /count=exact/);
+});
+
+test("undo reports a zero-row RLS response as failure", async t => {
+  const entries = [{ id: "entry-1", status: "submitted" }];
+  const { service } = statusFixture(t, entries, { hiddenIds: ["entry-1"] });
+  await assert.rejects(service.revertSubmittedTimesheetEntries(["entry-1"]), /statusUpdateConflict/);
+  assert.equal(entries[0].status, "submitted");
+});
+
+for (const status of ["approved", "invoiced", "rejected", "draft"]) {
+  test(`undo does not overwrite an entry that is already ${status}`, async t => {
+    const entries = [{ id: "entry-1", status }];
+    const { service } = statusFixture(t, entries);
+    await assert.rejects(service.revertSubmittedTimesheetEntries(["entry-1"]), /statusUpdateConflict/);
+    assert.equal(entries[0].status, status);
+  });
+}
+
+test("submission updates only drafts and reports a partially applied batch as failure", async t => {
+  const entries = [{ id: "entry-1", status: "draft" }, { id: "entry-2", status: "approved" }];
+  const { service, requests } = statusFixture(t, entries);
+  await assert.rejects(service.submitTimesheetEntries(["entry-1", "entry-2"]), /statusUpdateConflict/);
+  assert.equal(entries[0].status, "submitted");
+  assert.ok(Number.isFinite(Date.parse(entries[0].submitted_at)));
+  assert.equal(entries[1].status, "approved");
+  assert.equal(requests[0].url.searchParams.get("status"), "eq.draft");
+});
+
+test("submission confirms every unique draft was submitted", async t => {
+  const entries = [{ id: "entry-1", status: "draft" }, { id: "entry-2", status: "draft" }];
+  const { service } = statusFixture(t, entries);
+  await service.submitTimesheetEntries(["entry-1", "entry-2", "entry-1"]);
+  assert.ok(entries.every(entry => entry.status === "submitted" && entry.submitted_at));
+});
+
+test("status changes propagate API errors and reject missing mutation counts", async t => {
+  const { service } = statusFixture(t, [], { error: true });
+  await assert.rejects(service.revertSubmittedTimesheetEntries(["entry-1"]), { message: "Permission denied" });
+  const { service: unconfirmed } = statusFixture(t, [], { missingCount: true });
+  await assert.rejects(unconfirmed.revertSubmittedTimesheetEntries(["entry-1"]), /statusUpdateConflict/);
+});
+
+test("empty submission and withdrawal do not make API requests", async t => {
+  const { service, requests } = statusFixture(t, []);
+  await service.submitTimesheetEntries([]);
+  await service.revertSubmittedTimesheetEntries([]);
+  assert.equal(requests.length, 0);
 });
