@@ -32,10 +32,11 @@ import { Select } from "../shared/Select";
 import { Input } from "../shared/Input";
 import { ProjectImportModal } from "./ProjectImportModal";
 import { isIndexedPriceMissing } from "../../utils/projectPricing";
-import { ProjectPricingModal } from "./ProjectPricingModal";
 import type { ProjectPricing } from "../../types/project-pricing";
 import { usePricingYear } from "../../hooks/usePricingYear";
 import { ProjectPayrollFields } from "./ProjectPayrollFields";
+
+const ProjectPricingModal = React.lazy(() => import("./ProjectPricingModal").then(m => ({ default: m.ProjectPricingModal })));
 
 const normalizeEstimatedHours = (value: string) => {
   if (value === "") return 0;
@@ -49,6 +50,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
   clients,
   projects,
   projectPricing,
+  attachmentsEnabled = true,
   pricingYear: suppliedPricingYear,
   onRefresh,
 }) => {
@@ -309,8 +311,8 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                 {t("common.add")}
               </Button>
             </div>
-            <ProjectPayrollFields id="new-project-payroll" enabled={newProjectIsPayroll}
-              onChange={setNewProjectIsPayroll} />
+            {attachmentsEnabled && <ProjectPayrollFields id="new-project-payroll" enabled={newProjectIsPayroll}
+              onChange={setNewProjectIsPayroll} />}
             <p className="text-xs text-muted-strong">
               {selectedClientForNewProject
                 ? t("companySettings.creatingUnder", {
@@ -474,7 +476,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                             {t("projectPricing.missingBadge", { year: pricingYear })}
                           </span>
                         )}
-                        {project.is_payroll && (
+                        {attachmentsEnabled && project.is_payroll && (
                           <span className="inline-flex items-center gap-1 rounded-full border border-primary-strong/20 bg-primary/20 px-2 py-0.5 text-xs font-semibold text-primary-strong">
                             <Users className="h-3 w-3" aria-hidden="true" />
                             {t("companySettings.payrollProject")}
@@ -621,8 +623,8 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
                 })
               }
             />
-            <ProjectPayrollFields id="edit-project-payroll" enabled={editingProject.is_payroll ?? false}
-              onChange={is_payroll => setEditingProject({ ...editingProject, is_payroll })} />
+            {attachmentsEnabled && <ProjectPayrollFields id="edit-project-payroll" enabled={editingProject.is_payroll ?? false}
+              onChange={is_payroll => setEditingProject({ ...editingProject, is_payroll })} />}
             <div className="flex justify-end gap-2">
               <Button
                 variant="secondary"

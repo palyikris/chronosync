@@ -1,4 +1,11 @@
 {
+  "modules": {
+    "title": "Modulok",
+    "base": "A munkaidő-nyilvántartás és az ellenőrzés mindig elérhető.",
+    "leave_attachments": "Szabadságkérelmek és számlamellékletek",
+    "invoicing": "Számlázás",
+    "dependency": "A számlázáshoz a Szabadságkérelmek és számlamellékletek modul is szükséges."
+  },
   "pwa": {
     "installTitle": "A ChronoSync egy érintésre",
     "installDescription": "Add az alkalmazást a kezdőképernyődhöz, hogy gyorsan elérd a munkaidődet és a csapatodat.",

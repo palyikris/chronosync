@@ -82,7 +82,7 @@ async function app(role='regular', options={}) {
     }
     if(table==='clients')return json(offset?[]:[client]);
     if(table==='projects')return json(offset?[]:[project]);
-    if(table==='companies')return json(req.headers().accept?.includes('object')?{id:companyId,name:'Test company',is_active:true,szamlazz_test_mode:true}:[]);
+    if(table==='companies')return json(req.headers().accept?.includes('object')?{id:companyId,name:'Test company',enabled_modules:['leave_attachments','invoicing'],is_active:true,szamlazz_test_mode:true}:[]);
     if(table==='invoice-settings')return json({invoice_provider:'szamlazz_hu',api_key_configured:false});
     if(table==='audit_logs'){
       const search=url.searchParams.get('or')??'';

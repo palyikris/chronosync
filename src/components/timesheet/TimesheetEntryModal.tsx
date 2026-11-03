@@ -54,14 +54,15 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
   open, isEditing, formData, clients, projects, onClose, onSubmit, onChange,
   isSaving, shortcutProjects, favoriteProjects, favoritesLoading,
   favoritesError, isSavingFavorite, onRetryFavorites, onToggleFavorite, feedback,
+  attachmentsEnabled = true,
 }) => {
   const { t, i18n } = useTranslation();
   const formId = React.useId();
   const descriptionRef = React.useRef<HTMLTextAreaElement>(null);
   const isResubmitting = isEditing && formData.status === "rejected";
   const selectedClient = clients.find(client => client.id === formData.client_id);
-  const showEnglishDescriptionHint = selectedClient?.invoice_attachment_language === "en";
-  const isPayroll = projects.find(project => project.id === formData.project_id)?.is_payroll;
+  const showEnglishDescriptionHint = attachmentsEnabled && selectedClient?.invoice_attachment_language === "en";
+  const isPayroll = attachmentsEnabled && projects.find(project => project.id === formData.project_id)?.is_payroll;
   const multiplier = formData.billing_multiplier ?? 1;
   const validMultiplier = !isPayroll || billingMultiplierSchema.safeParse(multiplier).success;
   const currentProject = {

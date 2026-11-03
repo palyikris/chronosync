@@ -70,6 +70,7 @@ const hasDuplicateClientCode = (
 };
 
 interface Props {
+  attachmentsEnabled?: boolean;
   companyId: string;
   clients: Client[];
   onRefresh: () => void;
@@ -77,6 +78,7 @@ interface Props {
 
 export const ClientManagementCard: React.FC<Props> = ({
   companyId,
+  attachmentsEnabled = true,
   clients,
   onRefresh,
 }) => {
@@ -337,7 +339,7 @@ export const ClientManagementCard: React.FC<Props> = ({
                 required
                 className="md:flex-1"
               />
-              <Select
+              {attachmentsEnabled && <Select
                 id="new-client-language"
                 label={t("companySettings.invoiceAttachmentLanguageLabel")}
                 leftIcon="translate"
@@ -355,9 +357,9 @@ export const ClientManagementCard: React.FC<Props> = ({
                 <option value="hu">
                   {t("companySettings.invoiceAttachmentLanguageHu")}
                 </option>
-              </Select>
+              </Select>}
             </div>
-            <div className="grid gap-3 md:grid-cols-2">
+            {attachmentsEnabled && <div className="grid gap-3 md:grid-cols-2">
               <Input
                 id="new-client-available-hours"
                 type="number"
@@ -386,7 +388,7 @@ export const ClientManagementCard: React.FC<Props> = ({
                   )
                 }
               />
-            </div>
+            </div>}
             <div className="flex items-center justify-between rounded-xl border border-border bg-surface-strong/70 px-4 py-3">
               <div>
                 <p className="text-sm font-medium text-text">
@@ -619,7 +621,7 @@ export const ClientManagementCard: React.FC<Props> = ({
                     />
                   </div>
                 </div>
-                <dl className="mt-4 grid grid-cols-1 gap-x-5 gap-y-3 border-t border-border pt-3 sm:ml-[3.25rem] sm:grid-cols-2 lg:grid-cols-3">
+                {attachmentsEnabled && <dl className="mt-4 grid grid-cols-1 gap-x-5 gap-y-3 border-t border-border pt-3 sm:ml-[3.25rem] sm:grid-cols-2 lg:grid-cols-3">
                   <div className="min-w-0">
                     <dt className="text-[10px] font-semibold uppercase tracking-[0.07em] text-muted">
                       {t("companySettings.invoiceAttachmentLanguageLabel")}
@@ -646,7 +648,7 @@ export const ClientManagementCard: React.FC<Props> = ({
                       {client.hours_from_previous_month ?? 0}
                     </dd>
                   </div>
-                </dl>
+                </dl>}
               </article>
             ))
           )}
@@ -688,7 +690,7 @@ export const ClientManagementCard: React.FC<Props> = ({
               maxLength={CLIENT_CODE_MAX_LENGTH}
               required
             />
-            <Select
+            {attachmentsEnabled && <Select
               id="edit-client-language"
               label={t("companySettings.invoiceAttachmentLanguageLabel")}
               leftIcon="translate"
@@ -709,8 +711,8 @@ export const ClientManagementCard: React.FC<Props> = ({
               <option value="hu">
                 {t("companySettings.invoiceAttachmentLanguageLabelHu")}
               </option>
-            </Select>
-            <div className="grid gap-3 md:grid-cols-2">
+            </Select>}
+            {attachmentsEnabled && <div className="grid gap-3 md:grid-cols-2">
               <Input
                 id="edit-client-available-hours"
                 type="number"
@@ -745,7 +747,7 @@ export const ClientManagementCard: React.FC<Props> = ({
                   })
                 }
               />
-            </div>
+            </div>}
             <div className="flex items-center justify-between rounded-xl border border-border-strong bg-bg-accent px-4 py-3">
               <div>
                 <p className="text-sm font-medium text-text">

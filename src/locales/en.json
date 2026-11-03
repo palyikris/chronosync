@@ -1,4 +1,11 @@
 {
+  "modules": {
+    "title": "Modules",
+    "base": "Timesheets and review are always included.",
+    "leave_attachments": "Leave requests & invoice attachments",
+    "invoicing": "Invoicing",
+    "dependency": "Invoicing requires Leave requests & invoice attachments."
+  },
   "pwa": {
     "installTitle": "Keep ChronoSync one tap away",
     "installDescription": "Add the app to your home screen for quick access to your time and team.",

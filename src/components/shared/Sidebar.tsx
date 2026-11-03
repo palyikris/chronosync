@@ -22,6 +22,8 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/useAuth";
 import { getRoleLabel } from "../../utils/getRoleLabel";
 import type { NavItem } from "../../types/ui";
+import { MODULE_ROUTES } from "../../modules/catalog";
+import { useCompanyModules } from "../../modules/useCompanyModules";
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -56,6 +58,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onMobileClose,
 }) => {
   const { profile, signOut } = useAuth();
+  const { hasModule } = useCompanyModules();
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
@@ -196,6 +199,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   const filteredNavItems = mainNavItems.filter((item) => {
+    const module = MODULE_ROUTES[item.to];
+    if (module && !hasModule(module)) return false;
     if (!item.roleRequired) return true;
     if (
       [

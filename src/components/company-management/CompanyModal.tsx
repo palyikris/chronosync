@@ -5,8 +5,10 @@ import { Button } from "../shared/Button";
 import { Checkbox } from "../shared/Checkbox";
 import { Input } from "../shared/Input";
 import { Modal } from "../shared/Modal";
+import { MODULES, toggleModule, type ModuleId } from "../../modules/catalog";
 
 export interface CompanyFormData {
+  enabled_modules: ModuleId[];
   name: string;
   billing_email: string;
   szamlazz_test_mode: boolean;
@@ -63,7 +65,18 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
               onChange={(e) => onChange({ billing_email: e.target.value })}
             />
           </div>
-          <div className="rounded-xl border border-border bg-bg-accent/60 p-4">
+          <fieldset className="space-y-3 rounded-xl border border-border p-4">
+            <legend className="px-1 text-sm font-semibold">{t("modules.title")}</legend>
+            <p className="text-xs text-muted">{t("modules.base")}</p>
+            {(Object.keys(MODULES) as ModuleId[]).map(module => (
+              <Checkbox key={module} id={`module-${module}`}
+                checked={formData.enabled_modules.includes(module)}
+                onChange={event => onChange({ enabled_modules: toggleModule(formData.enabled_modules, module, event.target.checked) })}
+                label={t(`modules.${module}`)} />
+            ))}
+            <p className="text-xs text-muted">{t("modules.dependency")}</p>
+          </fieldset>
+          {formData.enabled_modules.includes("invoicing") && <div className="rounded-xl border border-border bg-bg-accent/60 p-4">
             <Checkbox
               id="szamlazz_test_mode_check"
               checked={formData.szamlazz_test_mode}
@@ -72,7 +85,7 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
               }
               label={t("companyManagement.szamlazzTestMode")}
             />
-          </div>
+          </div>}
           <div className="rounded-xl border border-border bg-bg-accent/60 p-4">
             <Checkbox
               id="is_active_check"

@@ -21,6 +21,7 @@ export const CompanyManagementPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   const [formData, setFormData] = useState<CompanyFormData>({
+    enabled_modules: [],
     name: "",
     billing_email: "",
     szamlazz_test_mode: true,
@@ -34,6 +35,7 @@ export const CompanyManagementPage: React.FC = () => {
 
   const invalidateCompanies = async () => {
     await queryClient.invalidateQueries({ queryKey: companyQueryKey });
+    await queryClient.invalidateQueries({ queryKey: ["company-modules"] });
   };
 
   const handleMutationError = (error: unknown, fallback: string) => {
@@ -53,6 +55,7 @@ export const CompanyManagementPage: React.FC = () => {
   const updateCompanyMutation = useMutation({
     mutationFn: ({ id, input }: { id: string; input: CompanyFormData }) =>
       companyService.updateCompany(id, {
+        enabled_modules: input.enabled_modules,
         name: input.name.trim(),
         billing_email: input.billing_email.trim() || null,
         szamlazz_test_mode: input.szamlazz_test_mode,
@@ -106,6 +109,7 @@ export const CompanyManagementPage: React.FC = () => {
   const handleOpenCreateModal = () => {
     setEditingCompany(null);
     setFormData({
+      enabled_modules: [],
       name: "",
       billing_email: "",
       szamlazz_test_mode: true,
@@ -121,6 +125,7 @@ export const CompanyManagementPage: React.FC = () => {
   const handleOpenEditModal = (company: Company) => {
     setEditingCompany(company);
     setFormData({
+      enabled_modules: company.enabled_modules,
       name: company.name,
       billing_email: company.billing_email || "",
       szamlazz_test_mode: company.szamlazz_test_mode,
@@ -141,6 +146,7 @@ export const CompanyManagementPage: React.FC = () => {
         });
       } else {
         await createCompanyMutation.mutateAsync({
+          enabled_modules: formData.enabled_modules,
           name: formData.name.trim(),
           billing_email: formData.billing_email.trim() || undefined,
           szamlazz_test_mode: formData.szamlazz_test_mode,

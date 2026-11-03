@@ -159,6 +159,7 @@ export interface TimesheetEntryListProps {
 }
 
 export interface TimesheetEntryModalProps {
+  attachmentsEnabled?: boolean;
   open: boolean;
   isEditing: boolean;
   formData: TimesheetFormData;

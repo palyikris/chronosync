@@ -93,7 +93,7 @@ async function open(language = 'en', failPrices = false, initialTime = '2026-10-
     }
     const table = url.pathname.split('/').at(-1);
     if (table === 'profiles') return json(profile);
-    if (table === 'companies') return json({ id: company, name: 'Pricing Test Company', is_active: true, is_deleted: false, szamlazz_test_mode: routePath !== '/admin/billing', leave_client_id: null, leave_project_id: null });
+    if (table === 'companies') return json({ id: company, name: 'Pricing Test Company', enabled_modules: ['leave_attachments', 'invoicing'], is_active: true, is_deleted: false, szamlazz_test_mode: routePath !== '/admin/billing', leave_client_id: null, leave_project_id: null });
     if (table === 'clients') return json([client]);
     if (table === 'projects') return json(projects);
     if (table === 'client_billing_profiles') {

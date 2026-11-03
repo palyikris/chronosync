@@ -76,6 +76,40 @@ Package versions and dependencies are specified in `package.json`.
 
 ## Features
 
+### Company modules
+
+Timesheets, submission/review, time reporting, and the company/user/client/project
+administration needed for those workflows are included in the base application.
+Super administrators choose optional modules when creating or editing a company:
+
+| Module ID | Features | Requires |
+| --- | --- | --- |
+| `leave_attachments` | Leave requests and approval, leave configuration, invoice attachment exports, attachment language/carry-over settings, company report logo | Base |
+| `invoicing` | Billing profiles, project pricing and annual indexes, provider credentials/test mode, invoice review/preview/issuance, history, PDFs and reconciliation | `leave_attachments` |
+
+Enabling invoicing selects its dependency. Disabling the first module also disables
+invoicing. Navigation, direct routes and settings follow the company's enabled
+modules. New companies default to base only. The existing guided demo enables both
+modules with fictional data.
+
+Before deploying either application, apply the backend migration
+`20261103175015_company_modules.sql` after all existing migrations from both
+repositories. It adds `companies.enabled_modules`, preserves both modules for
+existing companies, and enforces module dependencies and super-admin-only changes
+in PostgreSQL. The backend also checks modules before returning optional data or
+calling an invoice provider. Disabling a module preserves its records and
+credentials; approved leave continues to protect existing timesheet date locks.
+Invoicing cannot be disabled while an invoice is issuing or awaiting reconciliation.
+
+Module definitions and route ownership live in `src/modules/catalog.ts`. Company
+module access is fetched through `src/modules/useCompanyModules.ts` and refreshed
+on focus and every minute. The API and database always check current access.
+
+Validation: `npm run build`, `npm run lint`, and
+`node --experimental-strip-types --test tests/*.test.mjs`. Browser coverage is in
+`tests/modules-ui/smoke.mjs` (start Vite on port 5187 with fake Supabase/API values
+and make Playwright available on `NODE_PATH`). It intercepts external traffic.
+
 ChronoSync provides the following features (grouped by area) with a short description of each:
 
 - Authentication & Access Control: Email/password sign-in, sign-up flows, sign-out, and role-aware access (`regular`, `company_admin`, `super_admin`). See `src/services/authService.ts` and `src/context/AuthContext.tsx` for details.

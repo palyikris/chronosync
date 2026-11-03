@@ -23,6 +23,7 @@ export interface ClientManagementCardProps {
 }
 
 export interface ProjectManagementCardProps {
+  attachmentsEnabled?: boolean;
   companyId: string;
   clients: Client[];
   projects: Project[];

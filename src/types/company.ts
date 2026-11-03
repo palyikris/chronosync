@@ -1,6 +1,7 @@
-// src/types/company.ts
+import type { ModuleId } from "../modules/catalog";
 export interface Company {
   id: string;
+  enabled_modules: ModuleId[];
   name: string;
   billing_email: string | null;
   szamlazz_test_mode: boolean;
@@ -14,6 +15,7 @@ export interface Company {
 }
 
 export interface CreateCompanyInput {
+  enabled_modules?: ModuleId[];
   name: string;
   billing_email?: string;
   szamlazz_test_mode?: boolean;
@@ -23,6 +25,7 @@ export interface CreateCompanyInput {
 }
 
 export interface UpdateCompanyInput {
+  enabled_modules?: ModuleId[];
   name?: string;
   billing_email?: string | null;
   szamlazz_test_mode?: boolean;

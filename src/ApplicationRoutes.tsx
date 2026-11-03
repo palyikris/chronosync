@@ -6,6 +6,7 @@ import { getHomeRouteForRole } from "./utils/navigation";
 import { ProtectedRoute } from "./components/shared/ProtectedRoute";
 import { AppLayout } from "./components/shared/AppLayout";
 import { AuthProvider } from "./context/AuthContext";
+import { ModuleRoute } from "./modules/ModuleRoute";
 
 const LoginPage = lazy(() => import("./pages/LoginPage").then(m => ({ default: m.LoginPage })));
 const AuthActionPage = lazy(() => import("./pages/AuthActionPage").then(m => ({ default: m.AuthActionPage })));
@@ -90,7 +91,9 @@ export default function ApplicationRoutes() {
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>
               <Route path="/timesheet" element={<TimesheetPage />} />
-              <Route path="/leaves" element={<LeaveRequestsPage />} />
+              <Route element={<ModuleRoute module="leave_attachments" />}>
+                <Route path="/leaves" element={<LeaveRequestsPage />} />
+              </Route>
 
               <Route element={<ProtectedRoute requireAdmin />}>
                 <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
@@ -101,14 +104,18 @@ export default function ApplicationRoutes() {
                 element={<ProtectedRoute allowedRoles={["company_admin"]} />}
               >
                 <Route path="/admin/review" element={<TimesheetReviewPage />} />
-                <Route
-                  path="/admin/invoice-attachments"
-                  element={<InvoiceAttachmentsPage />}
-                />
-                <Route
-                  path="/admin/billing"
-                  element={<ClientBillingPage />}
-                />
+                <Route element={<ModuleRoute module="leave_attachments" />}>
+                  <Route
+                    path="/admin/invoice-attachments"
+                    element={<InvoiceAttachmentsPage />}
+                  />
+                </Route>
+                <Route element={<ModuleRoute module="invoicing" />}>
+                  <Route
+                    path="/admin/billing"
+                    element={<ClientBillingPage />}
+                  />
+                </Route>
               </Route>
               <Route element={<ProtectedRoute allowedRoles={["super_admin"]} />}>
                 <Route path="/super-admin/companies" element={<CompanyManagementPage />} />

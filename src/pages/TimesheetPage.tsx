@@ -24,6 +24,7 @@ import { TimesheetEntryFilter } from "../components/timesheet/TimesheetEntryFilt
 import { TimesheetViewSwitcher } from "../components/timesheet/TimesheetViewSwitcher";
 import { TimesheetEntryList } from "../components/timesheet/TimesheetEntryList";
 import { TimesheetEntryModal } from "../components/timesheet/TimesheetEntryModal";
+import { useCompanyModules } from "../modules/useCompanyModules";
 import { Button } from "../components/shared/Button";
 import { LoadError } from "../components/shared/LoadError";
 import { Card } from "../components/shared/Card";
@@ -74,6 +75,7 @@ const getViewPreference = (): TimesheetViewMode => {
 
 export const TimesheetPage: React.FC<{ initialDate?: string }> = ({ initialDate }) => {
   const { profile, user } = useAuth();
+  const { hasModule } = useCompanyModules();
   const favorites = useFavoriteProjects();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
@@ -1009,6 +1011,7 @@ export const TimesheetPage: React.FC<{ initialDate?: string }> = ({ initialDate 
       ) : null}
 
       <TimesheetEntryModal
+        attachmentsEnabled={hasModule("leave_attachments")}
         open={isModalOpen}
         isEditing={Boolean(editEntryId)}
         formData={formData}

@@ -11,7 +11,7 @@ import type {
   InvoiceSettings,
 } from "../types/company-settings";
 
-const COMPANY_COLUMNS = "id, name, billing_email, szamlazz_test_mode, is_active, is_deleted, deleted_at, leave_client_id, leave_project_id, created_at";
+const COMPANY_COLUMNS = "id, name, billing_email, enabled_modules, szamlazz_test_mode, is_active, is_deleted, deleted_at, leave_client_id, leave_project_id, created_at";
 
 const getInvoiceApiUrl = () => {
   if (!apiBaseUrl) throw new Error("Invoice settings API is not configured.");
@@ -78,7 +78,7 @@ export const companyService = {
     const { data, error } = await supabase
       .from("companies")
       .select(
-        "id, name, billing_email, szamlazz_test_mode, is_active, is_deleted, deleted_at, leave_client_id, leave_project_id, created_at, profiles(count)",
+        "id, name, billing_email, enabled_modules, szamlazz_test_mode, is_active, is_deleted, deleted_at, leave_client_id, leave_project_id, created_at, profiles(count)",
       )
       .order("created_at", { ascending: false });
 
@@ -98,7 +98,7 @@ export const companyService = {
     const { data, error } = await supabase
       .from("companies")
       .select(
-        "id, name, billing_email, szamlazz_test_mode, is_active, is_deleted, deleted_at, leave_client_id, leave_project_id, created_at",
+        "id, name, billing_email, enabled_modules, szamlazz_test_mode, is_active, is_deleted, deleted_at, leave_client_id, leave_project_id, created_at",
       )
       .eq("id", companyId)
       .single();
@@ -111,6 +111,7 @@ export const companyService = {
       .from("companies")
       .insert({
         name: input.name,
+        enabled_modules: input.enabled_modules ?? [],
         billing_email: input.billing_email || null,
         szamlazz_test_mode: input.szamlazz_test_mode ?? true,
         is_active: input.is_active ?? true,

@@ -119,6 +119,11 @@ export const CompanyTable: React.FC<CompanyTableProps> = ({
                               },
                             )}
                           </span>
+                          <span className="mt-1 text-xs text-muted">
+                            {company.enabled_modules.length
+                              ? company.enabled_modules.map(module => t(`modules.${module}`)).join(" · ")
+                              : t("modules.base")}
+                          </span>
                         </div>
                       </div>
                     </td>

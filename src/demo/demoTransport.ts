@@ -35,7 +35,7 @@ function initialTables(): Tables {
     profiles: [{ ...demoProfile }],
     companies: [{ id: DEMO_COMPANY_ID, name: "ChronoSync demo", billing_email: "team@example.invalid",
       szamlazz_test_mode: true, is_active: true, is_deleted: false, deleted_at: null,
-      leave_client_id: null, leave_project_id: null, created_at: common.created_at }],
+      enabled_modules: ["leave_attachments", "invoicing"], leave_client_id: null, leave_project_id: null, created_at: common.created_at }],
     clients: [{ ...common, id: DEMO_CLIENT_ID, name: "Acme Studio", client_code: "ACME",
       is_active: true, is_default: true, invoice_attachment_language: "en",
       available_hours_per_month: 80, hours_from_previous_month: 0 }],
