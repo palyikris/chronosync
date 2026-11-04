@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useId, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CircleHelp, Download } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -6,7 +6,9 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { DatePicker } from "../components/shared/DatePicker";
 import { Button } from "../components/shared/Button";
 import { Checkbox } from "../components/shared/Checkbox";
+import { PopoverPanel } from "../components/shared/PopoverPanel";
 import { useAuth } from "../context/useAuth";
+import { usePopoverDismiss } from "../hooks/usePopoverDismiss";
 import { fetchActiveClients } from "../services/clientProjectService";
 import type { Client } from "../types/client-project";
 import { downloadSzamlamellekletReport } from "../utils/downloadExcelReport";
@@ -55,6 +57,11 @@ export const InvoiceAttachmentsPage: React.FC = () => {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [updateRemainingHours, setUpdateRemainingHours] = useState(false);
   const [isRemainingHoursInfoOpen, setIsRemainingHoursInfoOpen] = useState(false);
+  const remainingHoursInfoId = useId();
+  const remainingHoursInfoRoot = useRef<HTMLDivElement>(null);
+  const remainingHoursInfoTrigger = useRef<HTMLButtonElement>(null);
+  usePopoverDismiss(isRemainingHoursInfoOpen, remainingHoursInfoRoot, remainingHoursInfoTrigger,
+    () => setIsRemainingHoursInfoOpen(false));
   const [areTableFiltersVisible, setAreTableFiltersVisible] = useState(true);
   const [clientSearchTerm, setClientSearchTerm] = useState("");
   const [clientDefaultFilter, setClientDefaultFilter] = useState<ClientDefaultFilter>("all");
@@ -375,43 +382,43 @@ export const InvoiceAttachmentsPage: React.FC = () => {
               </div>
             </div>
             <div className="mt-4 grid gap-3 border-t border-border-strong pt-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
-              <div className="relative">
-                <label className="flex items-center gap-3 text-sm text-text">
+              <div className="flex items-start gap-2">
+                <label className="flex min-w-0 items-center gap-3 text-sm text-text">
                   <Checkbox
                     checked={canUpdateRemainingHours && updateRemainingHours}
                     onChange={(event) => setUpdateRemainingHours(event.target.checked)}
                     disabled={!canUpdateRemainingHours}
                     className="h-4 w-4"
                   />
-                  <span className="inline-flex items-center gap-2">
-                    <span className="font-medium">
-                      {t("dashboard.invoiceAttachmentUpdateRemainingHoursLabel")}
-                    </span>
-                    <button
-                      type="button"
-                      aria-label={t("dashboard.invoiceAttachmentUpdateInfoLabel")}
-                      aria-expanded={isRemainingHoursInfoOpen}
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        setIsRemainingHoursInfoOpen((open) => !open);
-                      }}
-                      className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-border-strong bg-white text-muted-strong transition hover:text-text"
-                    >
-                      <CircleHelp className="h-3.5 w-3.5" />
-                    </button>
+                  <span className="font-medium">
+                    {t("dashboard.invoiceAttachmentUpdateRemainingHoursLabel")}
                   </span>
                 </label>
-                {isRemainingHoursInfoOpen ? (
-                  <div
-                    role="tooltip"
-                    className="absolute left-12 top-[calc(100%+0.45rem)] z-20 w-[min(24rem,calc(100vw-4rem))] rounded-xl border border-border-strong bg-white px-3 py-2 text-sm text-muted shadow-[0_10px_24px_rgba(39,45,28,0.16)]"
+                <div ref={remainingHoursInfoRoot} className="shrink-0">
+                  <button
+                    ref={remainingHoursInfoTrigger}
+                    id={`${remainingHoursInfoId}-trigger`}
+                    type="button"
+                    aria-label={t("dashboard.invoiceAttachmentUpdateInfoLabel")}
+                    aria-haspopup="dialog"
+                    aria-expanded={isRemainingHoursInfoOpen}
+                    aria-controls={isRemainingHoursInfoOpen ? remainingHoursInfoId : undefined}
+                    onClick={() => setIsRemainingHoursInfoOpen((open) => !open)}
+                    className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-border-strong bg-white text-muted-strong transition hover:text-text"
                   >
-                    {canUpdateRemainingHours
-                      ? t("dashboard.invoiceAttachmentUpdateRemainingHoursHint")
-                      : t("dashboard.invoiceAttachmentUpdateRequiresFullMonth")}
-                  </div>
-                ) : null}
+                    <CircleHelp className="h-3.5 w-3.5" aria-hidden="true" />
+                  </button>
+                  {isRemainingHoursInfoOpen ? (
+                    <PopoverPanel trigger={remainingHoursInfoTrigger} id={remainingHoursInfoId}
+                      title={t("dashboard.invoiceAttachmentUpdateInfoLabel")} width={384}>
+                      <p className="text-sm leading-6 text-muted">
+                        {canUpdateRemainingHours
+                          ? t("dashboard.invoiceAttachmentUpdateRemainingHoursHint")
+                          : t("dashboard.invoiceAttachmentUpdateRequiresFullMonth")}
+                      </p>
+                    </PopoverPanel>
+                  ) : null}
+                </div>
               </div>
               <div className="flex flex-wrap items-center gap-2 text-xs text-muted-strong lg:justify-end">
                 <span className="rounded-full border border-border-strong bg-bg px-3 py-1">
