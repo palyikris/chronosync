@@ -3,6 +3,11 @@ import { useTranslation } from "react-i18next";
 import type { Project } from "../../types/client-project";
 import type { ProjectPricing } from "../../types/project-pricing";
 import { saveProjectPricing } from "../../services/projectPricingService";
+import {
+  getProjectPricingUnitOption,
+  PROJECT_PRICING_CURRENCIES,
+  PROJECT_PRICING_UNITS,
+} from "../../utils/projectPricingOptions";
 import { Modal } from "../shared/Modal";
 import { Input } from "../shared/Input";
 import { Button } from "../shared/Button";
@@ -19,8 +24,14 @@ interface Props {
 export function ProjectPricingModal({ project, year, price, onClose, onSaved }: Props) {
   const { t, i18n } = useTranslation();
   const [amount, setAmount] = useState(price?.indexed_fee == null ? "" : String(price.indexed_fee));
-  const [currency, setCurrency] = useState(price?.currency ?? "HUF");
-  const [unit, setUnit] = useState(price?.unit ?? "óra");
+  const [currency, setCurrency] = useState(() => {
+    const saved = price?.currency ?? "HUF";
+    return PROJECT_PRICING_CURRENCIES.some(code => code === saved) ? saved : "";
+  });
+  const [unit, setUnit] = useState(() => {
+    const saved = price?.unit ?? "óra";
+    return getProjectPricingUnitOption(saved) ? saved : "";
+  });
   const [indexCode, setIndexCode] = useState<NonNullable<ProjectPricing["index_code"]> | "">(price?.index_code ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -42,6 +53,8 @@ export function ProjectPricingModal({ project, year, price, onClose, onSaved }: 
   };
   const original = price?.original_fee == null ? price?.original_fee_text ?? t("projectPricing.unset")
     : `${new Intl.NumberFormat(i18n.resolvedLanguage ?? i18n.language, { maximumFractionDigits: 4 }).format(price.original_fee)} ${price.original_currency ?? price.currency} · ${price.original_unit ?? price.unit}`;
+  const currencyNames = new Intl.DisplayNames([i18n.resolvedLanguage ?? i18n.language], { type: "currency" });
+  const selectedUnit = getProjectPricingUnitOption(unit);
 
   return <Modal open size="content" className="w-lg max-w-full" title={t("projectPricing.editTitle", { year })} onClose={() => { if (!saving) onClose(); }}>
     <form onSubmit={save} className="space-y-4 p-4">
@@ -56,10 +69,22 @@ export function ProjectPricingModal({ project, year, price, onClose, onSaved }: 
           onChange={event => setAmount(event.target.value)} />
         <p className="text-sm text-muted">{t("projectPricing.blankHint")}</p>
         <div className="grid gap-3 sm:grid-cols-2">
-          <Input label={t("projectPricing.currency")} value={currency} required minLength={3} maxLength={3} pattern="[A-Z]{3}"
-            onChange={event => setCurrency(event.target.value.toUpperCase())} />
-          <Input label={t("projectPricing.unit")} value={unit} required maxLength={32}
-            onChange={event => setUnit(event.target.value)} />
+          <Select label={t("projectPricing.currency")} value={currency} required disabled={saving}
+            onChange={event => setCurrency(event.target.value)}>
+            <option value="" disabled>{t("common.select")}</option>
+            {PROJECT_PRICING_CURRENCIES.map(code => {
+              const name = currencyNames.of(code);
+              return <option key={code} value={code}>{name && name !== code ? `${code} – ${name}` : code}</option>;
+            })}
+          </Select>
+          <Select label={t("projectPricing.unit")} value={unit} required disabled={saving}
+            onChange={event => setUnit(event.target.value)}>
+            <option value="" disabled>{t("common.select")}</option>
+            {PROJECT_PRICING_UNITS.map(option => <option key={option.value}
+              value={option.value === selectedUnit?.value ? unit : option.value}>
+              {t(`projectPricing.unitOptions.${option.label}`)}
+            </option>)}
+          </Select>
         </div>
         <Select label={t("projectPricing.annualIndex")} value={indexCode}
           onChange={event => setIndexCode(event.target.value as typeof indexCode)}>

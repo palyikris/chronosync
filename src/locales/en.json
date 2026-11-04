@@ -33,6 +33,16 @@
     "editTitle": "Edit {{year}} project pricing",
     "currency": "Currency",
     "unit": "Unit",
+    "unitOptions": {
+      "hour": "Hour",
+      "month": "Month",
+      "person": "Person",
+      "personMonth": "Person / month",
+      "item": "Item",
+      "fixed": "Fixed fee",
+      "taxReturn": "Tax return",
+      "twoMonths": "Every two months"
+    },
     "blankHint": "Invoices use this saved price. Leave it blank to mark the project as needing attention and prevent invoicing its work.",
     "saveError": "Pricing could not be saved. Please try again.",
     "missingCount_one": "{{count}} project needs a {{year}} price",

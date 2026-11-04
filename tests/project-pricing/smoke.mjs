@@ -209,8 +209,12 @@ try {
   await page.screenshot({ animations: 'disabled', path: `${output}/pricing-modal-mobile.png` });
   await page.setViewportSize({ width: 1366, height: 900 });
   await modal.getByRole('spinbutton', { name: '2026 indexed price' }).fill('200');
-  await modal.getByRole('textbox', { name: 'Currency', exact: true }).fill('HUF');
-  await modal.getByRole('textbox', { name: 'Unit', exact: true }).fill('hó');
+  await expect(modal.getByRole('textbox', { name: /^(Currency|Unit)$/ })).toHaveCount(0);
+  await expect(modal.getByRole('button', { name: 'Unit', exact: true })).toHaveText('Hour');
+  await modal.getByRole('button', { name: 'Currency', exact: true }).click();
+  await page.getByRole('option', { name: 'HUF – Hungarian Forint', exact: true }).click();
+  await modal.getByRole('button', { name: 'Unit', exact: true }).click();
+  await page.getByRole('option', { name: 'Month', exact: true }).click();
   await modal.getByRole('button', { name: 'Annual increase' }).click();
   await page.getByRole('option', { name: 'EU inflation', exact: true }).click();
   app.failSave(true);
@@ -220,6 +224,8 @@ try {
   app.failSave(false);
   await modal.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(modal).toHaveCount(0);
+  assert.equal(app.priceWrites.at(-1)?.unit, 'hó');
+  assert.equal(app.priceWrites.at(-1)?.currency, 'HUF');
   await expect(article('Missing indexed price').getByText('200 HUF · hó', { exact: true })).toBeVisible();
   await expect(article('Missing indexed price').getByText('150 EUR · óra', { exact: true })).toBeVisible();
   await expect(article('Missing indexed price').getByText('2026 price missing')).toHaveCount(0);
@@ -245,6 +251,17 @@ try {
   const hu = await open('hu');
   await expect(hu.page.getByText('3 projektnél hiányzik a 2026. évi díj')).toBeVisible();
   await expect(hu.page.getByText('Hiányzó 2026. évi díj')).toHaveCount(3);
+  await hu.page.locator('article').filter({ has: hu.page.getByRole('heading', { name: 'Priced project', exact: true }) })
+    .getByRole('button', { name: 'Díjazás szerkesztése', exact: true }).click();
+  const huModal = hu.page.getByRole('dialog');
+  await expect(huModal.getByRole('button', { name: 'Egység', exact: true })).toHaveText('Óra');
+  await huModal.getByRole('button', { name: 'Deviza', exact: true }).click();
+  await expect(hu.page.getByRole('option', { name: 'HUF – magyar forint', exact: true })).toBeVisible();
+  await hu.page.getByRole('option', { name: 'EUR – euró', exact: true }).click();
+  await huModal.getByRole('button', { name: 'Egység', exact: true }).click();
+  await expect(hu.page.getByRole('option', { name: 'Fő / hónap', exact: true })).toBeVisible();
+  await hu.page.getByRole('option', { name: 'Hónap', exact: true }).click();
+  await hu.page.screenshot({ animations: 'disabled', path: `${output}/pricing-selects-hu.png` });
   await hu.context.close();
   const rollover = await open('en', false, '2026-12-31T22:59:58Z');
   await rollover.page.locator('article').filter({ has: rollover.page.getByRole('heading', { name: 'Priced project', exact: true }) })

@@ -33,6 +33,16 @@
     "editTitle": "{{year}}. évi projektdíj szerkesztése",
     "currency": "Deviza",
     "unit": "Egység",
+    "unitOptions": {
+      "hour": "Óra",
+      "month": "Hónap",
+      "person": "Fő",
+      "personMonth": "Fő / hónap",
+      "item": "Darab",
+      "fixed": "Fix díj",
+      "taxReturn": "Bevallás",
+      "twoMonths": "Kéthavonta"
+    },
     "blankHint": "A számlák ezt a mentett díjat használják. Üresen hagyva a projekt kitöltendőként jelenik meg, és a munkája nem számlázható.",
     "saveError": "A díjazást nem sikerült menteni. Próbáld újra.",
     "missingCount_one": "{{count}} projektnél hiányzik a {{year}}. évi díj",
