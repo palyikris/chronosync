@@ -7,6 +7,7 @@ import {
   type UpdateCompanyInput,
 } from "../types/company";
 import type {
+  InvoiceConnectionTestResult,
   InvoiceProvider,
   InvoiceSettings,
 } from "../types/company-settings";
@@ -27,6 +28,33 @@ const getAccessToken = async () => {
 };
 
 export const companyService = {
+  async testInvoiceConnection(
+    companyId: string,
+    apiKey?: string,
+  ): Promise<InvoiceConnectionTestResult> {
+    const response = await fetch(`${getInvoiceApiUrl()}/test-connection`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${await getAccessToken()}`,
+      },
+      body: JSON.stringify({
+        company_id: companyId,
+        invoice_provider: "szamlazz_hu",
+        ...(apiKey ? { api_key: apiKey } : {}),
+      }),
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        typeof errorData.detail === "string"
+          ? errorData.detail
+          : "Failed to test the Számlázz.hu connection.",
+      );
+    }
+    return response.json() as Promise<InvoiceConnectionTestResult>;
+  },
+
   async getInvoiceSettings(companyId: string): Promise<InvoiceSettings> {
     const response = await fetch(
       `${getInvoiceApiUrl()}?company_id=${encodeURIComponent(companyId)}`,

@@ -8,6 +8,12 @@ export interface InvoiceSettings {
   api_key_configured: boolean;
 }
 
+export interface InvoiceConnectionTestResult {
+  success: boolean;
+  status: "connected" | "invalid_key" | "provider_error" | "unavailable" | "unconfirmed";
+  provider_error_code: string | null;
+}
+
 export interface CompanySettingsHeaderProps {
   title: string;
   subtitle: string;

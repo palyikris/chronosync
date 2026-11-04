@@ -36,12 +36,18 @@ export const InvoiceSettingsCard: React.FC<InvoiceSettingsCardProps> = ({
   const [keyConfigured, setKeyConfigured] = useState(
     settings?.api_key_configured ?? false,
   );
+  const [configuredProvider, setConfiguredProvider] = useState(
+    settings?.invoice_provider ?? "szamlazz_hu",
+  );
   const [testMode, setTestMode] = useState(initialTestMode);
   const [loading, setLoading] = useState(false);
+  const [testing, setTesting] = useState(false);
   const [result, setResult] = useState<{
     success: boolean;
     message: string;
   } | null>(null);
+  const hasSavedKey = keyConfigured && provider === configuredProvider;
+  const busy = loading || testing;
 
   const handleProviderChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setProvider(event.target.value as InvoiceProvider);
@@ -78,6 +84,7 @@ export const InvoiceSettingsCard: React.FC<InvoiceSettingsCardProps> = ({
       );
 
       setProvider(savedSettings.invoice_provider);
+      setConfiguredProvider(savedSettings.invoice_provider);
       setKeyConfigured(savedSettings.api_key_configured);
       setApiKey("");
       onUpdate?.();
@@ -98,6 +105,49 @@ export const InvoiceSettingsCard: React.FC<InvoiceSettingsCardProps> = ({
     }
   };
 
+  const handleTestConnection = async () => {
+    setTesting(true);
+    setResult(null);
+    try {
+      const trimmedKey = apiKey.trim();
+      if (!trimmedKey && !hasSavedKey) {
+        throw new Error(t("companySettings.invoiceApiKeyRequired"));
+      }
+      if (trimmedKey) {
+        const validation = invoiceApiKeySchema.safeParse(trimmedKey);
+        if (!validation.success) {
+          throw new Error(validation.error.issues[0]?.message);
+        }
+      }
+      const connection = await companyService.testInvoiceConnection(
+        companyId,
+        trimmedKey || undefined,
+      );
+      const messages = {
+        connected: trimmedKey
+          ? "companySettings.invoiceConnectionNewKeySuccess"
+          : "companySettings.invoiceConnectionSuccess",
+        invalid_key: "companySettings.invoiceConnectionInvalidKey",
+        provider_error: "companySettings.invoiceConnectionProviderError",
+        unavailable: "companySettings.invoiceConnectionUnavailable",
+        unconfirmed: "companySettings.invoiceConnectionUnconfirmed",
+      } as const;
+      setResult({
+        success: connection.success,
+        message: t(messages[connection.status] ?? messages.unconfirmed),
+      });
+    } catch (error: unknown) {
+      setResult({
+        success: false,
+        message: error instanceof Error
+          ? error.message
+          : t("companySettings.invoiceConnectionUnconfirmed"),
+      });
+    } finally {
+      setTesting(false);
+    }
+  };
+
   const providerLabel =
     provider === "billingo"
       ? t("companySettings.billingo")
@@ -115,9 +165,9 @@ export const InvoiceSettingsCard: React.FC<InvoiceSettingsCardProps> = ({
           </p>
         </div>
         <span
-          className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${keyConfigured ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}
+          className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${hasSavedKey ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}
         >
-          {keyConfigured
+          {hasSavedKey
             ? t("companySettings.invoiceConfigured")
             : t("companySettings.invoiceNotConnected")}
         </span>
@@ -128,6 +178,7 @@ export const InvoiceSettingsCard: React.FC<InvoiceSettingsCardProps> = ({
           label={t("companySettings.invoiceProviderLabel")}
           value={provider}
           onChange={handleProviderChange}
+          disabled={busy}
         >
           <option value="szamlazz_hu">{t("companySettings.szamlazzHu")}</option>
           <option value="billingo">{t("companySettings.billingo")}</option>
@@ -138,7 +189,11 @@ export const InvoiceSettingsCard: React.FC<InvoiceSettingsCardProps> = ({
             label={t("companySettings.invoiceApiKeyLabel")}
             type="password"
             value={apiKey}
-            onChange={(event) => setApiKey(event.target.value)}
+            onChange={(event) => {
+              setApiKey(event.target.value);
+              setResult(null);
+            }}
+            disabled={busy}
             placeholder={t("companySettings.invoiceApiKeyPlaceholder")}
             autoComplete="new-password"
           />
@@ -151,6 +206,7 @@ export const InvoiceSettingsCard: React.FC<InvoiceSettingsCardProps> = ({
           <Checkbox
             id="szamlazz_test_mode"
             checked={testMode}
+            disabled={busy}
             onChange={(event) => setTestMode(event.target.checked)}
             label={t("companySettings.szamlazzTestMode")}
           />
@@ -158,14 +214,33 @@ export const InvoiceSettingsCard: React.FC<InvoiceSettingsCardProps> = ({
 
         {result && (
           <div
+            role={result.success ? "status" : "alert"}
             className={`rounded-md border p-3 text-sm ${result.success ? "border-green-200 bg-green-50 text-green-800" : "border-red-200 bg-red-50 text-red-800"}`}
           >
             {result.message}
           </div>
         )}
 
-        <div className="flex justify-end space-x-3 pt-2">
-          <Button type="submit" disabled={loading}>
+        {provider === "szamlazz_hu" && (
+          <p className="text-xs text-muted">
+            {t("companySettings.invoiceConnectionHint")}
+          </p>
+        )}
+        <div className="flex flex-wrap justify-end gap-3 pt-2">
+          {provider === "szamlazz_hu" && (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleTestConnection}
+              disabled={busy || (!apiKey.trim() && !hasSavedKey)}
+              aria-busy={testing}
+            >
+              {testing
+                ? t("companySettings.invoiceConnectionTesting")
+                : t("companySettings.invoiceConnectionTest")}
+            </Button>
+          )}
+          <Button type="submit" disabled={busy}>
             {loading ? t("common.saving") : t("common.saveChanges")}
           </Button>
         </div>
