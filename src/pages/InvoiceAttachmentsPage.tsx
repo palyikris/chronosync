@@ -1,5 +1,5 @@
 import React, { useId, useMemo, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CircleHelp, Download } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -9,6 +9,10 @@ import { Checkbox } from "../components/shared/Checkbox";
 import { PopoverPanel } from "../components/shared/PopoverPanel";
 import { useAuth } from "../context/useAuth";
 import { usePopoverDismiss } from "../hooks/usePopoverDismiss";
+import { useCompanyModules } from "../modules/useCompanyModules";
+import { issueClientInvoice, reviewInvoiceBatch } from "../services/clientBillingService";
+import { InvoiceAttachmentInvoiceReview } from "../components/dashboard/InvoiceAttachmentInvoiceReview";
+import type { InvoiceBatchResult, InvoiceBatchReviewItem } from "../types/client-billing";
 import { fetchActiveClients } from "../services/clientProjectService";
 import type { Client } from "../types/client-project";
 import { downloadSzamlamellekletReport } from "../utils/downloadExcelReport";
@@ -47,6 +51,9 @@ export const InvoiceAttachmentsPage: React.FC = () => {
   const { profile } = useAuth();
   const companyId = profile?.company_id ?? "";
   const language = i18n.resolvedLanguage || i18n.language || "en";
+  const queryClient = useQueryClient();
+  const { hasModule } = useCompanyModules();
+  const busy = useRef(false);
 
   const [dateRange, setDateRange] = useState<DashboardDateRange>(() =>
     getInitialDateRange(searchParams),
@@ -56,6 +63,12 @@ export const InvoiceAttachmentsPage: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [updateRemainingHours, setUpdateRemainingHours] = useState(false);
+  const [createRealInvoices, setCreateRealInvoices] = useState(false);
+  const [batchReview, setBatchReview] = useState<{
+    items: InvoiceBatchReviewItem[];
+    params: Parameters<typeof downloadSzamlamellekletReport>[0];
+  } | null>(null);
+  const [batchResults, setBatchResults] = useState<InvoiceBatchResult[] | null>(null);
   const [isRemainingHoursInfoOpen, setIsRemainingHoursInfoOpen] = useState(false);
   const remainingHoursInfoId = useId();
   const remainingHoursInfoRoot = useRef<HTMLDivElement>(null);
@@ -179,7 +192,7 @@ export const InvoiceAttachmentsPage: React.FC = () => {
   };
 
   const handleGenerate = async () => {
-    if (!isDateRangeValid || selectedClientIds.length === 0 || isGenerating) {
+    if (!isDateRangeValid || selectedClientIds.length === 0 || busy.current) {
       return;
     }
 
@@ -192,11 +205,12 @@ export const InvoiceAttachmentsPage: React.FC = () => {
       return;
     }
 
+    busy.current = true;
     setIsGenerating(true);
     setSubmitError(null);
 
     try {
-      await downloadSzamlamellekletReport({
+      const params = {
         companyId,
         clientIds: selectedClientIds,
         startDate,
@@ -204,7 +218,18 @@ export const InvoiceAttachmentsPage: React.FC = () => {
         language,
         periodText,
         updateRemainingHours: updateRemainingHours && canUpdateRemainingHours,
-      });
+      };
+      if (createRealInvoices && hasModule("invoicing")) {
+        const items = await reviewInvoiceBatch({
+          companyId,
+          clientIds: selectedClientIds,
+          periodStart: startDate,
+          periodEnd: endDate,
+        });
+        setBatchReview({ items, params });
+      } else {
+        await downloadSzamlamellekletReport(params);
+      }
     } catch (error) {
       setSubmitError(
         error instanceof Error
@@ -212,6 +237,41 @@ export const InvoiceAttachmentsPage: React.FC = () => {
           : t("dashboard.invoiceAttachmentGenerationFailed"),
       );
     } finally {
+      busy.current = false;
+      setIsGenerating(false);
+    }
+  };
+
+  const handleConfirmBatch = async () => {
+    if (!batchReview || busy.current || batchResults !== null) return;
+    busy.current = true;
+    setIsGenerating(true);
+    setSubmitError(null);
+    try {
+      // Generate the attachment before starting any irreversible invoice operation.
+      await downloadSzamlamellekletReport(batchReview.params);
+      const results: InvoiceBatchResult[] = [];
+      setBatchResults([]);
+      for (const item of batchReview.items) {
+        if (!item.review) continue;
+        try {
+          const invoice = await issueClientInvoice(item.review);
+          results.push({ clientId: item.client_id, invoiceNumber: invoice.invoice_number, error: null });
+        } catch (error) {
+          // A lost response may mean an invoice was issued. Never retry creation.
+          results.push({ clientId: item.client_id, invoiceNumber: null,
+            error: error instanceof Error ? error.message : t("clientBilling.invoiceRequestFailed") });
+        }
+        setBatchResults([...results]);
+      }
+      void queryClient.invalidateQueries({ queryKey: ["invoice-history", companyId] });
+      void queryClient.invalidateQueries({ queryKey: ["timesheets"] });
+      void queryClient.invalidateQueries({ queryKey: ["adminDashboard", companyId] });
+      void queryClient.invalidateQueries({ queryKey: ["activeClients", companyId] });
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : t("dashboard.invoiceAttachmentGenerationFailed"));
+    } finally {
+      busy.current = false;
       setIsGenerating(false);
     }
   };
@@ -282,7 +342,7 @@ export const InvoiceAttachmentsPage: React.FC = () => {
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-6 pb-10">
+    <fieldset disabled={isGenerating} className="mx-auto min-w-0 w-full max-w-6xl space-y-6 pb-10">
       <h1 className="text-2xl font-semibold tracking-[-0.03em] text-text sm:text-[28px]">
         {t("navigation.invoiceAttachments")}
       </h1>
@@ -382,6 +442,7 @@ export const InvoiceAttachmentsPage: React.FC = () => {
               </div>
             </div>
             <div className="mt-4 grid gap-3 border-t border-border-strong pt-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+              <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
               <div className="flex items-start gap-2">
                 <label className="flex min-w-0 items-center gap-3 text-sm text-text">
                   <Checkbox
@@ -419,6 +480,14 @@ export const InvoiceAttachmentsPage: React.FC = () => {
                     </PopoverPanel>
                   ) : null}
                 </div>
+              </div>
+              {hasModule("invoicing") ? (
+                <label className="flex min-w-0 items-center gap-3 text-sm text-text" title={t("dashboard.invoiceAttachmentCreateInvoicesHint")}>
+                  <Checkbox checked={createRealInvoices}
+                    onChange={(event) => setCreateRealInvoices(event.target.checked)} className="h-4 w-4" />
+                  <span className="font-medium">{t("dashboard.invoiceAttachmentCreateInvoicesLabel")}</span>
+                </label>
+              ) : null}
               </div>
               <div className="flex flex-wrap items-center gap-2 text-xs text-muted-strong lg:justify-end">
                 <span className="rounded-full border border-border-strong bg-bg px-3 py-1">
@@ -619,9 +688,23 @@ export const InvoiceAttachmentsPage: React.FC = () => {
             clients.length === 0
           }
         >
-          {isGenerating ? t("common.loading") : t("dashboard.generateInvoiceAttachments")}
+          {isGenerating ? t("common.loading") : t(createRealInvoices && hasModule("invoicing")
+            ? "dashboard.invoiceBatchReviewButton" : "dashboard.generateInvoiceAttachments")}
         </Button>
       </div>
-    </div>
+      {batchReview ? (
+        <InvoiceAttachmentInvoiceReview items={batchReview.items}
+          clientNames={Object.fromEntries(clients.map((client) => [client.id, client.name]))}
+          startDate={batchReview.params.startDate} endDate={batchReview.params.endDate}
+          generating={isGenerating} results={batchResults} error={submitError}
+          onConfirm={handleConfirmBatch} onClose={() => {
+            if (busy.current) return;
+            setBatchReview(null);
+            if (batchResults !== null) setCreateRealInvoices(false);
+            setBatchResults(null);
+            setSubmitError(null);
+          }} />
+      ) : null}
+    </fieldset>
   );
 };

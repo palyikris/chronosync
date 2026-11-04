@@ -127,6 +127,18 @@ export interface ClientInvoiceReview {
   review_fingerprint: string;
 }
 
+export interface InvoiceBatchReviewItem {
+  client_id: string;
+  review: ClientInvoiceReview | null;
+  reason: string | null;
+}
+
+export interface InvoiceBatchResult {
+  clientId: string;
+  invoiceNumber: string | null;
+  error: string | null;
+}
+
 export type InvoiceLedgerStatus =
   | "issuing"
   | "issued"

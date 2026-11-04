@@ -119,7 +119,8 @@
     "entry": "bejegyzés",
     "entries": "bejegyzés",
     "all": "Összes",
-    "created": "Létrehozva"
+    "created": "Létrehozva",
+    "close": "Bezárás"
   },
   "validation": {
     "validEmail": "Adj meg egy érvényes e-mail címet",
@@ -480,7 +481,24 @@
     "selectAllCompanies": "Összes kijelölése",
     "unselectAllCompanies": "Kijelölés megszüntetése",
     "useDefaultCompanies": "Alapértelmezett cégek használata",
-    "generateInvoiceAttachments": "Számlamellékletek generálása"
+    "generateInvoiceAttachments": "Számlamellékletek generálása",
+    "invoiceAttachmentCreateInvoicesLabel": "Valódi számlák automatikus kiállítása",
+    "invoiceAttachmentCreateInvoicesHint": "Jogosultság ellenőrzése és áttekintés a hiánytalan számlázási adatokkal és projektárakkal rendelkező ügyfelek számlázása előtt.",
+    "invoiceBatchReviewButton": "Számlák ellenőrzése és tovább",
+    "invoiceBatchReviewTitle": "Automatikus számlák áttekintése",
+    "invoiceBatchReviewHint": "A kiválasztott, kimutatható munkával rendelkező ügyfelek számlamellékletei elkészülnek. Ezután csak az alábbi alkalmas ügyfelek számára állítunk ki valódi számlát a mentett számlázási adatok és e-mail-beállítások szerint. A kézzel megadandó mennyiséget igénylő projekteket külön kell számlázni.",
+    "invoiceBatchEligible": "Számlázható ügyfelek: {{count}}",
+    "invoiceBatchSkipped": "A valódi számlázásból kihagyott ügyfelek: {{count}}",
+    "invoiceBatchSkippedHint": "Ezek az ügyfelek továbbra is szerepelnek a számlamelléklet-készítésben. Számukra nem készül valódi számla.",
+    "invoiceBatchDetails": "Számlaadatok és projektösszegek",
+    "invoiceBatchConfirm": "Elolvastam az ellenőrzés eredményét, beleértve az esetleg kihagyott ügyfeleket, és ellenőriztem a címzetteket, összegeket és e-mail-beállításokat. Megerősítem a felsorolt valódi számlák kiállítását.",
+    "invoiceBatchConfirmAttachmentsOnly": "Elolvastam a fenti indokokat, és tudomásul veszem, hogy csak számlamellékletek készülnek; valódi számlák nem kerülnek kiállításra.",
+    "invoiceBatchGenerate": "Mellékletek készítése és számlák kiállítása",
+    "invoiceBatchResultsTitle": "A számlakészítés eredménye",
+    "invoiceBatchProgress": "A mellékletek letöltve. Feldolgozott számlák: {{count}} / {{total}}. Kérjük, tartsa nyitva ezt az ablakot.",
+    "invoiceBatchFinished": "A mellékletek letöltve. Feldolgozott számlák: {{count}} / {{total}}.",
+    "invoiceBatchFailed": "Figyelmet igényel",
+    "invoiceBatchCheckHistory": "Újabb próbálkozás előtt ellenőrizze a számlatörténetet. Egy megszakadt vagy bizonytalan kérés már létrehozhatott számlát. A sikeres számlák fent láthatók."
   },
   "companyManagement": {
     "brand": "ChronoTrack",

@@ -9,6 +9,7 @@ import {
   type ClientBillingProfileUpsert,
   type ClientInvoiceReview,
   type InvoiceHistoryItem,
+  type InvoiceBatchReviewItem,
 } from "../types/client-billing";
 import { getBillingProfileReadiness } from "../utils/clientBillingReadiness";
 
@@ -320,6 +321,33 @@ const normalizeInvoiceHistoryItem = (
   vat_total: Number(value.vat_total),
   gross_total: Number(value.gross_total),
 });
+
+export const reviewInvoiceBatch = async (params: {
+  companyId: string;
+  clientIds: string[];
+  periodStart: string;
+  periodEnd: string;
+}): Promise<InvoiceBatchReviewItem[]> => {
+  const response = await fetch(`${getInvoiceApiBaseUrl()}/batch-review`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${await getAccessToken()}`,
+    },
+    body: JSON.stringify({
+      company_id: params.companyId,
+      client_ids: params.clientIds,
+      period_start: params.periodStart,
+      period_end: params.periodEnd,
+    }),
+  });
+  if (!response.ok) throw new Error(await getInvoiceApiError(response));
+  const items = (await response.json()) as InvoiceBatchReviewItem[];
+  return items.map((item) => ({
+    ...item,
+    review: item.review ? normalizeInvoiceReview(item.review) : null,
+  }));
+};
 
 export const reviewClientInvoice = async ({
   companyId,

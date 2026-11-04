@@ -118,7 +118,8 @@
     "itemsSelected": "items selected",
     "entry": "entry",
     "entries": "entries",
-    "created": "Created"
+    "created": "Created",
+    "close": "Close"
   },
   "validation": {
     "validEmail": "Enter a valid email address",
@@ -483,7 +484,24 @@
     "selectAllCompanies": "Select all",
     "unselectAllCompanies": "Unselect all",
     "useDefaultCompanies": "Use default companies",
-    "generateInvoiceAttachments": "Generate Invoice Attachments"
+    "generateInvoiceAttachments": "Generate Invoice Attachments",
+    "invoiceAttachmentCreateInvoicesLabel": "Create real invoices automatically",
+    "invoiceAttachmentCreateInvoicesHint": "Check eligibility and review before creating invoices for clients with complete billing details and project prices.",
+    "invoiceBatchReviewButton": "Check invoices and continue",
+    "invoiceBatchReviewTitle": "Review automatic invoices",
+    "invoiceBatchReviewHint": "Attachments will be generated for the selected clients with reportable work. Real invoices will then be issued only for eligible clients below, using their saved billing details and email preferences. Projects requiring a manually entered quantity must be invoiced separately.",
+    "invoiceBatchEligible": "Eligible clients: {{count}}",
+    "invoiceBatchSkipped": "Clients skipped for real invoicing: {{count}}",
+    "invoiceBatchSkippedHint": "These clients remain selected for attachment generation. No real invoice will be created for them.",
+    "invoiceBatchDetails": "Invoice details and project amounts",
+    "invoiceBatchConfirm": "I have read the eligibility results, including any skipped clients, and checked the recipients, amounts and email settings. I confirm creation of the listed real invoices.",
+    "invoiceBatchConfirmAttachmentsOnly": "I have read the reasons above and understand that only attachments will be generated; no real invoices will be created.",
+    "invoiceBatchGenerate": "Generate attachments and issue invoices",
+    "invoiceBatchResultsTitle": "Invoice generation results",
+    "invoiceBatchProgress": "Attachments downloaded. Invoices processed: {{count}} / {{total}}. Please keep this window open.",
+    "invoiceBatchFinished": "Attachments downloaded. Invoices processed: {{count}} / {{total}}.",
+    "invoiceBatchFailed": "Needs attention",
+    "invoiceBatchCheckHistory": "Check invoice history before trying again. An interrupted or uncertain request may already have created an invoice. Successful invoices are listed above."
   },
   "companyManagement": {
     "brand": "ChronoTrack",
