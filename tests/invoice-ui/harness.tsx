@@ -52,6 +52,8 @@ export function Harness() {
   return <main className="p-5">
     <output data-testid="issue-count">{issuedCalls}</output>
     {mode === "history" ? <InvoiceHistoryCard history={items} loading={false} error={false} downloadingId={null}
+      downloadingAttachmentId={null} onDownloadAttachment={() => undefined}
+      reversing={false} canReverse={true} onStorno={async () => undefined} onDownloadStorno={() => undefined}
       reconciling={pending} onDownload={() => undefined} onResolveNotIssued={() => undefined}
       onResolveIssued={async () => {
         setPending(true);

@@ -38,6 +38,11 @@ export interface ClientBillingProfile {
   invoice_language: InvoiceLanguage;
   payment_method: string;
   payment_term_days: number;
+  invoice_electronic?: boolean;
+  fulfillment_date_policy?: "period_end" | "due_date" | "issue_date";
+  invoice_prefix?: string | null;
+  seller_bank_name?: string | null;
+  seller_bank_account?: string | null;
   vat_code: string;
   automatic_invoicing_enabled: boolean;
   invoice_schedule_day: number;
@@ -116,6 +121,13 @@ export interface ClientInvoiceReview {
   vat_code: string;
   currency: string;
   exchange_rate_bank?: string | null;
+  e_invoice?: boolean;
+  invoice_prefix?: string | null;
+  seller_bank_name?: string | null;
+  seller_bank_account?: string | null;
+  invoice_comment?: string | null;
+  attach_timesheet_report?: boolean;
+  attachment?: InvoiceAttachmentInfo | null;
   billing_profile_updated_at?: string | null;
   net_total: number;
   vat_total: number;
@@ -143,7 +155,41 @@ export type InvoiceLedgerStatus =
   | "issuing"
   | "issued"
   | "uncertain"
+  | "reversed"
   | "failed";
+
+export interface InvoiceAttachmentInfo {
+  filename: string;
+  media_type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  size_bytes: number;
+  sha256: string;
+  language: "hu" | "en";
+}
+
+export interface InvoiceReversalDetails {
+  id: string;
+  status: "reversing" | "uncertain" | "failed" | "reversed";
+  reason: string;
+  issue_date: string;
+  e_invoice: boolean;
+  invoice_number: string | null;
+  net_total: number | null;
+  gross_total: number | null;
+  pdf_available: boolean;
+  error_code: string | null;
+  error_message: string | null;
+  attempt_count: number;
+  reversed_at: string | null;
+}
+
+export interface InvoiceStornoParams {
+  companyId: string;
+  invoiceId: string;
+  originalInvoiceNumber: string;
+  reason: string;
+  resolution?: "reversed" | "not_reversed";
+  reversalInvoiceNumber?: string;
+}
 
 export interface InvoiceHistoryItem {
   id: string;
@@ -168,6 +214,9 @@ export interface InvoiceHistoryItem {
   gross_total: number;
   invoice_number: string | null;
   pdf_available: boolean;
+  attachment?: InvoiceAttachmentInfo | null;
+  attachment_available?: boolean;
+  reversal?: InvoiceReversalDetails | null;
   provider_error_code: string | null;
   provider_error_message: string | null;
   attempt_count: number;
@@ -179,6 +228,9 @@ export interface InvoiceHistoryItem {
 export interface InvoiceReviewProjectLine {
   project_id: string;
   project_name: string;
+  invoice_name?: string | null;
+  invoice_note?: string | null;
+  po_number?: string | null;
   is_payroll?: boolean;
   logged_hours?: number | null;
   pricing_year: number;

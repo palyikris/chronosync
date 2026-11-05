@@ -33,6 +33,13 @@ export function ProjectPricingModal({ project, year, price, onClose, onSaved }: 
     return getProjectPricingUnitOption(saved) ? saved : "";
   });
   const [indexCode, setIndexCode] = useState<NonNullable<ProjectPricing["index_code"]> | "">(price?.index_code ?? "");
+  const [recurringQuantity, setRecurringQuantity] = useState(price?.recurring_quantity == null ? "" : String(price.recurring_quantity));
+  const [invoiceName, setInvoiceName] = useState(price?.invoice_name ?? "");
+  const [invoiceNote, setInvoiceNote] = useState(price?.attachment_note ?? "");
+  const [poNumber, setPoNumber] = useState(price?.po_number ?? "");
+  const hourly = getProjectPricingUnitOption(unit)?.label === "hour";
+  const supportsRecurring = !hourly && getProjectPricingUnitOption(unit)?.label !== "twoMonths";
+  const monthly = getProjectPricingUnitOption(unit)?.label === "month";
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const save = async (event: React.FormEvent) => {
@@ -42,7 +49,10 @@ export function ProjectPricingModal({ project, year, price, onClose, onSaved }: 
     try {
       await saveProjectPricing({ company_id: project.company_id, project_id: project.id,
         pricing_year: year, indexed_fee: amount.trim() === "" ? null : Number(amount), currency, unit,
-        index_code: indexCode === "" ? null : indexCode }, Boolean(price));
+        index_code: indexCode === "" ? null : indexCode,
+        recurring_quantity: !supportsRecurring || recurringQuantity.trim() === "" ? null : Number(recurringQuantity),
+        invoice_name: invoiceName.trim() || null, attachment_note: invoiceNote.trim() || null,
+        po_number: poNumber.trim() || null }, Boolean(price));
       onSaved();
       onClose();
     } catch {
@@ -86,6 +96,18 @@ export function ProjectPricingModal({ project, year, price, onClose, onSaved }: 
             </option>)}
           </Select>
         </div>
+        {supportsRecurring && <>
+          <Input type="number" min={monthly ? "1" : "0.0001"} max={monthly ? "1" : "999999"} step={monthly ? "1" : "0.0001"}
+            label={t("projectPricing.recurringQuantity")} value={recurringQuantity}
+            onChange={event => setRecurringQuantity(event.target.value)} />
+          <p className="text-xs text-muted">{t("projectPricing.recurringQuantityHint")}</p>
+        </>}
+        <Input label={t("projectPricing.invoiceName")} value={invoiceName} maxLength={255}
+          placeholder={project.name} onChange={event => setInvoiceName(event.target.value)} />
+        <Input label={t("projectPricing.invoiceNote")} value={invoiceNote} maxLength={400}
+          onChange={event => setInvoiceNote(event.target.value)} />
+        <Input label={t("projectPricing.poNumber")} value={poNumber} maxLength={80}
+          onChange={event => setPoNumber(event.target.value)} />
         <Select label={t("projectPricing.annualIndex")} value={indexCode}
           onChange={event => setIndexCode(event.target.value as typeof indexCode)}>
           <option value="">{t("projectPricing.manualIndex")}</option>

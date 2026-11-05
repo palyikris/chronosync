@@ -65,7 +65,12 @@
     "kshRate": "KSH inflation (%)",
     "euRate": "EU inflation (%)",
     "saveIndexes": "Save indexes",
-    "indexesSaved": "Indexes saved for {{year}}."
+    "indexesSaved": "Indexes saved for {{year}}.",
+    "recurringQuantity": "Default monthly quantity",
+    "recurringQuantityHint": "Include this service every full month, even without time entries. Use 1 for a monthly fee or the agreed headcount for payroll. Leave blank to require an entered quantity.",
+    "invoiceName": "Invoice line name",
+    "invoiceNote": "Invoice line note",
+    "poNumber": "Purchase order reference"
   },
   "common": {
     "changesSaved": "Changes saved.",
@@ -1040,8 +1045,8 @@
     "billingEmail": "Billing email",
     "sendInvoiceEmail": "Email the invoice to the client",
     "sendInvoiceEmailDescription": "Számlázz.hu sends the finalized invoice to the billing email above.",
-    "attachTimesheet": "Attach the timesheet report",
-    "attachTimesheetDescription": "Download timesheet reports separately from Timesheets. Invoice emails currently include the invoice only.",
+    "attachTimesheet": "Save billing report and attach it to invoice emails",
+    "attachTimesheetDescription": "Includes the reviewed project charges and time entries. The same workbook remains available in invoice history, even when email delivery is off.",
     "automationTitle": "Automation controls",
     "automationDescription": "Invoices cover the previous calendar month and only use approved time entries.",
     "missingFieldsTitle": "{{count}} required fields still need attention",
@@ -1108,7 +1113,8 @@
       "issuing": "Issuing",
       "issued": "Issued",
       "uncertain": "Needs reconciliation",
-      "failed": "Failed"
+      "failed": "Failed",
+      "reversed": "Reversed"
     },
     "fields": {
       "billingName": "Legal billing name",
@@ -1127,7 +1133,57 @@
       "invoiceUnit": "Unit",
       "vatCode": "VAT code"
     },
-    "recoverInvoicePdf": "Recover invoice PDF"
+    "recoverInvoicePdf": "Recover invoice PDF",
+    "savedRecurringQuantity": "Saved monthly quantity: {{quantity}} {{unit}}. Leave blank to use it, or enter the reviewed quantity.",
+    "fulfillmentDatePolicy": "Fulfillment date",
+    "fulfillmentPeriodEnd": "Last day of the service period",
+    "fulfillmentDueDate": "Payment deadline",
+    "fulfillmentIssueDate": "Invoice issue date",
+    "invoiceDocumentType": "Invoice document type",
+    "paperInvoice": "Paper-based invoice",
+    "electronicInvoice": "Electronic invoice",
+    "invoicePrefix": "Invoice numbering prefix",
+    "sellerBankName": "Seller bank name",
+    "sellerBankAccount": "Seller bank account / IBAN",
+    "bankDetailsRequired": "Enter both the seller bank name and account, or leave both blank.",
+    "invoiceConfigurationHint": "Use the fulfillment policy agreed for this client. Leave the prefix and both bank fields blank to use the Számlázz.hu account defaults. Service dates and these settings appear in the invoice review.",
+    "storno": {
+      "action": "Storno",
+      "title": "Reverse invoice (storno)",
+      "description": "This creates a cancellation invoice for {{invoiceNumber}} at Számlázz.hu. Both documents are retained. After confirmation, the work and billing period become available for a reviewed replacement. Automatic invoicing for this client is paused. No customer email is requested.",
+      "originalNumber": "Type the original invoice number",
+      "reason": "Reason for reversal",
+      "confirmation": "I confirm that this invoice must be reversed. A confirmed storno cannot be undone.",
+      "submit": "Create storno",
+      "reconcileTitle": "Verify existing storno",
+      "reconcileDescription": "Check an existing cancellation for {{invoiceNumber}}. Chronosync verifies the original invoice, the storno reference, amounts and PDF at Számlázz.hu. Confirmed cancellation pauses automatic invoicing for this client. This does not create a document.",
+      "recordExisting": "Check existing storno",
+      "reversalNumber": "Storno invoice number",
+      "resolution": "Provider outcome",
+      "wasReversed": "A storno was issued",
+      "notReversed": "No storno was issued",
+      "reconcileConfirmation": "I have checked the original invoice in Számlázz.hu and want Chronosync to verify this outcome.",
+      "verify": "Verify at Számlázz.hu",
+      "download": "Download storno PDF",
+      "saved": "Storno status verified and saved.",
+      "failed": "Could not confirm storno. Check invoice history before continuing.",
+      "previewBlocked": "Storno is disabled in preview mode.",
+      "status": {
+        "reversing": "Storno in progress",
+        "uncertain": "Storno needs reconciliation",
+        "failed": "Storno not completed",
+        "reversed": "Storno confirmed"
+      }
+    },
+    "annex": {
+      "title": "Billing report",
+      "emailIncluded": "Included with the invoice email.",
+      "savedOnly": "Saved with the invoice. Email delivery is disabled.",
+      "downloadReview": "Review billing report",
+      "downloadSaved": "Download billing report",
+      "downloadFailed": "Could not download the billing report.",
+      "invalidFile": "The server did not return a valid billing workbook."
+    }
   },
   "userSettings": {
     "title": "User Preferences",

@@ -10,6 +10,10 @@ export interface ProjectPricing {
   unit: string;
   currency: string;
   index_code: "ksh" | "eu" | "none" | null;
+  recurring_quantity?: number | null;
+  invoice_name?: string | null;
+  attachment_note?: string | null;
+  po_number?: string | null;
 }
 
 export interface CompanyPriceIndex {
