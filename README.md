@@ -35,6 +35,10 @@ Run `npm run dev:site` for the website at http://127.0.0.1:5173, alongside `npm 
 
 Set `VITE_CHRONOSYNC_APP_URL` on the website and `VITE_MARKETING_SITE_URL` on the app to their respective production URLs. Details and placeholder configuration are documented in `landing/README.md`.
 
+## Importing billing details
+
+For importing existing customers' billing details from a Számlázz.hu partner export, see [Partner billing import](docs/partner-billing-import.md). Apply its database migration before deploying the updated frontend.
+
 ## Required environment variables
 
 - `VITE_SUPABASE_URL` — Supabase project URL (used by `src/lib/supabaseClient.ts`)

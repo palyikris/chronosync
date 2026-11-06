@@ -6,7 +6,7 @@ import { cn } from "../../utils/cn";
 import { Button } from "./Button";
 import type { ModalProps } from "../../types/ui";
 
-export const Modal: React.FC<ModalProps> = ({ open, title, onClose, children, className, footer, size = "default" }) => {
+export const Modal: React.FC<ModalProps> = ({ open, title, onClose, children, className, footer, size = "default", closeDisabled = false }) => {
   const { t } = useTranslation();
   const dialogRef = React.useRef<HTMLDivElement>(null);
   const onCloseRef = React.useRef(onClose);
@@ -105,6 +105,7 @@ export const Modal: React.FC<ModalProps> = ({ open, title, onClose, children, cl
             variant="ghost"
             size="icon"
             onClick={onClose}
+            disabled={closeDisabled}
             aria-label={t("common.closeDialog")}
             icon={<X className="h-5 w-5 text-muted" />}
           ></Button>

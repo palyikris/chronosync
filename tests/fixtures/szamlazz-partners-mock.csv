@@ -1,0 +1,5 @@
+﻿partner neve;partner azonosító;ország;irányítószám;település;utca és házszám;adószám;email cím;adóalany;alapértelmezett fizetési mód;fizetési határidő (nap)
+MyTest Company;MOCK-MTC-20261106;Magyarország;1054;Budapest;Mock Import utca 6.;99887766-2-41;mock-mtc@example.invalid;1;Készpénz;30
+Manual match – Testing Kft (mock export);MOCK-TES-20261106;HU;6720;Szeged;Minta utca 22.;99887767-2-41;mock-tes@example.invalid;1;Készpénz;30
+DunaPart Digital Kft. (teszt);MOCK-QD1-20261106;HU;9999;Import must not replace;Do not overwrite 99.;12345676-2-41;overwrite-attempt@example.invalid;1;Készpénz;365
+Unmatched Mock Partner 20261106;MOCK-UNKNOWN-20261106;HU;7621;Pécs;Minta tér 1.;99887768-2-41;unmatched@example.invalid;1;Átutalás;8

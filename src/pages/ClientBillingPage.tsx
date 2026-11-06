@@ -11,6 +11,7 @@ import {
   Search,
   Settings2,
   ShieldCheck,
+  Upload,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -20,6 +21,7 @@ import { Checkbox } from "../components/shared/Checkbox";
 import { InvoiceHistoryCard } from "../components/client-billing/InvoiceHistoryCard";
 import { ProjectInvoicePricing } from "../components/client-billing/ProjectInvoicePricing";
 import { InvoiceReviewModal } from "../components/client-billing/InvoiceReviewModal";
+import { PartnerBillingImportModal } from "../components/client-billing/PartnerBillingImportModal";
 import { Input } from "../components/shared/Input";
 import { InfoPopover } from "../components/shared/InfoPopover";
 import { Select } from "../components/shared/Select";
@@ -52,6 +54,7 @@ import type {
 import type { Client } from "../types/client-project";
 import { getBillingProfileReadiness } from "../utils/clientBillingReadiness";
 import { cn } from "../utils/cn";
+import { isDemoDocument } from "../lib/serviceEnvironment";
 
 const VAT_CODES = [
   "27",
@@ -307,6 +310,7 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
   } | null>(null);
   const [invoiceReview, setInvoiceReview] = useState<ClientInvoiceReview | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [partnerImportOpen, setPartnerImportOpen] = useState(false);
   const [issueError, setIssueError] = useState<string | null>(null);
   const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<string | null>(null);
   const [downloadingAttachmentId, setDownloadingAttachmentId] = useState<string | null>(null);
@@ -760,6 +764,12 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {!preview && !isDemoDocument ? <Button variant="secondary" icon={<Upload />}
+            disabled={isDirty || saveMutation.isPending || loading || Boolean(loadError)}
+            tooltip={isDirty ? t("clientBilling.partnerImport.saveFirst") : undefined}
+            onClick={() => setPartnerImportOpen(true)}>
+            {t("clientBilling.partnerImport.openButton")}
+          </Button> : null}
           <span
             className={cn(
               "inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[11.5px] font-medium",
@@ -789,6 +799,14 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
           </Link>
         </div>
       </header>
+
+      {partnerImportOpen ? <PartnerBillingImportModal key={companyId} companyId={companyId}
+        onClose={() => setPartnerImportOpen(false)} onComplete={async () => {
+          await queryClient.invalidateQueries({ queryKey: ["clientBillingProfiles", companyId] });
+          setInvoiceReview(null);
+          setReviewOpen(false);
+          setPreviewResult(null);
+        }} /> : null}
 
       {!integrationConfigured && !invoiceSettingsQuery.isLoading ? (
         <div className="flex flex-col gap-3 rounded-2xl border border-warning/20 bg-warning-bg/70 px-4 py-3.5 text-warning sm:flex-row sm:items-center sm:justify-between">

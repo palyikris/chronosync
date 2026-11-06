@@ -13,6 +13,7 @@ import {
   type InvoiceStornoParams,
 } from "../types/client-billing";
 import { getBillingProfileReadiness } from "../utils/clientBillingReadiness";
+import { fetchAllRows } from "../utils/fetchAllRows";
 
 const nullableText = (maxLength: number) =>
   z
@@ -122,14 +123,12 @@ const PROFILE_COLUMNS = [
 export const fetchClientBillingProfiles = async (
   companyId: string,
 ): Promise<ClientBillingProfile[]> => {
-  const { data, error } = await supabase
-    .from("client_billing_profiles")
-    .select(PROFILE_COLUMNS)
-    .eq("company_id", companyId)
-    .order("billing_name");
-
-  if (error) throw error;
-  return (data ?? []) as unknown as ClientBillingProfile[];
+  return fetchAllRows<ClientBillingProfile>(async (from, to) => {
+    const { data, error } = await supabase.from("client_billing_profiles")
+      .select(PROFILE_COLUMNS).eq("company_id", companyId)
+      .order("client_id").range(from, to);
+    return { data: data as unknown as ClientBillingProfile[] | null, error };
+  });
 };
 
 export const saveClientBillingProfile = async (

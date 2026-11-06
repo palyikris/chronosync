@@ -1,4 +1,5 @@
 import { supabase } from "../lib/supabaseClient";
+import { fetchAllRows } from "../utils/fetchAllRows";
 import {
   type Client,
   type CreateClientPayload,
@@ -9,13 +10,8 @@ import {
 
 // --- CLIENTS ---
 export async function fetchClients(companyId: string): Promise<Client[]> {
-  const { data, error } = await supabase
-    .from("clients")
-    .select("*")
-    .eq("company_id", companyId)
-    .order("name");
-  if (error) throw error;
-  return data || [];
+  return fetchAllRows<Client>((from, to) => supabase.from("clients").select("*")
+    .eq("company_id", companyId).order("name").order("id").range(from, to));
 }
 
 export async function fetchActiveClients(companyId: string): Promise<Client[]> {
