@@ -421,8 +421,10 @@ export const issueClientInvoice = async (
 
 export const fetchInvoiceHistory = async (
   companyId: string,
+  clientId?: string,
 ): Promise<InvoiceHistoryItem[]> => {
   const query = new URLSearchParams({ company_id: companyId, limit: "50" });
+  if (clientId) query.set("client_id", clientId);
   const response = await fetch(`${getInvoiceApiBaseUrl()}/history?${query}`, {
     headers: { Authorization: `Bearer ${await getAccessToken()}` },
   });

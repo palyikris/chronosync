@@ -191,6 +191,8 @@ export interface InvoiceStornoParams {
   reversalInvoiceNumber?: string;
 }
 
+export type InvoiceHistoryScope = "client" | "global";
+
 export interface InvoiceHistoryItem {
   id: string;
   company_id: string;

@@ -50,6 +50,7 @@ import type {
   ClientBillingProfile,
   ClientBillingProfileUpsert,
   InvoiceHistoryItem,
+  InvoiceHistoryScope,
   TaxSubject,
 } from "../types/client-billing";
 import type { Client } from "../types/client-project";
@@ -306,6 +307,7 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
     : (userProfile?.company_id ?? "");
   const [quantityDrafts, setQuantityDrafts] = useState<Record<string, Record<string, string>>>({});
   const [selectedClientId, setSelectedClientId] = useState("");
+  const [historyScope, setHistoryScope] = useState<InvoiceHistoryScope>("client");
   const [searchTerm, setSearchTerm] = useState("");
   const [draft, setDraft] = useState<ClientBillingProfileUpsert | null>(null);
   const [isDirty, setIsDirty] = useState(false);
@@ -350,15 +352,6 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
     enabled: Boolean(companyId) && !preview,
   });
 
-  const historyQuery = useQuery<InvoiceHistoryItem[]>({
-    queryKey: ["invoice-history", companyId],
-    queryFn: () => fetchInvoiceHistory(companyId),
-    enabled: Boolean(companyId) && !preview,
-    retry: false,
-    refetchInterval: (query) =>
-      query.state.data?.some((item) => item.status === "issuing" || item.reversal?.status === "reversing") ? 15_000 : false,
-  });
-
   const clients = useMemo(
     () => (preview ? PREVIEW_CLIENTS : (clientsQuery.data ?? [])),
     [clientsQuery.data, preview],
@@ -382,6 +375,16 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
       clients.find((client) => client.id === effectiveSelectedClientId) ?? null,
     [clients, effectiveSelectedClientId],
   );
+
+  const historyClientId = historyScope === "client" ? effectiveSelectedClientId : undefined;
+  const historyQuery = useQuery<InvoiceHistoryItem[]>({
+    queryKey: ["invoice-history", companyId, historyClientId ?? null],
+    queryFn: () => fetchInvoiceHistory(companyId, historyClientId),
+    enabled: Boolean(companyId) && !preview && (historyScope === "global" || Boolean(historyClientId)),
+    retry: false,
+    refetchInterval: (query) =>
+      query.state.data?.some((item) => item.status === "issuing" || item.reversal?.status === "reversing") ? 15_000 : false,
+  });
 
   const quantityScope = `${companyId}:${effectiveSelectedClientId}:${invoicePeriod.start}:${invoicePeriod.end}`;
   const quantityDraft = quantityDrafts[quantityScope] ?? {};
@@ -1466,6 +1469,9 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
 
       {!preview ? (
         <InvoiceHistoryCard
+          scope={historyScope}
+          onScopeChange={setHistoryScope}
+          selectedClientName={selectedClient?.name ?? null}
           history={historyQuery.data ?? []}
           loading={historyQuery.isLoading}
           error={Boolean(historyQuery.error)}

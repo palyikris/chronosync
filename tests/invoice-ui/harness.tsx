@@ -51,7 +51,8 @@ export function Harness() {
   const reconcileCalls = useRef(0);
   return <main className="p-5">
     <output data-testid="issue-count">{issuedCalls}</output>
-    {mode === "history" ? <InvoiceHistoryCard history={items} loading={false} error={false} downloadingId={null}
+    {mode === "history" ? <InvoiceHistoryCard scope="global" onScopeChange={() => undefined}
+      selectedClientName={null} history={items} loading={false} error={false} downloadingId={null}
       downloadingAttachmentId={null} onDownloadAttachment={() => undefined}
       reversing={false} canReverse={true} onStorno={async () => undefined} onDownloadStorno={() => undefined}
       reconciling={pending} onDownload={() => undefined} onResolveNotIssued={() => undefined}

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { AlertTriangle, Download, FileClock, RefreshCcw } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import type { InvoiceHistoryItem, InvoiceStornoParams } from "../../types/client-billing";
+import type { InvoiceHistoryItem, InvoiceHistoryScope, InvoiceStornoParams } from "../../types/client-billing";
 import { InvoiceStornoModal } from "./InvoiceStornoModal";
 import { cn } from "../../utils/cn";
 import { Button } from "../shared/Button";
@@ -9,8 +9,12 @@ import { Card } from "../shared/Card";
 import { Checkbox } from "../shared/Checkbox";
 import { Input } from "../shared/Input";
 import { Modal } from "../shared/Modal";
+import { SegmentedControl } from "../shared/SegmentedControl";
 
 interface InvoiceHistoryCardProps {
+  scope: InvoiceHistoryScope;
+  onScopeChange: (scope: InvoiceHistoryScope) => void;
+  selectedClientName: string | null;
   history: InvoiceHistoryItem[];
   loading: boolean;
   error: boolean;
@@ -48,6 +52,9 @@ const money = (value: number, currency: string) =>
   }).format(value);
 
 export const InvoiceHistoryCard: React.FC<InvoiceHistoryCardProps> = ({
+  scope,
+  onScopeChange,
+  selectedClientName,
   history,
   loading,
   error,
@@ -89,23 +96,39 @@ export const InvoiceHistoryCard: React.FC<InvoiceHistoryCardProps> = ({
   return (
     <>
       <Card>
-        <div className="flex items-start justify-between gap-4 border-b border-primary-strong/20 bg-primary/15 px-4.5 py-4">
-          <div>
+        <div className="flex flex-col gap-3 border-b border-primary-strong/20 bg-primary/15 px-4.5 py-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
             <h2 className="flex items-center gap-2 text-[14px] font-semibold text-text">
               <FileClock className="h-4 w-4 text-primary-strong" />
               {t("clientBilling.historyTitle")}
             </h2>
             <p className="mt-1 text-[11.5px] text-muted">
-              {t("clientBilling.historyDescription")}
+              {t(scope === "global" ? "clientBilling.historyDescription"
+                : selectedClientName ? "clientBilling.historyClientDescription" : "clientBilling.historySelectClient",
+              { clientName: selectedClientName })}
             </p>
           </div>
+          <SegmentedControl
+            value={scope}
+            onChange={onScopeChange}
+            ariaLabel={t("clientBilling.historyView")}
+            density="compact"
+            className="shrink-0"
+            options={[
+              { value: "client", label: t("clientBilling.historyClientView") },
+              { value: "global", label: t("clientBilling.historyGlobalView") },
+            ]}
+          />
         </div>
         {loading ? (
           <div className="p-6 text-center text-xs text-muted">{t("common.loading")}</div>
         ) : error ? (
           <div className="p-5 text-xs text-danger">{t("clientBilling.historyLoadFailed")}</div>
         ) : history.length === 0 ? (
-          <div className="p-6 text-center text-xs text-muted">{t("clientBilling.historyEmpty")}</div>
+          <div className="p-6 text-center text-xs text-muted">
+            {t(scope === "global" ? "clientBilling.historyEmpty"
+              : selectedClientName ? "clientBilling.historyClientEmpty" : "clientBilling.historySelectClient")}
+          </div>
         ) : (
           <div className="divide-y divide-border">
             {history.map((item) => (
