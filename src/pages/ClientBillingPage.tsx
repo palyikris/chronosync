@@ -3,15 +3,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertCircle,
   ArrowRight,
-  CalendarDays,
   Check,
   CheckCircle2,
-  CircleDollarSign,
   Download,
   Eye,
-  FileCheck2,
-  Mail,
-  MapPin,
   ReceiptText,
   Search,
   Settings2,
@@ -26,6 +21,7 @@ import { InvoiceHistoryCard } from "../components/client-billing/InvoiceHistoryC
 import { ProjectInvoicePricing } from "../components/client-billing/ProjectInvoicePricing";
 import { InvoiceReviewModal } from "../components/client-billing/InvoiceReviewModal";
 import { Input } from "../components/shared/Input";
+import { InfoPopover } from "../components/shared/InfoPopover";
 import { Select } from "../components/shared/Select";
 import { useAuth } from "../context/useAuth";
 import {
@@ -247,22 +243,18 @@ const PREVIEW_PROFILES: ClientBillingProfile[] = [
 ];
 
 const SectionHeading: React.FC<{
-  icon: React.ReactNode;
   title: string;
-  description: string;
-}> = ({ icon, title, description }) => (
-  <div className="flex items-start gap-3">
-    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] border border-primary-strong/10 bg-primary/12 text-primary-strong [&>svg]:h-4 [&>svg]:w-4">
-      {icon}
+  children: React.ReactNode;
+  level?: "h2" | "h3";
+}> = ({ title, children, level: Heading = "h3" }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex items-center gap-1.5">
+      <Heading className="text-sm font-semibold text-text">{title}</Heading>
+      <InfoPopover label={t("common.infoAbout", { topic: title })}>{children}</InfoPopover>
     </div>
-    <div>
-      <h2 className="text-[14px] font-semibold tracking-[-0.015em] text-text">
-        {title}
-      </h2>
-      <p className="mt-0.5 text-[12px] leading-5 text-muted">{description}</p>
-    </div>
-  </div>
-);
+  );
+};
 
 const SwitchRow: React.FC<{
   id: string;
@@ -271,29 +263,22 @@ const SwitchRow: React.FC<{
   checked: boolean;
   disabled?: boolean;
   onChange: (checked: boolean) => void;
-}> = ({ id, title, description, checked, disabled, onChange }) => (
-  <label
-    htmlFor={id}
-    className={cn(
-      "flex items-start justify-between gap-4 rounded-xl border border-border bg-white/38 px-3.5 py-3 transition",
-      disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:bg-white/60",
-    )}
-  >
-    <span>
-      <span className="block text-[13px] font-medium text-text">{title}</span>
-      <span className="mt-0.5 block text-[11.5px] leading-4.5 text-muted">
-        {description}
-      </span>
-    </span>
-    <Checkbox
-      id={id}
-      checked={checked}
-      disabled={disabled}
-      onChange={(event) => onChange(event.target.checked)}
-      className="mt-0.5 shrink-0"
-    />
-  </label>
-);
+}> = ({ id, title, description, checked, disabled, onChange }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex items-center gap-1.5">
+      <label htmlFor={id} className={cn(
+        "flex min-w-0 items-center gap-2.5 text-[13px] text-text",
+        disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer",
+      )}>
+        <Checkbox id={id} checked={checked} disabled={disabled}
+          onChange={(event) => onChange(event.target.checked)} className="shrink-0" />
+        <span>{title}</span>
+      </label>
+      <InfoPopover label={t("common.infoAbout", { topic: title })}>{description}</InfoPopover>
+    </div>
+  );
+};
 
 export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { start: string; end: string } }> = ({
   preview = false,
@@ -599,13 +584,6 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
   const savedProfileReadiness = selectedStoredProfile
     ? getBillingProfileReadiness(selectedStoredProfile)
     : null;
-  const progressPercent = draftReadiness
-    ? Math.round(
-        (draftReadiness.completedCount / Math.max(draftReadiness.totalCount, 1)) *
-          100,
-      )
-    : 0;
-
   const selectClient = (clientId: string) => {
     if (
       isDirty &&
@@ -758,7 +736,7 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
             ? t("clientBilling.previewCompleteProfile")
             : !invoicePeriodIsValid
               ? t("clientBilling.previewInvalidPeriod")
-              : t("clientBilling.previewSafetyHint");
+              : null;
 
   if (!companyId) {
     return (
@@ -771,17 +749,14 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-5 pb-10">
       <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <div className="mb-2 flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-primary-strong">
-            <ReceiptText className="h-3.5 w-3.5" />
-            {t("clientBilling.eyebrow")}
-          </div>
+        <div className="flex items-center gap-2">
           <h1 className="text-2xl font-semibold tracking-[-0.035em] text-text sm:text-[28px]">
             {t("clientBilling.title")}
           </h1>
-          <p className="mt-1.5 max-w-2xl text-sm leading-6 text-muted">
-            {t("clientBilling.subtitle")}
-          </p>
+          <InfoPopover label={t("common.infoAbout", { topic: t("clientBilling.title") })}>
+            <p>{t("clientBilling.subtitle")}</p>
+            <p>{t("clientBilling.manualOnlyHint")}</p>
+          </InfoPopover>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -819,13 +794,13 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
         <div className="flex flex-col gap-3 rounded-2xl border border-warning/20 bg-warning-bg/70 px-4 py-3.5 text-warning sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-2.5">
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
-            <div>
+            <div className="flex items-center gap-1.5">
               <p className="text-[12.5px] font-semibold">
                 {t("clientBilling.integrationBannerTitle")}
               </p>
-              <p className="mt-0.5 text-[11.5px] leading-5 opacity-85">
+              <InfoPopover label={t("common.infoAbout", { topic: t("clientBilling.integrationSettings") })}>
                 {t("clientBilling.integrationBannerDescription")}
-              </p>
+              </InfoPopover>
             </div>
           </div>
           <Link
@@ -865,14 +840,8 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
           <Card className="lg:sticky lg:top-7">
             <div className="border-b border-border bg-bg-accent/40 p-3.5">
               <div className="mb-2.5 flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-[13px] font-semibold text-text">
-                    {t("clientBilling.clientsTitle")}
-                  </h2>
-                  <p className="mt-0.5 text-[10.5px] text-muted">
-                    {t("clientBilling.clientsCount", { count: clients.length })}
-                  </p>
-                </div>
+                <h2 className="text-[13px] font-semibold text-text">{t("clientBilling.clientsTitle")}</h2>
+                <span className="text-[10.5px] text-muted" aria-label={t("clientBilling.clientsCount", { count: clients.length })}>{clients.length}</span>
               </div>
               <Input
                 aria-label={t("clientBilling.searchClients")}
@@ -948,131 +917,293 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
           {selectedClient && draft && draftReadiness ? (
             <form onSubmit={handleSubmit} className="space-y-4">
               <Card>
-                <div className="flex flex-col gap-4 border-b border-border bg-bg-accent/35 px-4.5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="truncate text-[16px] font-semibold tracking-[-0.02em] text-text">
-                        {selectedClient.name}
-                      </h2>
-                      <span
-                        className={cn(
-                          "rounded-full px-2 py-0.5 text-[10px] font-medium",
-                          draftReadiness.complete
-                              ? "bg-success-bg text-success"
-                              : "bg-warning-bg text-warning",
-                        )}
-                      >
-                        {draftReadiness.complete
-                          ? t("clientBilling.statusReady")
-                          : t("clientBilling.statusIncomplete")}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-[11.5px] text-muted">
-                      {t("clientBilling.profileProgress", {
-                        completed: draftReadiness.completedCount,
-                        total: draftReadiness.totalCount,
-                      })}
-                    </p>
+                <div className="border-b border-border bg-bg-accent/35 px-4.5 py-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="min-w-0 break-words text-base font-semibold text-text">{selectedClient.name}</h2>
+                    <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-medium",
+                      draftReadiness.complete ? "bg-success-bg text-success" : "bg-warning-bg text-warning")}>
+                      {t(draftReadiness.complete ? "clientBilling.statusReady" : "clientBilling.statusIncomplete")}
+                    </span>
                   </div>
-                  <div className="w-full sm:w-48">
-                    <div className="mb-1.5 flex items-center justify-between text-[10px] font-medium text-muted">
-                      <span>{t("clientBilling.readiness")}</span>
-                      <span>{progressPercent}%</span>
+                  {!draftReadiness.complete ? (
+                    <div className="mt-3 text-xs text-warning">
+                      <p>{t("clientBilling.missingFieldsTitle", { count: draftReadiness.missingFields.length })}</p>
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {draftReadiness.missingFields.map((field: BillingProfileField) => (
+                          <span key={field} className="rounded-full border border-warning/20 bg-warning-bg px-2 py-0.5 text-[10px]">
+                            {t(`clientBilling.fields.${field}`)}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                    <div className="h-1.5 overflow-hidden rounded-full bg-black/[0.06]">
-                      <div
-                        className={cn(
-                          "h-full rounded-full transition-[width,background-color] duration-300",
-                          draftReadiness.complete ? "bg-success" : "bg-primary-strong",
-                        )}
-                        style={{ width: `${progressPercent}%` }}
+                  ) : null}
+                </div>
+                <div className="divide-y divide-border">
+                  <section className="space-y-3 p-4.5">
+                    <SectionHeading title={t("clientBilling.identityTitle")}>
+                      <p>{t("clientBilling.identityDescription")}</p>
+                      <p>{t("clientBilling.taxDescription")}</p>
+                      <p>{t("clientBilling.groupTaxNumberHint")}</p>
+                    </SectionHeading>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Input
+                        id="billing-name"
+                        label={t("clientBilling.billingName")}
+                        value={draft.billing_name ?? ""}
+                        onChange={(event) =>
+                          updateDraft((current) => ({
+                            ...current,
+                            billing_name: event.target.value,
+                          }))
+                        }
+                        className="sm:col-span-2"
+                      />
+                      <Input
+                        id="billing-country-code"
+                        label={t("clientBilling.countryCode")}
+                        value={draft.billing_country_code}
+                        maxLength={2}
+                        onChange={(event) =>
+                          updateDraft((current) => ({
+                            ...current,
+                            billing_country_code: event.target.value.toUpperCase(),
+                          }))
+                        }
+                      />
+                      <Input
+                        id="billing-postal-code"
+                        label={t("clientBilling.postalCode")}
+                        value={draft.billing_postal_code ?? ""}
+                        onChange={(event) =>
+                          updateDraft((current) => ({
+                            ...current,
+                            billing_postal_code: event.target.value,
+                          }))
+                        }
+                      />
+                      <Input
+                        id="billing-city"
+                        label={t("clientBilling.city")}
+                        value={draft.billing_city ?? ""}
+                        onChange={(event) =>
+                          updateDraft((current) => ({
+                            ...current,
+                            billing_city: event.target.value,
+                          }))
+                        }
+                      />
+                      <Input
+                        id="billing-address"
+                        label={t("clientBilling.address")}
+                        value={draft.billing_address ?? ""}
+                        onChange={(event) =>
+                          updateDraft((current) => ({
+                            ...current,
+                            billing_address: event.target.value,
+                          }))
+                        }
+                      />
+                      <Select
+                        id="tax-subject"
+                        label={t("clientBilling.taxSubject")}
+                        value={draft.tax_subject === null ? "" : String(draft.tax_subject)}
+                        onChange={(event) =>
+                          updateDraft((current) => ({
+                            ...current,
+                            tax_subject:
+                              event.target.value === ""
+                                ? null
+                                : (Number(event.target.value) as TaxSubject),
+                          }))
+                        }
+                      >
+                        <option value="">{t("clientBilling.taxSubjectPlaceholder")}</option>
+                        <option value="1">{t("clientBilling.taxSubjectDomestic")}</option>
+                        <option value="6">{t("clientBilling.taxSubjectEu")}</option>
+                        <option value="7">{t("clientBilling.taxSubjectNonEu")}</option>
+                        <option value="0">{t("clientBilling.taxSubjectUnknown")}</option>
+                        <option value="-1">{t("clientBilling.taxSubjectNoNumber")}</option>
+                      </Select>
+                      <Input
+                        id="tax-number"
+                        label={t("clientBilling.taxNumber")}
+                        value={draft.tax_number ?? ""}
+                        onChange={(event) =>
+                          updateDraft((current) => ({
+                            ...current,
+                            tax_number: event.target.value,
+                          }))
+                        }
+                      />
+                      <Input
+                        id="eu-vat-number"
+                        label={t("clientBilling.euVatNumber")}
+                        value={draft.eu_vat_number ?? ""}
+                        onChange={(event) =>
+                          updateDraft((current) => ({
+                            ...current,
+                            eu_vat_number: event.target.value,
+                          }))
+                        }
+                      />
+                      <Input
+                        id="group-tax-number"
+                        label={t("clientBilling.groupTaxNumber")}
+                        value={draft.group_tax_number ?? ""}
+                        onChange={(event) =>
+                          updateDraft((current) => ({
+                            ...current,
+                            group_tax_number: event.target.value,
+                          }))
+                        }
                       />
                     </div>
-                  </div>
-                </div>
-
-                <div className="space-y-5 p-4.5">
-                  <SectionHeading
-                    icon={<MapPin />}
-                    title={t("clientBilling.identityTitle")}
-                    description={t("clientBilling.identityDescription")}
-                  />
-                  <div className="grid gap-3 sm:grid-cols-2">
+                  </section>
+                  <section className="space-y-3 p-4.5">
+                    <SectionHeading title={t("clientBilling.commercialTitle")}>
+                      <p>{t("clientBilling.invoiceConfigurationHint")}</p>
+                    </SectionHeading>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Select
+                        id="vat-code"
+                        label={t("clientBilling.vatCode")}
+                        value={draft.vat_code}
+                        onChange={(event) =>
+                          updateDraft((current) => ({
+                            ...current,
+                            vat_code: event.target.value,
+                          }))
+                        }
+                      >
+                        {VAT_CODES.map((vatCode) => (
+                          <option key={vatCode} value={vatCode}>
+                            {vatCode.match(/^\d/) ? `${vatCode}%` : vatCode}
+                          </option>
+                        ))}
+                      </Select>
+                      <Select
+                        id="payment-method"
+                        label={t("clientBilling.paymentMethod")}
+                        value={draft.payment_method}
+                        onChange={(event) =>
+                          updateDraft((current) => ({
+                            ...current,
+                            payment_method: event.target.value,
+                          }))
+                        }
+                      >
+                        <option value="Átutalás">{t("clientBilling.paymentTransfer")}</option>
+                        <option value="Készpénz">{t("clientBilling.paymentCash")}</option>
+                        <option value="Bankkártya">{t("clientBilling.paymentCard")}</option>
+                        <option value="PayPal">PayPal</option>
+                      </Select>
+                      <Input
+                        id="payment-term-days"
+                        type="number"
+                        min="0"
+                        max="365"
+                        step="1"
+                        label={t("clientBilling.paymentTermDays")}
+                        value={draft.payment_term_days}
+                        onChange={(event) =>
+                          updateDraft((current) => ({
+                            ...current,
+                            payment_term_days: Number(event.target.value),
+                          }))
+                        }
+                      />
+                      <Select
+                        id="invoice-language"
+                        label={t("clientBilling.invoiceLanguage")}
+                        value={draft.invoice_language}
+                        onChange={(event) =>
+                          updateDraft((current) => ({
+                            ...current,
+                            invoice_language: event.target.value as typeof current.invoice_language,
+                          }))
+                        }
+                      >
+                        {LANGUAGE_CODES.map((language) => (
+                          <option key={language} value={language}>
+                            {language.toUpperCase()}
+                          </option>
+                        ))}
+                      </Select>
+                      <Select label={t("clientBilling.fulfillmentDatePolicy")}
+                        value={draft.fulfillment_date_policy ?? "period_end"}
+                        onChange={event => updateDraft(current => ({ ...current,
+                          fulfillment_date_policy: event.target.value as NonNullable<ClientBillingProfile["fulfillment_date_policy"]> }))}>
+                        <option value="period_end">{t("clientBilling.fulfillmentPeriodEnd")}</option>
+                        <option value="due_date">{t("clientBilling.fulfillmentDueDate")}</option>
+                        <option value="issue_date">{t("clientBilling.fulfillmentIssueDate")}</option>
+                      </Select>
+                      <Select label={t("clientBilling.invoiceDocumentType")}
+                        value={draft.invoice_electronic ? "electronic" : "paper"}
+                        onChange={event => updateDraft(current => ({ ...current, invoice_electronic: event.target.value === "electronic" }))}>
+                        <option value="paper">{t("clientBilling.paperInvoice")}</option>
+                        <option value="electronic">{t("clientBilling.electronicInvoice")}</option>
+                      </Select>
+                      <Input label={t("clientBilling.invoicePrefix")} maxLength={32}
+                        value={draft.invoice_prefix ?? ""}
+                        onChange={event => updateDraft(current => ({ ...current, invoice_prefix: event.target.value || null }))} />
+                      <Input label={t("clientBilling.sellerBankName")} maxLength={120}
+                        value={draft.seller_bank_name ?? ""}
+                        onChange={event => updateDraft(current => ({ ...current, seller_bank_name: event.target.value || null }))} />
+                      <Input label={t("clientBilling.sellerBankAccount")} maxLength={120}
+                        className="sm:col-span-2 [&_label]:max-w-[calc(100%_-_1.5rem)] [&_label]:truncate"
+                        value={draft.seller_bank_account ?? ""}
+                        onChange={event => updateDraft(current => ({ ...current, seller_bank_account: event.target.value || null }))} />
+                    </div>
+                  </section>
+                  <section className="space-y-3 p-4.5">
+                    <SectionHeading title={t("clientBilling.deliveryTitle")}>
+                      <p>{t("clientBilling.deliveryDescription")}</p>
+                    </SectionHeading>
                     <Input
-                      id="billing-name"
-                      label={t("clientBilling.billingName")}
-                      value={draft.billing_name ?? ""}
+                      id="billing-email"
+                      type="email"
+                      label={t("clientBilling.billingEmail")}
+                      value={draft.billing_email ?? ""}
                       onChange={(event) =>
                         updateDraft((current) => ({
                           ...current,
-                          billing_name: event.target.value,
+                          billing_email: event.target.value,
                         }))
                       }
-                      className="sm:col-span-2"
                     />
-                    <Input
-                      id="billing-country-code"
-                      label={t("clientBilling.countryCode")}
-                      value={draft.billing_country_code}
-                      maxLength={2}
-                      onChange={(event) =>
+                    <SwitchRow
+                      id="send-invoice-email"
+                      title={t("clientBilling.sendInvoiceEmail")}
+                      description={t("clientBilling.sendInvoiceEmailDescription")}
+                      checked={draft.send_invoice_email}
+                      onChange={(checked) =>
                         updateDraft((current) => ({
                           ...current,
-                          billing_country_code: event.target.value.toUpperCase(),
+                          send_invoice_email: checked,
                         }))
                       }
                     />
-                    <Input
-                      id="billing-postal-code"
-                      label={t("clientBilling.postalCode")}
-                      value={draft.billing_postal_code ?? ""}
-                      onChange={(event) =>
-                        updateDraft((current) => ({
-                          ...current,
-                          billing_postal_code: event.target.value,
-                        }))
-                      }
+                    <SwitchRow
+                      id="attach-timesheet-report"
+                      title={t("clientBilling.attachTimesheet")}
+                      description={t("clientBilling.attachTimesheetDescription")}
+                      checked={draft.attach_timesheet_report}
+                      onChange={(checked) => updateDraft((current) => ({ ...current, attach_timesheet_report: checked }))}
                     />
-                    <Input
-                      id="billing-city"
-                      label={t("clientBilling.city")}
-                      value={draft.billing_city ?? ""}
-                      onChange={(event) =>
-                        updateDraft((current) => ({
-                          ...current,
-                          billing_city: event.target.value,
-                        }))
-                      }
-                    />
-                    <Input
-                      id="billing-address"
-                      label={t("clientBilling.address")}
-                      value={draft.billing_address ?? ""}
-                      onChange={(event) =>
-                        updateDraft((current) => ({
-                          ...current,
-                          billing_address: event.target.value,
-                        }))
-                      }
-                    />
-                  </div>
+                  </section>
                 </div>
               </Card>
 
-              <Card className="overflow-hidden border-primary-strong/15 bg-primary/[0.025]">
-                <div className="flex flex-col gap-3 border-b border-primary-strong/10 bg-primary/[0.045] px-4.5 py-4 sm:flex-row sm:items-start sm:justify-between">
-                  <SectionHeading
-                    icon={<CalendarDays />}
-                    title={t("clientBilling.previewTitle")}
-                    description={t("clientBilling.previewDescription")}
-                  />
-                  <span className="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border border-success/20 bg-success-bg px-2.5 py-1 text-[10.5px] font-medium text-success">
-                    <ShieldCheck className="h-3.5 w-3.5" />
-                    {t("clientBilling.previewOnlyBadge")}
-                  </span>
+              <Card>
+                <div className="border-b border-border bg-bg-accent/35 px-4.5 py-3">
+                  <SectionHeading level="h2" title={t("clientBilling.previewTitle")}>
+                    <p>{t("clientBilling.previewDescription")}</p>
+                    <p>{t("clientBilling.previewSafetyHint")}</p>
+                    <p>{t("clientBilling.manualOnlyHint")}</p>
+                  </SectionHeading>
                 </div>
                 <div className="space-y-3 p-4.5">
-                  <div className="grid items-end gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+                  <div className="grid items-end gap-3 sm:grid-cols-2">
                     <Input
                       id="invoice-period-start"
                       type="date"
@@ -1099,35 +1230,43 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
                         setPreviewResult(null);
                       }}
                     />
-                    <div className="flex flex-col gap-2 sm:flex-row">
-                      <Button
-                        type="button"
-                        size="lg"
-                        variant="outline"
-                        icon={<Download />}
-                        disabled={!canGeneratePreview || previewMutation.isPending}
-                        onClick={generatePreview}
-                        className="w-full sm:w-auto"
-                      >
-                        {previewMutation.isPending
-                          ? t("clientBilling.generatingPreview")
-                          : t("clientBilling.generatePreview")}
-                      </Button>
-                      <Button
-                        type="button"
-                        size="lg"
-                        icon={<Eye />}
-                        disabled={!canReviewInvoice || reviewMutation.isPending}
-                        onClick={generateReview}
-                        className="w-full sm:w-auto"
-                      >
-                        {reviewMutation.isPending
-                          ? t("clientBilling.loadingReview")
-                          : t("clientBilling.reviewAndIssue")}
-                      </Button>
-                    </div>
                   </div>
-                  <div className="min-h-5 text-[11px] leading-5">
+                  {!preview ? (
+                    <ProjectInvoicePricing key={quantityScope} companyId={companyId}
+                      clientId={effectiveSelectedClientId} year={Number(invoicePeriod.start.slice(0, 4))}
+                      quantities={quantityDraft} onQuantityChange={(projectId, value) => {
+                        setQuantityDrafts(current => ({ ...current, [quantityScope]: { ...current[quantityScope], [projectId]: value } }));
+                        setInvoiceReview(null); setIssueError(null); setPreviewResult(null);
+                      }} />
+                  ) : null}
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Button
+                      type="button"
+                      size="lg"
+                      variant="outline"
+                      icon={<Download />}
+                      disabled={!canGeneratePreview || previewMutation.isPending}
+                      onClick={generatePreview}
+                      className="w-full sm:w-auto"
+                    >
+                      {previewMutation.isPending
+                        ? t("clientBilling.generatingPreview")
+                        : t("clientBilling.generatePreview")}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="lg"
+                      icon={<Eye />}
+                      disabled={!canReviewInvoice || reviewMutation.isPending}
+                      onClick={generateReview}
+                      className="w-full sm:w-auto"
+                    >
+                      {reviewMutation.isPending
+                        ? t("clientBilling.loadingReview")
+                        : t("clientBilling.reviewAndIssue")}
+                    </Button>
+                  </div>
+                  {previewResult || previewHint ? <div role={previewResult?.kind === "error" ? "alert" : "status"} className="text-[11px] leading-5">
                     {previewResult ? (
                       <span
                         className={cn(
@@ -1147,321 +1286,56 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
                     ) : (
                       <span className="text-muted">{previewHint}</span>
                     )}
+                  </div> : null}
+                </div>
+              </Card>
+
+              {isDirty || result ? (
+                <div className="sticky bottom-3 z-10 flex flex-col gap-3 rounded-2xl border border-border-strong bg-surface-strong/94 px-4 py-3 shadow-[0_12px_36px_rgba(75,87,57,0.12)] backdrop-blur-2xl sm:flex-row sm:items-center sm:justify-between">
+                  <div role={result?.kind === "error" ? "alert" : "status"} className="min-h-5 text-[11.5px]">
+                    {result ? (
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1.5 font-medium",
+                          result.kind === "success" ? "text-success" : "text-danger",
+                        )}
+                      >
+                        {result.kind === "success" ? (
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                        ) : (
+                          <AlertCircle className="h-3.5 w-3.5" />
+                        )}
+                        {result.message}
+                      </span>
+                    ) : (
+                      <span className="text-muted">{t("clientBilling.unsavedChanges")}</span>
+                    )}
                   </div>
-                </div>
-              </Card>
-
-              <Card className="p-4.5">
-                <div className="space-y-5">
-                  <SectionHeading
-                    icon={<ShieldCheck />}
-                    title={t("clientBilling.taxTitle")}
-                    description={t("clientBilling.taxDescription")}
-                  />
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <Select
-                      id="tax-subject"
-                      label={t("clientBilling.taxSubject")}
-                      value={draft.tax_subject === null ? "" : String(draft.tax_subject)}
-                      onChange={(event) =>
-                        updateDraft((current) => ({
-                          ...current,
-                          tax_subject:
-                            event.target.value === ""
-                              ? null
-                              : (Number(event.target.value) as TaxSubject),
-                        }))
-                      }
-                    >
-                      <option value="">{t("clientBilling.taxSubjectPlaceholder")}</option>
-                      <option value="1">{t("clientBilling.taxSubjectDomestic")}</option>
-                      <option value="6">{t("clientBilling.taxSubjectEu")}</option>
-                      <option value="7">{t("clientBilling.taxSubjectNonEu")}</option>
-                      <option value="0">{t("clientBilling.taxSubjectUnknown")}</option>
-                      <option value="-1">{t("clientBilling.taxSubjectNoNumber")}</option>
-                    </Select>
-                    <Input
-                      id="tax-number"
-                      label={t("clientBilling.taxNumber")}
-                      value={draft.tax_number ?? ""}
-                      onChange={(event) =>
-                        updateDraft((current) => ({
-                          ...current,
-                          tax_number: event.target.value,
-                        }))
-                      }
-                    />
-                    <Input
-                      id="eu-vat-number"
-                      label={t("clientBilling.euVatNumber")}
-                      value={draft.eu_vat_number ?? ""}
-                      onChange={(event) =>
-                        updateDraft((current) => ({
-                          ...current,
-                          eu_vat_number: event.target.value,
-                        }))
-                      }
-                    />
-                    <Input
-                      id="group-tax-number"
-                      label={t("clientBilling.groupTaxNumber")}
-                      value={draft.group_tax_number ?? ""}
-                      onChange={(event) =>
-                        updateDraft((current) => ({
-                          ...current,
-                          group_tax_number: event.target.value,
-                        }))
-                      }
-                    />
-                    <p className="text-xs text-muted sm:col-span-2">
-                      {t("clientBilling.groupTaxNumberHint")}
-                    </p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-4.5">
-                <div className="space-y-5">
-                  <SectionHeading
-                    icon={<CircleDollarSign />}
-                    title={t("clientBilling.commercialTitle")}
-                    description={t("clientBilling.commercialDescription")}
-                  />
-                  {!preview && <ProjectInvoicePricing key={quantityScope} companyId={companyId}
-                    clientId={effectiveSelectedClientId} year={Number(invoicePeriod.start.slice(0, 4))}
-                    quantities={quantityDraft} onQuantityChange={(projectId, value) => {
-                      setQuantityDrafts(current => ({ ...current, [quantityScope]: { ...current[quantityScope], [projectId]: value } }));
-                      setInvoiceReview(null); setIssueError(null); setPreviewResult(null);
-                    }} />}
-                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                    <Select
-                      id="vat-code"
-                      label={t("clientBilling.vatCode")}
-                      value={draft.vat_code}
-                      onChange={(event) =>
-                        updateDraft((current) => ({
-                          ...current,
-                          vat_code: event.target.value,
-                        }))
-                      }
-                    >
-                      {VAT_CODES.map((vatCode) => (
-                        <option key={vatCode} value={vatCode}>
-                          {vatCode.match(/^\d/) ? `${vatCode}%` : vatCode}
-                        </option>
-                      ))}
-                    </Select>
-                    <Select
-                      id="payment-method"
-                      label={t("clientBilling.paymentMethod")}
-                      value={draft.payment_method}
-                      onChange={(event) =>
-                        updateDraft((current) => ({
-                          ...current,
-                          payment_method: event.target.value,
-                        }))
-                      }
-                    >
-                      <option value="Átutalás">{t("clientBilling.paymentTransfer")}</option>
-                      <option value="Készpénz">{t("clientBilling.paymentCash")}</option>
-                      <option value="Bankkártya">{t("clientBilling.paymentCard")}</option>
-                      <option value="PayPal">PayPal</option>
-                    </Select>
-                    <Input
-                      id="payment-term-days"
-                      type="number"
-                      min="0"
-                      max="365"
-                      step="1"
-                      label={t("clientBilling.paymentTermDays")}
-                      value={draft.payment_term_days}
-                      onChange={(event) =>
-                        updateDraft((current) => ({
-                          ...current,
-                          payment_term_days: Number(event.target.value),
-                        }))
-                      }
-                    />
-                    <Select
-                      id="invoice-language"
-                      label={t("clientBilling.invoiceLanguage")}
-                      value={draft.invoice_language}
-                      onChange={(event) =>
-                        updateDraft((current) => ({
-                          ...current,
-                          invoice_language: event.target.value as typeof current.invoice_language,
-                        }))
-                      }
-                    >
-                      {LANGUAGE_CODES.map((language) => (
-                        <option key={language} value={language}>
-                          {language.toUpperCase()}
-                        </option>
-                      ))}
-                    </Select>
-                    <Select label={t("clientBilling.fulfillmentDatePolicy")}
-                      value={draft.fulfillment_date_policy ?? "period_end"}
-                      onChange={event => updateDraft(current => ({ ...current,
-                        fulfillment_date_policy: event.target.value as NonNullable<ClientBillingProfile["fulfillment_date_policy"]> }))}>
-                      <option value="period_end">{t("clientBilling.fulfillmentPeriodEnd")}</option>
-                      <option value="due_date">{t("clientBilling.fulfillmentDueDate")}</option>
-                      <option value="issue_date">{t("clientBilling.fulfillmentIssueDate")}</option>
-                    </Select>
-                    <Select label={t("clientBilling.invoiceDocumentType")}
-                      value={draft.invoice_electronic ? "electronic" : "paper"}
-                      onChange={event => updateDraft(current => ({ ...current, invoice_electronic: event.target.value === "electronic" }))}>
-                      <option value="paper">{t("clientBilling.paperInvoice")}</option>
-                      <option value="electronic">{t("clientBilling.electronicInvoice")}</option>
-                    </Select>
-                    <Input label={t("clientBilling.invoicePrefix")} maxLength={32}
-                      value={draft.invoice_prefix ?? ""}
-                      onChange={event => updateDraft(current => ({ ...current, invoice_prefix: event.target.value || null }))} />
-                    <Input label={t("clientBilling.sellerBankName")} maxLength={120}
-                      value={draft.seller_bank_name ?? ""}
-                      onChange={event => updateDraft(current => ({ ...current, seller_bank_name: event.target.value || null }))} />
-                    <Input label={t("clientBilling.sellerBankAccount")} maxLength={120}
-                      value={draft.seller_bank_account ?? ""}
-                      onChange={event => updateDraft(current => ({ ...current, seller_bank_account: event.target.value || null }))} />
-                    <p className="text-xs leading-5 text-muted sm:col-span-2">{t("clientBilling.invoiceConfigurationHint")}</p>
-                  </div>
-                  {preview && <p className="rounded-xl border border-border bg-bg-accent/40 px-3 py-2.5 text-[11px] leading-5 text-muted">
-                    {t("clientBilling.projectPricingHint")}
-                  </p>}
-                </div>
-              </Card>
-
-              <Card className="p-4.5">
-                <div className="space-y-5">
-                  <SectionHeading
-                    icon={<Mail />}
-                    title={t("clientBilling.deliveryTitle")}
-                    description={t("clientBilling.deliveryDescription")}
-                  />
-                  <Input
-                    id="billing-email"
-                    type="email"
-                    label={t("clientBilling.billingEmail")}
-                    value={draft.billing_email ?? ""}
-                    onChange={(event) =>
-                      updateDraft((current) => ({
-                        ...current,
-                        billing_email: event.target.value,
-                      }))
-                    }
-                  />
-                  <SwitchRow
-                    id="send-invoice-email"
-                    title={t("clientBilling.sendInvoiceEmail")}
-                    description={t("clientBilling.sendInvoiceEmailDescription")}
-                    checked={draft.send_invoice_email}
-                    onChange={(checked) =>
-                      updateDraft((current) => ({
-                        ...current,
-                        send_invoice_email: checked,
-                      }))
-                    }
-                  />
-                  <SwitchRow
-                    id="attach-timesheet-report"
-                    title={t("clientBilling.attachTimesheet")}
-                    description={t("clientBilling.attachTimesheetDescription")}
-                    checked={draft.attach_timesheet_report}
-                    onChange={(checked) => updateDraft((current) => ({ ...current, attach_timesheet_report: checked }))}
-                  />
-                </div>
-              </Card>
-
-              <Card className="p-4.5">
-                <div className="space-y-5">
-                  <SectionHeading
-                    icon={<FileCheck2 />}
-                    title={t("clientBilling.manualReadinessTitle")}
-                    description={t("clientBilling.manualReadinessDescription")}
-                  />
-
-                  {!draftReadiness.complete ? (
-                    <div className="rounded-xl border border-warning/20 bg-warning-bg/60 px-3.5 py-3">
-                      <p className="flex items-center gap-2 text-[12px] font-semibold text-warning">
-                        <AlertCircle className="h-3.5 w-3.5" />
-                        {t("clientBilling.missingFieldsTitle", {
-                          count: draftReadiness.missingFields.length,
-                        })}
-                      </p>
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        {draftReadiness.missingFields.map((field: BillingProfileField) => (
-                          <span
-                            key={field}
-                            className="rounded-full border border-warning/15 bg-white/45 px-2 py-0.5 text-[10px] font-medium text-warning"
-                          >
-                            {t(`clientBilling.fields.${field}`)}
-                          </span>
-                        ))}
-                      </div>
+                  {isDirty ? (
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="lg"
+                        disabled={!isDirty || saveMutation.isPending}
+                        onClick={cancelChanges}
+                      >
+                        {t("common.cancel")}
+                      </Button>
+                      <Button
+                        type="submit"
+                        size="lg"
+                        disabled={!isDirty || saveMutation.isPending}
+                        icon={<Check />}
+                      >
+                        {saveMutation.isPending
+                          ? t("common.saving")
+                          : t("clientBilling.saveProfile")}
+                      </Button>
                     </div>
-                  ) : (
-                    <div className="flex items-start gap-2.5 rounded-xl border border-success/20 bg-success-bg/65 px-3.5 py-3 text-success">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-                      <div>
-                        <p className="text-[12px] font-semibold">
-                          {t("clientBilling.readyTitle")}
-                        </p>
-                        <p className="mt-0.5 text-[11px] leading-5 opacity-85">
-                          {t("clientBilling.readyDescription")}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  <p className="rounded-xl border border-border bg-bg-accent/40 px-3.5 py-3 text-[11px] leading-5 text-muted">
-                    {t("clientBilling.manualOnlyHint")}
-                  </p>
+                  ) : null}
                 </div>
-              </Card>
-
-              <div className="sticky bottom-3 z-10 flex flex-col gap-3 rounded-2xl border border-border-strong bg-surface-strong/94 px-4 py-3 shadow-[0_12px_36px_rgba(75,87,57,0.12)] backdrop-blur-2xl sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-h-5 text-[11.5px]">
-                  {result ? (
-                    <span
-                      className={cn(
-                        "inline-flex items-center gap-1.5 font-medium",
-                        result.kind === "success" ? "text-success" : "text-danger",
-                      )}
-                    >
-                      {result.kind === "success" ? (
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                      ) : (
-                        <AlertCircle className="h-3.5 w-3.5" />
-                      )}
-                      {result.message}
-                    </span>
-                  ) : isDirty ? (
-                    <span className="text-muted">{t("clientBilling.unsavedChanges")}</span>
-                  ) : (
-                    <span className="text-muted">{t("clientBilling.allChangesSaved")}</span>
-                  )}
-                </div>
-                <div className="flex flex-wrap items-center justify-end gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="lg"
-                    disabled={!isDirty || saveMutation.isPending}
-                    onClick={cancelChanges}
-                  >
-                    {t("common.cancel")}
-                  </Button>
-                  <Button
-                    type="submit"
-                    size="lg"
-                    disabled={!isDirty || saveMutation.isPending}
-                    icon={<Check />}
-                  >
-                    {saveMutation.isPending
-                      ? t("common.saving")
-                      : t("clientBilling.saveProfile")}
-                  </Button>
-                </div>
-              </div>
+              ) : null}
             </form>
           ) : null}
         </div>

@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { fetchProjects } from "../../services/clientProjectService";
 import { fetchProjectPricing } from "../../services/projectPricingService";
 import { Input } from "../shared/Input";
+import { InfoPopover } from "../shared/InfoPopover";
 import { LoadError } from "../shared/LoadError";
 import { PageLoading } from "../shared/PageLoading";
 
@@ -28,8 +29,12 @@ export function ProjectInvoicePricing({ companyId, clientId, year, quantities, o
   if (projects.isError || prices.isError) return <LoadError
     retrying={projects.isFetching || prices.isFetching} onRetry={() => { void projects.refetch(); void prices.refetch(); }} />;
   return <section className="space-y-3" aria-label={t("clientBilling.projectPricingTitle")}>
-    <p className="text-xs leading-5 text-muted">{t("clientBilling.projectPricingHint")}</p>
-    <Link to="/admin/settings" className="inline-block text-xs font-semibold text-primary-strong underline">{t("clientBilling.manageProjectPrices")}</Link>
+    <div className="flex items-center gap-1.5">
+      <Link to="/admin/settings" className="text-xs font-semibold text-primary-strong hover:underline">{t("clientBilling.manageProjectPrices")}</Link>
+      <InfoPopover label={t("common.infoAbout", { topic: t("clientBilling.projectPricingTitle") })}>
+        {t("clientBilling.projectPricingHint")}
+      </InfoPopover>
+    </div>
     <div className="max-h-80 space-y-2 overflow-auto">
       {(projects.data ?? []).filter(project => project.is_active).map(project => {
         const price = priceById.get(project.id);
@@ -43,16 +48,20 @@ export function ProjectInvoicePricing({ companyId, clientId, year, quantities, o
               : `${format.format(price.indexed_fee!)} ${price.currency} · ${price.unit}`}</p>
           </div>
           {!missing && (hourly ? <p className="self-center text-xs text-muted">{t("clientBilling.quantityFromHours")}</p>
-            : <Input type="number" min="0" max="999999" step="0.0001"
-              aria-label={t("clientBilling.projectQuantityLabel", { project: project.name, unit: price.unit })}
-              label={t("clientBilling.projectQuantity", { unit: price.unit })}
-              placeholder={price.recurring_quantity == null ? "" : String(price.recurring_quantity)}
-              value={quantities[project.id] ?? ""}
-              onKeyDown={event => { if (event.key === "Enter") event.preventDefault(); }}
-              onChange={event => onQuantityChange(project.id, event.target.value)} />)}
-          {price?.recurring_quantity != null && <p className="text-xs text-muted sm:col-span-2">
-            {t("clientBilling.savedRecurringQuantity", { quantity: price.recurring_quantity, unit: price.unit })}
-          </p>}
+            : <div className="flex items-center gap-1.5">
+              <Input type="number" min="0" max="999999" step="0.0001" className="min-w-0 flex-1"
+                aria-label={t("clientBilling.projectQuantityLabel", { project: project.name, unit: price.unit })}
+                label={t("clientBilling.projectQuantity", { unit: price.unit })}
+                placeholder={price.recurring_quantity == null ? "" : String(price.recurring_quantity)}
+                value={quantities[project.id] ?? ""}
+                onKeyDown={event => { if (event.key === "Enter") event.preventDefault(); }}
+                onChange={event => onQuantityChange(project.id, event.target.value)} />
+              {price.recurring_quantity != null ? (
+                <InfoPopover label={t("common.infoAbout", { topic: t("clientBilling.projectQuantityLabel", { project: project.name, unit: price.unit }) })}>
+                  {t("clientBilling.savedRecurringQuantity", { quantity: price.recurring_quantity, unit: price.unit })}
+                </InfoPopover>
+              ) : null}
+            </div>)}
         </div>;
       })}
     </div>

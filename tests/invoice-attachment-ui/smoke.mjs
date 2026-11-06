@@ -157,7 +157,7 @@ try {
     await confirm.evaluate((button) => { button.click(); button.click(); });
     await expect(page.getByText(/Invoices processed: 3 \/ 3|Feldolgozott számlák: 3 \/ 3/)).toBeVisible();
     await expect(page.getByText(/No time entries were available|Nem volt exportálható időbejegyzés/)).toBeVisible();
-    await expect(page.getByText(/Timesheet export downloaded|Az időbejegyzések exportja letöltve/)).toHaveCount(0);
+    await expect(page.getByText(/Invoice attachment downloaded|Számlamelléklet letöltve/)).toHaveCount(0);
     assert.deepEqual(calls.map((call) => call.operation), ["review", "attachment", "issue", "issue", "issue"]);
     assert.equal(downloads.length, 0);
     assert.ok(calls.filter((call) => call.operation === "issue").every((call) => call.body.confirm && call.body.review_fingerprint === "a".repeat(64)));

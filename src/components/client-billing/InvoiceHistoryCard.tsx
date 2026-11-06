@@ -8,6 +8,7 @@ import { Button } from "../shared/Button";
 import { Card } from "../shared/Card";
 import { Checkbox } from "../shared/Checkbox";
 import { Input } from "../shared/Input";
+import { InfoPopover } from "../shared/InfoPopover";
 import { Modal } from "../shared/Modal";
 import { SegmentedControl } from "../shared/SegmentedControl";
 
@@ -97,16 +98,16 @@ export const InvoiceHistoryCard: React.FC<InvoiceHistoryCardProps> = ({
     <>
       <Card>
         <div className="flex flex-col gap-3 border-b border-primary-strong/20 bg-primary/15 px-4.5 py-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0">
+          <div className="flex min-w-0 items-center gap-1.5">
             <h2 className="flex items-center gap-2 text-[14px] font-semibold text-text">
               <FileClock className="h-4 w-4 text-primary-strong" />
               {t("clientBilling.historyTitle")}
             </h2>
-            <p className="mt-1 text-[11.5px] text-muted">
+            <InfoPopover label={t("common.infoAbout", { topic: t("clientBilling.historyTitle") })}>
               {t(scope === "global" ? "clientBilling.historyDescription"
                 : selectedClientName ? "clientBilling.historyClientDescription" : "clientBilling.historySelectClient",
               { clientName: selectedClientName })}
-            </p>
+            </InfoPopover>
           </div>
           <SegmentedControl
             value={scope}
