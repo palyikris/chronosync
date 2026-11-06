@@ -69,6 +69,15 @@ export const getCurrentMonthDateRange = (today = new Date()) => ({
   ),
 });
 
+export const getPreviousMonthDateRange = (today = new Date()) => ({
+  startDate: formatDashboardDate(
+    new Date(today.getFullYear(), today.getMonth() - 1, 1, 12),
+  ),
+  endDate: formatDashboardDate(
+    new Date(today.getFullYear(), today.getMonth(), 0, 12),
+  ),
+});
+
 export const getEndOfMonthForDashboardDate = (value: string) => {
   const date = parseDashboardDate(value);
   if (!date) return value;

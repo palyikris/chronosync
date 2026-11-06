@@ -7,6 +7,7 @@ import {
   getCurrentMonthDateRange,
   getDashboardDateRange,
   getMonthlyEstimateFactor,
+  getPreviousMonthDateRange,
   isValidDashboardDateRange,
   parseDashboardDate,
 } from "../src/utils/dashboardCalculations.ts";
@@ -16,6 +17,17 @@ test("dashboard month defaults use local calendar dates without UTC drift", () =
     getCurrentMonthDateRange(new Date(2026, 9, 21, 8)),
     { startDate: "2026-10-01", endDate: "2026-10-31" },
   );
+});
+
+test("previous month defaults cover the full month across year and leap-year boundaries", () => {
+  for (const [today, startDate, endDate] of [
+    [new Date(2026, 10, 6, 8), "2026-10-01", "2026-10-31"],
+    [new Date(2026, 0, 1, 0, 30), "2025-12-01", "2025-12-31"],
+    [new Date(2024, 2, 31, 8), "2024-02-01", "2024-02-29"],
+    [new Date(2026, 2, 31, 8), "2026-02-01", "2026-02-28"],
+  ]) {
+    assert.deepEqual(getPreviousMonthDateRange(today), { startDate, endDate });
+  }
 });
 
 test("dashboard date validation rejects impossible and reversed ranges", () => {

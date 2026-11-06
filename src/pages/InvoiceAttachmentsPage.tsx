@@ -18,7 +18,7 @@ import type { Client } from "../types/client-project";
 import { downloadSzamlamellekletReport } from "../utils/downloadExcelReport";
 import { NoReportableTimeEntriesError } from "../utils/invoiceAttachmentDownloadHelpers";
 import {
-  getCurrentMonthDateRange,
+  getPreviousMonthDateRange,
   isValidDashboardDateRange,
   parseDashboardDate,
 } from "../utils/dashboardCalculations";
@@ -42,7 +42,7 @@ const getInitialDateRange = (searchParams: URLSearchParams): DashboardDateRange 
     return { startDate, endDate };
   }
 
-  return getCurrentMonthDateRange();
+  return getPreviousMonthDateRange();
 };
 
 export const InvoiceAttachmentsPage: React.FC = () => {
