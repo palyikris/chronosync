@@ -529,14 +529,19 @@ button.auth-input:disabled {
 .auth-field:focus-within select ~ label,
 .auth-field.has-value select ~ label { opacity: 1; }
 
-/* Keep Select labels within field bounds to avoid clipping in overflow-managed parent layouts. */
-.auth-select-field > label {
-  top: 0.72rem;
-}
-
-.auth-select-field:focus-within > label,
-.auth-select-field.has-value > label {
-  transform: translateY(-0.56rem) scale(0.76);
+/* Selects always keep their label above the displayed choice, like filled inputs. */
+.auth-field.auth-select-field > label {
+  top: 0;
+  left: 0.7rem;
+  max-width: calc(100% - 1.4rem);
+  overflow: hidden;
+  color: var(--color-primary-strong);
+  font-size: 0.76rem;
+  line-height: 1rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 1;
+  transform: translateY(-50%);
 }
 
 .auth-input-floating-placeholder::placeholder { color: transparent; }

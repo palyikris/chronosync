@@ -114,6 +114,7 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
       useState<React.CSSProperties | null>(null);
     const generatedId = useId();
     const controlId = id ?? `select-${generatedId.replace(/:/g, "")}`;
+    const labelId = `${controlId}-label`;
     const hasValue = value !== undefined && value !== null && value !== "";
     const options = useMemo(() => extractOptions(children), [children]);
     const selectedOption = useMemo(
@@ -308,7 +309,7 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
     };
 
     const selectedLabel = selectedOption?.label ?? "";
-    const defaultPlaceholder = placeholder ?? label ?? " ";
+    const defaultPlaceholder = placeholder ?? selectedOption?.label ?? label ?? " ";
     const accessibleLabel = props["aria-label"] ?? label ?? placeholder;
     const displayLabel = hasValue ? selectedLabel : defaultPlaceholder;
     const resolvedDisabledReason =
@@ -395,7 +396,7 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
           )}
           disabled={disabled}
           aria-label={accessibleLabel}
-          aria-labelledby={props["aria-labelledby"]}
+          aria-labelledby={props["aria-labelledby"] ?? (label && !props["aria-label"] ? labelId : undefined)}
           aria-describedby={props["aria-describedby"]}
           aria-required={props.required}
           aria-invalid={isInvalid || props["aria-invalid"]}
@@ -454,6 +455,8 @@ export const Select = React.forwardRef<HTMLSelectElement, StyledSelectProps>(
             )}
           </span>
         </button>
+
+        {label ? <label id={labelId} htmlFor={controlId}>{label}</label> : null}
 
         {disabled ? (
           <>
