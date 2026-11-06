@@ -130,6 +130,8 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
   };
 
   const toggleClient = (clientId: string) => {
+    if (isGenerating) return;
+
     setSubmitError(null);
     setSelectionMode("manual");
     setManualSelectedClientIds((current) =>
@@ -326,7 +328,8 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
                     return (
                       <tr
                         key={client.id}
-                        className="transition hover:bg-bg-accent/50"
+                        onClick={() => toggleClient(client.id)}
+                        className={`transition ${isGenerating ? "cursor-not-allowed" : "cursor-pointer hover:bg-bg-accent/50"}`}
                       >
                         <td className="px-5 py-4 font-medium text-text">
                           {client.client_code}
@@ -346,6 +349,8 @@ export const InvoiceAttachmentModal: React.FC<InvoiceAttachmentModalProps> = ({
                         <td className="px-5 py-4 text-center">
                           <Checkbox
                             checked={isChecked}
+                            disabled={isGenerating}
+                            onClick={(event) => event.stopPropagation()}
                             onChange={() => toggleClient(client.id)}
                             className="h-4 w-4"
                             aria-label={t("dashboard.selectClientForInvoice", {
