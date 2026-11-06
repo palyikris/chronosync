@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { AlertTriangle, Download, FileClock, RefreshCcw } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import type { InvoiceHistoryItem } from "../../types/client-billing";
+import type { InvoiceHistoryItem, InvoiceStornoParams } from "../../types/client-billing";
+import { InvoiceStornoModal } from "./InvoiceStornoModal";
 import { cn } from "../../utils/cn";
 import { Button } from "../shared/Button";
 import { Card } from "../shared/Card";
@@ -14,7 +15,13 @@ interface InvoiceHistoryCardProps {
   loading: boolean;
   error: boolean;
   downloadingId: string | null;
+  downloadingAttachmentId: string | null;
+  onDownloadAttachment: (item: InvoiceHistoryItem) => void;
   reconciling: boolean;
+  reversing: boolean;
+  canReverse: boolean;
+  onStorno: (params: InvoiceStornoParams) => Promise<unknown>;
+  onDownloadStorno: (item: InvoiceHistoryItem) => void;
   onDownload: (item: InvoiceHistoryItem) => void;
   onResolveNotIssued: (item: InvoiceHistoryItem) => void;
   onResolveIssued: (
@@ -30,6 +37,7 @@ const statusClasses: Record<InvoiceHistoryItem["status"], string> = {
   failed: "border-danger/20 bg-danger-bg text-danger",
   uncertain: "border-warning/25 bg-warning-bg text-warning",
   issuing: "border-primary-strong/15 bg-primary/10 text-primary-strong",
+  reversed: "border-muted/20 bg-bg-accent text-muted-strong",
 };
 
 const money = (value: number, currency: string) =>
@@ -44,7 +52,13 @@ export const InvoiceHistoryCard: React.FC<InvoiceHistoryCardProps> = ({
   loading,
   error,
   downloadingId,
+  downloadingAttachmentId,
+  onDownloadAttachment,
   reconciling,
+  reversing,
+  canReverse,
+  onStorno,
+  onDownloadStorno,
   onDownload,
   onResolveNotIssued,
   onResolveIssued,
@@ -57,6 +71,7 @@ export const InvoiceHistoryCard: React.FC<InvoiceHistoryCardProps> = ({
   const [grossTotal, setGrossTotal] = useState("");
   const [confirmed, setConfirmed] = useState(false);
   const [reconcileError, setReconcileError] = useState<string | null>(null);
+  const [stornoTarget, setStornoTarget] = useState<{ item: InvoiceHistoryItem; reconcile: boolean } | null>(null);
 
   const openReconciliation = (item: InvoiceHistoryItem) => {
     setReconcileTarget(item);
@@ -115,9 +130,25 @@ export const InvoiceHistoryCard: React.FC<InvoiceHistoryCardProps> = ({
                       {item.provider_error_message}
                     </p>
                   ) : null}
+                  {item.reversal ? (
+                    <div className="mt-1 space-y-1 text-[10.5px] leading-4 text-muted-strong">
+                      <p>{t(`clientBilling.storno.status.${item.reversal.status}`)}
+                        {item.reversal.invoice_number ? ` · ${item.reversal.invoice_number}` : ""}
+                        {item.reversal.gross_total !== null ? ` · ${money(item.reversal.gross_total, item.currency)}` : ""}
+                      </p>
+                      <p>{item.reversal.reason}</p>
+                      {item.reversal.error_message ? <p className="text-warning">{item.reversal.error_message}</p> : null}
+                    </div>
+                  ) : null}
                 </div>
                 <div className="flex shrink-0 flex-wrap items-center gap-2">
-                  {item.status === "issued" ? (
+                  {item.attachment_available && item.attachment ? (
+                    <Button variant="outline" size="sm" icon={<Download />}
+                      disabled={downloadingAttachmentId === item.id} onClick={() => onDownloadAttachment(item)}>
+                      {t("clientBilling.annex.downloadSaved")}
+                    </Button>
+                  ) : null}
+                  {item.status === "issued" || item.status === "reversed" ? (
                     <Button
                       variant="outline"
                       size="sm"
@@ -127,6 +158,29 @@ export const InvoiceHistoryCard: React.FC<InvoiceHistoryCardProps> = ({
                     >
                       {t(item.pdf_available ? "clientBilling.downloadInvoicePdf" : "clientBilling.recoverInvoicePdf")}
                     </Button>
+                  ) : null}
+                  {item.status === "reversed" && item.reversal?.pdf_available ? (
+                    <Button variant="outline" size="sm" icon={<Download />}
+                      disabled={downloadingId === item.id} onClick={() => onDownloadStorno(item)}>
+                      {t("clientBilling.storno.download")}
+                    </Button>
+                  ) : null}
+                  {item.status === "issued" && item.invoice_number ? (
+                    <>
+                      {(!item.reversal || item.reversal.status === "failed") ? (
+                        <Button variant="outline" size="sm" disabled={reversing || !canReverse}
+                          title={!canReverse ? t("clientBilling.storno.previewBlocked") : undefined}
+                          onClick={() => setStornoTarget({ item, reconcile: false })}>
+                          {t("clientBilling.storno.action")}
+                        </Button>
+                      ) : null}
+                      {item.reversal?.status !== "reversing" ? (
+                        <Button variant="outline" size="sm" disabled={reversing}
+                          onClick={() => setStornoTarget({ item, reconcile: true })}>
+                          {t("clientBilling.storno.recordExisting")}
+                        </Button>
+                      ) : null}
+                    </>
                   ) : null}
                   {item.status === "uncertain" ? (
                     <>
@@ -155,6 +209,12 @@ export const InvoiceHistoryCard: React.FC<InvoiceHistoryCardProps> = ({
           </div>
         )}
       </Card>
+
+      {stornoTarget ? (
+        <InvoiceStornoModal key={`${stornoTarget.item.id}-${stornoTarget.reconcile}`}
+          item={stornoTarget.item} reconcile={stornoTarget.reconcile} busy={reversing}
+          onClose={() => setStornoTarget(null)} onSubmit={onStorno} />
+      ) : null}
 
       <Modal
         open={Boolean(reconcileTarget)}

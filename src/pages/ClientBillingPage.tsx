@@ -35,6 +35,10 @@ import {
   fetchInvoiceHistory,
   issueClientInvoice,
   reconcileInvoice,
+  submitInvoiceStorno,
+  downloadStornoPdf,
+  downloadReviewedInvoiceAttachment,
+  downloadStoredInvoiceAttachment,
   reviewClientInvoice,
   saveClientBillingProfile,
 } from "../services/clientBillingService";
@@ -166,6 +170,11 @@ const createProfileDraft = (
         invoice_language: profile.invoice_language,
         payment_method: profile.payment_method,
         payment_term_days: profile.payment_term_days,
+        invoice_electronic: profile.invoice_electronic ?? false,
+        fulfillment_date_policy: profile.fulfillment_date_policy ?? "period_end",
+        invoice_prefix: profile.invoice_prefix ?? null,
+        seller_bank_name: profile.seller_bank_name ?? null,
+        seller_bank_account: profile.seller_bank_account ?? null,
         vat_code: profile.vat_code,
         automatic_invoicing_enabled:
           profile.automatic_invoicing_enabled,
@@ -189,6 +198,11 @@ const createProfileDraft = (
         invoice_language: client.invoice_attachment_language ?? "hu",
         payment_method: "Átutalás",
         payment_term_days: 8,
+        invoice_electronic: false,
+        fulfillment_date_policy: "period_end",
+        invoice_prefix: null,
+        seller_bank_name: null,
+        seller_bank_account: null,
         vat_code: "27",
         automatic_invoicing_enabled: false,
         invoice_schedule_day: 1,
@@ -308,6 +322,8 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
   const [reviewOpen, setReviewOpen] = useState(false);
   const [issueError, setIssueError] = useState<string | null>(null);
   const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<string | null>(null);
+  const [downloadingAttachmentId, setDownloadingAttachmentId] = useState<string | null>(null);
+  const [attachmentDownloadError, setAttachmentDownloadError] = useState<string | null>(null);
 
   const clientsQuery = useQuery<Client[]>({
     queryKey: ["clients", userProfile?.id, companyId],
@@ -340,7 +356,7 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
     enabled: Boolean(companyId) && !preview,
     retry: false,
     refetchInterval: (query) =>
-      query.state.data?.some((item) => item.status === "issuing") ? 15_000 : false,
+      query.state.data?.some((item) => item.status === "issuing" || item.reversal?.status === "reversing") ? 15_000 : false,
   });
 
   const clients = useMemo(
@@ -481,6 +497,7 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
     mutationFn: reviewClientInvoice,
     onSuccess: (review) => {
       setInvoiceReview(review);
+      setAttachmentDownloadError(null);
       setIssueError(null);
       setReviewOpen(true);
     },
@@ -536,6 +553,21 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
             ? error.message
             : t("clientBilling.reconciliationFailed"),
       });
+    },
+  });
+
+  const stornoMutation = useMutation({
+    mutationFn: submitInvoiceStorno,
+    retry: false,
+    onSuccess: () => {
+      setInvoiceReview(null);
+      setReviewOpen(false);
+      setPreviewResult({ kind: "success", message: t("clientBilling.storno.saved") });
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: ["invoice-history", companyId] });
+      void queryClient.invalidateQueries({ queryKey: ["timesheets"] });
+      void queryClient.invalidateQueries({ queryKey: ["clientBillingProfiles", companyId] });
     },
   });
 
@@ -638,11 +670,12 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
     });
   };
 
-  const downloadInvoicePdf = async (item: InvoiceHistoryItem) => {
+  const downloadInvoicePdf = async (item: InvoiceHistoryItem, storno = false) => {
     setDownloadingInvoiceId(item.id);
     setPreviewResult(null);
     try {
-      await downloadIssuedInvoicePdf(companyId, item.id);
+      if (storno) await downloadStornoPdf(companyId, item.id);
+      else await downloadIssuedInvoicePdf(companyId, item.id);
       if (!item.pdf_available) await queryClient.invalidateQueries({ queryKey: ["invoice-history", companyId] });
     } catch (error) {
       setPreviewResult({
@@ -664,6 +697,22 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
       invoiceId: item.id,
       resolution: "not_issued",
     });
+  };
+
+  const downloadInvoiceAttachment = async (item?: InvoiceHistoryItem) => {
+    if (!item && !invoiceReview) return;
+    if (!item) setAttachmentDownloadError(null);
+    setDownloadingAttachmentId(item?.id ?? "review");
+    try {
+      if (item) await downloadStoredInvoiceAttachment(companyId, item.id);
+      else if (invoiceReview) await downloadReviewedInvoiceAttachment(invoiceReview);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t("clientBilling.annex.downloadFailed");
+      if (item) setPreviewResult({ kind: "error", message });
+      else setAttachmentDownloadError(message);
+    } finally {
+      setDownloadingAttachmentId(null);
+    }
   };
 
   const resolveIssued = (
@@ -1235,6 +1284,30 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
                         </option>
                       ))}
                     </Select>
+                    <Select label={t("clientBilling.fulfillmentDatePolicy")}
+                      value={draft.fulfillment_date_policy ?? "period_end"}
+                      onChange={event => updateDraft(current => ({ ...current,
+                        fulfillment_date_policy: event.target.value as NonNullable<ClientBillingProfile["fulfillment_date_policy"]> }))}>
+                      <option value="period_end">{t("clientBilling.fulfillmentPeriodEnd")}</option>
+                      <option value="due_date">{t("clientBilling.fulfillmentDueDate")}</option>
+                      <option value="issue_date">{t("clientBilling.fulfillmentIssueDate")}</option>
+                    </Select>
+                    <Select label={t("clientBilling.invoiceDocumentType")}
+                      value={draft.invoice_electronic ? "electronic" : "paper"}
+                      onChange={event => updateDraft(current => ({ ...current, invoice_electronic: event.target.value === "electronic" }))}>
+                      <option value="paper">{t("clientBilling.paperInvoice")}</option>
+                      <option value="electronic">{t("clientBilling.electronicInvoice")}</option>
+                    </Select>
+                    <Input label={t("clientBilling.invoicePrefix")} maxLength={32}
+                      value={draft.invoice_prefix ?? ""}
+                      onChange={event => updateDraft(current => ({ ...current, invoice_prefix: event.target.value || null }))} />
+                    <Input label={t("clientBilling.sellerBankName")} maxLength={120}
+                      value={draft.seller_bank_name ?? ""}
+                      onChange={event => updateDraft(current => ({ ...current, seller_bank_name: event.target.value || null }))} />
+                    <Input label={t("clientBilling.sellerBankAccount")} maxLength={120}
+                      value={draft.seller_bank_account ?? ""}
+                      onChange={event => updateDraft(current => ({ ...current, seller_bank_account: event.target.value || null }))} />
+                    <p className="text-xs leading-5 text-muted sm:col-span-2">{t("clientBilling.invoiceConfigurationHint")}</p>
                   </div>
                   {preview && <p className="rounded-xl border border-border bg-bg-accent/40 px-3 py-2.5 text-[11px] leading-5 text-muted">
                     {t("clientBilling.projectPricingHint")}
@@ -1277,9 +1350,8 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
                     id="attach-timesheet-report"
                     title={t("clientBilling.attachTimesheet")}
                     description={t("clientBilling.attachTimesheetDescription")}
-                    checked={false}
-                    disabled
-                    onChange={() => undefined}
+                    checked={draft.attach_timesheet_report}
+                    onChange={(checked) => updateDraft((current) => ({ ...current, attach_timesheet_report: checked }))}
                   />
                 </div>
               </Card>
@@ -1375,7 +1447,13 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
           loading={historyQuery.isLoading}
           error={Boolean(historyQuery.error)}
           downloadingId={downloadingInvoiceId}
+          downloadingAttachmentId={downloadingAttachmentId}
+          onDownloadAttachment={(item) => void downloadInvoiceAttachment(item)}
           reconciling={reconcileMutation.isPending}
+          reversing={stornoMutation.isPending}
+          canReverse={!isCompanyPreviewMode}
+          onStorno={(params) => stornoMutation.mutateAsync(params)}
+          onDownloadStorno={(item) => void downloadInvoicePdf(item, true)}
           onDownload={(item) => void downloadInvoicePdf(item)}
           onResolveNotIssued={resolveNotIssued}
           onResolveIssued={resolveIssued}
@@ -1389,6 +1467,9 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
         issuing={issueMutation.isPending}
         canIssue={!isCompanyPreviewMode}
         error={issueError}
+        attachmentDownloading={downloadingAttachmentId === "review"}
+        attachmentError={attachmentDownloadError}
+        onDownloadAttachment={() => void downloadInvoiceAttachment()}
         onClose={() => {
           setReviewOpen(false);
           setIssueError(null);

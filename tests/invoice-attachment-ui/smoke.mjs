@@ -26,6 +26,10 @@ const review = (client) => ({
     address: "Example street 1", send_email: false, email: null, tax_subject: 1, tax_number: "12345678-2-41" },
   items: [{project_id: "project", project_name: "Services", quantity: "2", unit: "hour", net_unit_price: "50",
     vat_code: "27", currency: "EUR", net_total: "100", vat_total: "27", gross_total: "127"}],
+  attach_timesheet_report: true,
+  attachment: { filename: `invoice-annex-${client.client_code}-2026-10-01-2026-10-31.xlsx`,
+    media_type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    size_bytes: 7000, sha256: 'b'.repeat(64), language: 'en' },
   approved_entries: [], project_quantities: {}, review_fingerprint: "a".repeat(64),
 });
 const errors = [];

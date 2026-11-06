@@ -11,7 +11,18 @@ const pricingSchema = z.object({
   currency: z.string().trim().toUpperCase().regex(/^[A-Z]{3}$/),
   unit: z.string().trim().min(1).max(32),
   index_code: z.enum(["ksh", "eu", "none"]).nullable(),
-}).strict();
+  recurring_quantity: z.number().finite().positive().max(999999).nullable().default(null),
+  invoice_name: z.string().trim().min(1).max(255).nullable().default(null),
+  attachment_note: z.string().trim().max(400).nullable().default(null),
+  po_number: z.string().trim().max(80).nullable().default(null),
+}).strict().superRefine((price, context) => {
+  if (price.recurring_quantity == null) return;
+  const unit = price.unit.toLowerCase();
+  if (["óra", "hour", "hours", "h", "hr", "2 havonta"].includes(unit) ||
+      (["hó", "hónap", "month"].includes(unit) && price.recurring_quantity !== 1)) {
+    context.addIssue({ code: "custom", path: ["recurring_quantity"], message: "Invalid monthly quantity for this unit." });
+  }
+});
 
 export type ProjectPricingInput = z.infer<typeof pricingSchema>;
 
@@ -20,7 +31,7 @@ export async function fetchProjectPricing(companyId: string, year: number): Prom
   if (error) throw error;
   return fetchAllRows<ProjectPricing>((from, to) => supabase
     .from("project_pricing")
-    .select("project_id, company_id, pricing_year, original_fee, original_fee_text, original_currency, original_unit, indexed_fee, unit, currency, index_code")
+    .select("project_id, company_id, pricing_year, original_fee, original_fee_text, original_currency, original_unit, indexed_fee, unit, currency, index_code, recurring_quantity, invoice_name, attachment_note, po_number")
     .eq("company_id", companyId)
     .eq("pricing_year", year)
     .order("project_id")
@@ -33,6 +44,8 @@ export async function saveProjectPricing(input: ProjectPricingInput, existing: b
     ? supabase.from("project_pricing").update({
       indexed_fee: value.indexed_fee, currency: value.currency, unit: value.unit, source_formula: null,
       index_code: value.index_code, price_origin: "manual", generated_from_year: null, applied_index_rate: null,
+      recurring_quantity: value.recurring_quantity, invoice_name: value.invoice_name,
+      attachment_note: value.attachment_note, po_number: value.po_number,
     }).eq("company_id", value.company_id).eq("project_id", value.project_id).eq("pricing_year", value.pricing_year)
     : supabase.from("project_pricing").insert(value);
   const { error } = await query.select("project_id").single();

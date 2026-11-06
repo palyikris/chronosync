@@ -46,9 +46,13 @@ export function ProjectInvoicePricing({ companyId, clientId, year, quantities, o
             : <Input type="number" min="0" max="999999" step="0.0001"
               aria-label={t("clientBilling.projectQuantityLabel", { project: project.name, unit: price.unit })}
               label={t("clientBilling.projectQuantity", { unit: price.unit })}
+              placeholder={price.recurring_quantity == null ? "" : String(price.recurring_quantity)}
               value={quantities[project.id] ?? ""}
               onKeyDown={event => { if (event.key === "Enter") event.preventDefault(); }}
               onChange={event => onQuantityChange(project.id, event.target.value)} />)}
+          {price?.recurring_quantity != null && <p className="text-xs text-muted sm:col-span-2">
+            {t("clientBilling.savedRecurringQuantity", { quantity: price.recurring_quantity, unit: price.unit })}
+          </p>}
         </div>;
       })}
     </div>

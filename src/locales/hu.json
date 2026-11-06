@@ -65,7 +65,12 @@
     "kshRate": "KSH-infláció (%)",
     "euRate": "EU-infláció (%)",
     "saveIndexes": "Indexek mentése",
-    "indexesSaved": "A {{year}}. évi indexek mentve."
+    "indexesSaved": "A {{year}}. évi indexek mentve.",
+    "recurringQuantity": "Alapértelmezett havi mennyiség",
+    "recurringQuantityHint": "A szolgáltatás minden teljes hónapban bekerül, munkaidő nélkül is. Havidíjhoz 1-et, bérszámfejtéshez a megállapodott létszámot add meg. Üresen hagyva a mennyiséget külön kell megadni.",
+    "invoiceName": "Számlán megjelenő tételnév",
+    "invoiceNote": "Számlatétel megjegyzése",
+    "poNumber": "Megrendelési hivatkozás (PO)"
   },
   "common": {
     "changesSaved": "A módosítások mentve.",
@@ -1039,8 +1044,8 @@
     "billingEmail": "Számlázási e-mail",
     "sendInvoiceEmail": "Számla elküldése e-mailben az ügyfélnek",
     "sendInvoiceEmailDescription": "A Számlázz.hu elküldi a végleges számlát a fenti számlázási e-mail címre.",
-    "attachTimesheet": "Munkaidő-kimutatás csatolása",
-    "attachTimesheetDescription": "Az időkimutatás külön tölthető le a Munkaidő menüpontból. A számlaértesítő e-mail jelenleg csak a számlát tartalmazza.",
+    "attachTimesheet": "Számlamelléklet mentése és csatolása a számla e-mailjéhez",
+    "attachTimesheetDescription": "Az ellenőrzött projektdíjakat és időbejegyzéseket tartalmazza. A munkafüzet a számlatörténetből akkor is letölthető, ha az e-mail-küldés ki van kapcsolva.",
     "automationTitle": "Automatizálási beállítások",
     "automationDescription": "A számlák az előző naptári hónapot fedik le, és csak jóváhagyott időbejegyzéseket használnak.",
     "missingFieldsTitle": "Még {{count}} kötelező mező hiányzik",
@@ -1107,7 +1112,8 @@
       "issuing": "Kiállítás alatt",
       "issued": "Kiállítva",
       "uncertain": "Egyeztetendő",
-      "failed": "Sikertelen"
+      "failed": "Sikertelen",
+      "reversed": "Sztornózott"
     },
     "fields": {
       "billingName": "Hivatalos számlázási név",
@@ -1126,7 +1132,57 @@
       "invoiceUnit": "Mennyiségi egység",
       "vatCode": "Áfakulcs"
     },
-    "recoverInvoicePdf": "Számla PDF visszaállítása"
+    "recoverInvoicePdf": "Számla PDF visszaállítása",
+    "savedRecurringQuantity": "Mentett havi mennyiség: {{quantity}} {{unit}}. Üresen hagyva ezt használja, vagy add meg az ellenőrzött mennyiséget.",
+    "fulfillmentDatePolicy": "Teljesítés dátuma",
+    "fulfillmentPeriodEnd": "Elszámolási időszak utolsó napja",
+    "fulfillmentDueDate": "Fizetési határidő",
+    "fulfillmentIssueDate": "Számla kiállításának napja",
+    "invoiceDocumentType": "Számla típusa",
+    "paperInvoice": "Papíralapú számla",
+    "electronicInvoice": "Elektronikus számla",
+    "invoicePrefix": "Számlaszám előtagja",
+    "sellerBankName": "Eladó bankjának neve",
+    "sellerBankAccount": "Eladó bankszámlaszáma / IBAN",
+    "bankDetailsRequired": "Add meg az eladó bankjának nevét és számlaszámát is, vagy hagyd mindkettőt üresen.",
+    "invoiceConfigurationHint": "Az ügyféllel egyeztetett teljesítési szabályt válaszd. Üres előtag és banki mezők esetén a Számlázz.hu-fiók alapértékei érvényesek. A dátumok és beállítások a számla ellenőrzésekor is láthatók.",
+    "storno": {
+      "action": "Sztornózás",
+      "title": "Számla sztornózása",
+      "description": "A(z) {{invoiceNumber}} számlához sztornószámla készül a Számlázz.hu rendszerében. Mindkét bizonylat megmarad. Az igazolt sztornó után a munka és az időszak ismét számlázható, új ellenőrzést követően. Az ügyfél automatikus számlázása szünetelni fog. Nem kérünk ügyfélnek küldött e-mailt.",
+      "originalNumber": "Írja be az eredeti számla számát",
+      "reason": "A sztornózás indoka",
+      "confirmation": "Megerősítem, hogy ezt a számlát sztornózni kell. Az igazolt sztornó nem vonható vissza.",
+      "submit": "Sztornószámla kiállítása",
+      "reconcileTitle": "Meglévő sztornó ellenőrzése",
+      "reconcileDescription": "A(z) {{invoiceNumber}} számla meglévő sztornójának ellenőrzése. A Chronosync a Számlázz.hu rendszerében ellenőrzi az eredeti számlát, a hivatkozást, az összegeket és a PDF-et. Az igazolt sztornó szünetelteti az ügyfél automatikus számlázását. Nem készül új bizonylat.",
+      "recordExisting": "Meglévő sztornó ellenőrzése",
+      "reversalNumber": "Sztornószámla száma",
+      "resolution": "Eredmény a szolgáltatónál",
+      "wasReversed": "Készült sztornószámla",
+      "notReversed": "Nem készült sztornószámla",
+      "reconcileConfirmation": "Ellenőriztem az eredeti számlát a Számlázz.hu rendszerében, és kérem az eredmény ellenőrzését.",
+      "verify": "Ellenőrzés a Számlázz.hu-n",
+      "download": "Sztornó PDF letöltése",
+      "saved": "A sztornó állapota ellenőrizve és mentve.",
+      "failed": "A sztornó nem igazolható. Folytatás előtt ellenőrizze a számlatörténetet.",
+      "previewBlocked": "Előnézeti módban a sztornózás nem engedélyezett.",
+      "status": {
+        "reversing": "Sztornózás folyamatban",
+        "uncertain": "A sztornó egyeztetést igényel",
+        "failed": "A sztornó nem fejeződött be",
+        "reversed": "Sztornó igazolva"
+      }
+    },
+    "annex": {
+      "title": "Számlamelléklet",
+      "emailIncluded": "A számla e-mailjének melléklete.",
+      "savedOnly": "A számlával együtt mentve. Az e-mail-küldés ki van kapcsolva.",
+      "downloadReview": "Számlamelléklet ellenőrzése",
+      "downloadSaved": "Számlamelléklet letöltése",
+      "downloadFailed": "A számlamelléklet nem tölthető le.",
+      "invalidFile": "A szerver nem adott vissza érvényes számlamellékletet."
+    }
   },
   "userSettings": {
     "title": "Felhasználói beállítások",

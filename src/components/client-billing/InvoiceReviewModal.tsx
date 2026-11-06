@@ -14,6 +14,9 @@ interface InvoiceReviewModalProps {
   error: string | null;
   onClose: () => void;
   onIssue: () => void;
+  attachmentDownloading?: boolean;
+  attachmentError?: string | null;
+  onDownloadAttachment?: () => void;
 }
 
 const formatMoney = (value: number, currency: string) =>
@@ -31,6 +34,9 @@ export const InvoiceReviewModal: React.FC<InvoiceReviewModalProps> = ({
   error,
   onClose,
   onIssue,
+  attachmentDownloading = false,
+  attachmentError = null,
+  onDownloadAttachment,
 }) => {
   const { t } = useTranslation();
   const [confirmed, setConfirmed] = useState(false);
@@ -93,6 +99,21 @@ export const InvoiceReviewModal: React.FC<InvoiceReviewModalProps> = ({
           </span>
         </div>
 
+        {review.attachment ? (
+          <div className="mt-3 rounded-xl border border-border p-3 text-xs text-muted-strong">
+            <p className="font-medium text-text">{t("clientBilling.annex.title")}</p>
+            <p className="mt-1 break-all">{review.attachment.filename} · {Math.ceil(review.attachment.size_bytes / 1024)} KB</p>
+            <p className="mt-1">{t(review.recipient.send_email ? "clientBilling.annex.emailIncluded" : "clientBilling.annex.savedOnly")}</p>
+            {onDownloadAttachment ? (
+              <Button className="mt-2" size="sm" variant="outline" disabled={issuing || attachmentDownloading}
+                onClick={onDownloadAttachment}>
+                {t(attachmentDownloading ? "common.loading" : "clientBilling.annex.downloadReview")}
+              </Button>
+            ) : null}
+            {attachmentError ? <p role="alert" className="mt-2 text-danger">{attachmentError}</p> : null}
+          </div>
+        ) : null}
+
         <div className="mt-3 rounded-xl border border-border bg-white/35 px-3.5 py-3 text-[11px] leading-5 text-muted">
           <span className="font-semibold text-text">{review.item_name}</span>
           {" · "}
@@ -103,7 +124,13 @@ export const InvoiceReviewModal: React.FC<InvoiceReviewModalProps> = ({
           {t("clientBilling.reviewDue", { date: review.due_date })}
           {" · "}
           {review.payment_method} · {review.language.toUpperCase()}
+          {" · "}{t(review.e_invoice ? "clientBilling.electronicInvoice" : "clientBilling.paperInvoice")}
+          {review.invoice_prefix && ` · ${review.invoice_prefix}`}
         </div>
+        {(review.invoice_comment || review.seller_bank_account) && <div className="mt-3 text-xs leading-5 text-muted">
+          {review.invoice_comment && <p>{review.invoice_comment}</p>}
+          {review.seller_bank_account && <p>{review.seller_bank_name} · {review.seller_bank_account}</p>}
+        </div>}
 
         {review.exchange_rate_bank ? (
           <p className="mt-3 text-xs text-muted">
@@ -145,7 +172,9 @@ export const InvoiceReviewModal: React.FC<InvoiceReviewModalProps> = ({
             </tr></thead>
             <tbody className="divide-y divide-border">{items.map(item => <tr key={`${item.project_id}-${item.pricing_year}`}>
               <td className="px-3 py-2 font-medium">
-                {item.project_name}
+                {item.invoice_name || item.project_name}
+                {item.invoice_note && <span className="mt-1 block text-xs text-muted">{item.invoice_note}</span>}
+                {item.po_number && <span className="mt-1 block text-xs text-muted">PO: {item.po_number}</span>}
                 {item.is_payroll && <span className="mt-1 block text-xs text-primary-strong">
                   {t("companySettings.payrollProject")}
                 </span>}

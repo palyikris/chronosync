@@ -53,9 +53,17 @@ export function InvoiceAttachmentInvoiceReview({
                       <summary className="cursor-pointer font-medium text-primary-strong">{t("dashboard.invoiceBatchDetails")}</summary>
                       <div className="mt-2 space-y-2 text-muted">
                         <p>{t("clientBilling.reviewFulfillment", { date: review.fulfillment_date })} · {t("clientBilling.reviewDue", { date: review.due_date })} · {review.payment_method} · {review.language.toUpperCase()}</p>
+                        <p>{t(review.e_invoice ? "clientBilling.electronicInvoice" : "clientBilling.paperInvoice")}{review.invoice_prefix ? ` · ${review.invoice_prefix}` : ""}</p>
+                        {review.invoice_comment && <p>{review.invoice_comment}</p>}
+                        {review.attachment && <p className="break-all">{t("clientBilling.annex.title")}: {review.attachment.filename} · {t(review.recipient.send_email ? "clientBilling.annex.emailIncluded" : "clientBilling.annex.savedOnly")}</p>}
+                        {review.seller_bank_account && <p>{review.seller_bank_name} · {review.seller_bank_account}</p>}
                         <p>{t("clientBilling.reviewTaxSubject", { value: review.recipient.tax_subject })} · {review.recipient.tax_number ?? review.recipient.eu_tax_number ?? "—"}{review.recipient.group_tax_number ? ` · ${review.recipient.group_tax_number}` : ""}</p>
                         {review.items.map((line) => (
-                          <p key={line.project_id}>{line.project_name}: {line.quantity} {line.unit} × {money(line.net_unit_price, line.currency)} · {t("clientBilling.reviewVat", { vat: line.vat_code })} · {money(line.gross_total, line.currency)}</p>
+                          <div key={line.project_id}>
+                            <p>{line.invoice_name || line.project_name}: {line.quantity} {line.unit} × {money(line.net_unit_price, line.currency)} · {t("clientBilling.reviewVat", { vat: line.vat_code })} · {money(line.gross_total, line.currency)}</p>
+                            {line.invoice_note && <p>{line.invoice_note}</p>}
+                            {line.po_number && <p>PO: {line.po_number}</p>}
+                          </div>
                         ))}
                         <p>{t("clientBilling.reviewNet")}: {money(review.net_total, review.currency)} · {t("clientBilling.reviewVat", { vat: review.vat_code })}: {money(review.vat_total, review.currency)}</p>
                         {review.exchange_rate_bank ? <p>{t("clientBilling.exchangeRatePolicy", { bank: review.exchange_rate_bank })}</p> : null}

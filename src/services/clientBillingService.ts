@@ -10,6 +10,7 @@ import {
   type ClientInvoiceReview,
   type InvoiceHistoryItem,
   type InvoiceBatchReviewItem,
+  type InvoiceStornoParams,
 } from "../types/client-billing";
 import { getBillingProfileReadiness } from "../utils/clientBillingReadiness";
 
@@ -52,6 +53,11 @@ const profileSchema = z
     invoice_language: z.enum(INVOICE_LANGUAGES),
     payment_method: z.string().trim().min(1).max(64),
     payment_term_days: z.number().int().min(0).max(365),
+    invoice_electronic: z.boolean().default(false),
+    fulfillment_date_policy: z.enum(["period_end", "due_date", "issue_date"]).default("period_end"),
+    invoice_prefix: nullableText(32).default(null),
+    seller_bank_name: nullableText(120).default(null),
+    seller_bank_account: nullableText(120).default(null),
     vat_code: z.string().trim().min(1).max(16),
     automatic_invoicing_enabled: z.boolean(),
     invoice_schedule_day: z.number().int().min(1).max(28),
@@ -59,6 +65,10 @@ const profileSchema = z
   })
   .strict()
   .superRefine((profile, context) => {
+    if (Boolean(profile.seller_bank_name) !== Boolean(profile.seller_bank_account)) {
+      context.addIssue({ code: "custom", path: ["seller_bank_account"],
+        message: i18n.t("clientBilling.bankDetailsRequired") });
+    }
     if (profile.send_invoice_email && !profile.billing_email) {
       context.addIssue({
         code: "custom",
@@ -96,6 +106,11 @@ const PROFILE_COLUMNS = [
   "invoice_language",
   "payment_method",
   "payment_term_days",
+  "invoice_electronic",
+  "fulfillment_date_policy",
+  "invoice_prefix",
+  "seller_bank_name",
+  "seller_bank_account",
   "vat_code",
   "automatic_invoicing_enabled",
   "invoice_schedule_day",
@@ -320,6 +335,11 @@ const normalizeInvoiceHistoryItem = (
   net_total: Number(value.net_total),
   vat_total: Number(value.vat_total),
   gross_total: Number(value.gross_total),
+  reversal: value.reversal ? {
+    ...value.reversal,
+    net_total: value.reversal.net_total === null ? null : Number(value.reversal.net_total),
+    gross_total: value.reversal.gross_total === null ? null : Number(value.reversal.gross_total),
+  } : null,
 });
 
 export const reviewInvoiceBatch = async (params: {
@@ -411,12 +431,12 @@ export const fetchInvoiceHistory = async (
   return items.map(normalizeInvoiceHistoryItem);
 };
 
-const downloadPdfResponse = async (response: Response, fallbackName: string) => {
+const downloadPdfResponse = async (response: Response, fallbackName: string, report = false) => {
   if (!response.ok) throw new Error(await getInvoiceApiError(response));
   const blob = await response.blob();
   const signature = new TextDecoder().decode(await blob.slice(0, 4).arrayBuffer());
-  if (blob.size === 0 || signature !== "%PDF") {
-    throw new Error(i18n.t("clientBilling.previewInvalidFile"));
+  if (blob.size === 0 || signature !== (report ? "PK\u0003\u0004" : "%PDF")) {
+    throw new Error(i18n.t(report ? "clientBilling.annex.invalidFile" : "clientBilling.previewInvalidFile"));
   }
   const disposition = response.headers.get("Content-Disposition") ?? "";
   const filenameMatch = disposition.match(/filename="([^"]+)"/i);
@@ -430,6 +450,25 @@ const downloadPdfResponse = async (response: Response, fallbackName: string) => 
   window.setTimeout(() => window.URL.revokeObjectURL(downloadUrl), 1_000);
 };
 
+export const downloadReviewedInvoiceAttachment = async (review: ClientInvoiceReview) => {
+  const response = await fetch(`${getInvoiceApiBaseUrl()}/client-attachment`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${await getAccessToken()}` },
+    body: JSON.stringify({ company_id: review.company_id, client_id: review.client_id,
+      period_start: review.period_start, period_end: review.period_end,
+      project_quantities: review.project_quantities ?? {}, review_fingerprint: review.review_fingerprint }),
+  });
+  await downloadPdfResponse(response, review.attachment?.filename ?? "invoice-annex.xlsx", true);
+};
+
+export const downloadStoredInvoiceAttachment = async (companyId: string, invoiceId: string) => {
+  const query = new URLSearchParams({ company_id: companyId });
+  const response = await fetch(`${getInvoiceApiBaseUrl()}/${encodeURIComponent(invoiceId)}/attachment?${query}`, {
+    headers: { Authorization: `Bearer ${await getAccessToken()}` },
+  });
+  await downloadPdfResponse(response, `invoice-annex-${invoiceId}.xlsx`, true);
+};
+
 export const downloadIssuedInvoicePdf = async (
   companyId: string,
   invoiceId: string,
@@ -440,6 +479,35 @@ export const downloadIssuedInvoicePdf = async (
     { headers: { Authorization: `Bearer ${await getAccessToken()}` } },
   );
   await downloadPdfResponse(response, `invoice-${invoiceId}.pdf`);
+};
+
+export const downloadStornoPdf = async (companyId: string, invoiceId: string) => {
+  const query = new URLSearchParams({ company_id: companyId });
+  const response = await fetch(
+    `${getInvoiceApiBaseUrl()}/${encodeURIComponent(invoiceId)}/storno/pdf?${query}`,
+    { headers: { Authorization: `Bearer ${await getAccessToken()}` } },
+  );
+  await downloadPdfResponse(response, `storno-${invoiceId}.pdf`);
+};
+
+export const submitInvoiceStorno = async (
+  params: InvoiceStornoParams,
+): Promise<InvoiceHistoryItem> => {
+  const response = await fetch(
+    `${getInvoiceApiBaseUrl()}/${encodeURIComponent(params.invoiceId)}/storno${params.resolution ? "/reconcile" : ""}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${await getAccessToken()}` },
+      body: JSON.stringify({
+        company_id: params.companyId, original_invoice_number: params.originalInvoiceNumber,
+        reason: params.reason, confirm: true,
+        ...(params.resolution ? { resolution: params.resolution } : {}),
+        ...(params.reversalInvoiceNumber ? { reversal_invoice_number: params.reversalInvoiceNumber } : {}),
+      }),
+    },
+  );
+  if (!response.ok) throw new Error(await getInvoiceApiError(response));
+  return normalizeInvoiceHistoryItem((await response.json()) as InvoiceHistoryItem);
 };
 
 export const reconcileInvoice = async (params: {
