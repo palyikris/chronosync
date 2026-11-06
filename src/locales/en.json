@@ -1153,7 +1153,7 @@
       "action": "Storno",
       "title": "Reverse invoice (storno)",
       "description": "This creates a cancellation invoice for {{invoiceNumber}} at Számlázz.hu. Both documents are retained. After confirmation, the work and billing period become available for a reviewed replacement. Automatic invoicing for this client is paused. No customer email is requested.",
-      "originalNumber": "Type the original invoice number",
+      "originalNumber": "Original invoice number",
       "reason": "Reason for reversal",
       "confirmation": "I confirm that this invoice must be reversed. A confirmed storno cannot be undone.",
       "submit": "Create storno",

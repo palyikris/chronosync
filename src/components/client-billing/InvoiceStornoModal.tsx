@@ -17,7 +17,7 @@ export function InvoiceStornoModal({ item, reconcile, busy, onClose, onSubmit }:
   const { t } = useTranslation();
   const formId = useId();
   const [reason, setReason] = useState(item.reversal?.reason ?? "");
-  const [originalNumber, setOriginalNumber] = useState("");
+  const [originalNumber, setOriginalNumber] = useState(item.invoice_number ?? "");
   const [reversalNumber, setReversalNumber] = useState("");
   const [resolution, setResolution] = useState<"reversed" | "not_reversed">("reversed");
   const [confirmed, setConfirmed] = useState(false);

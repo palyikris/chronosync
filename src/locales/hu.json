@@ -1152,7 +1152,7 @@
       "action": "Sztornózás",
       "title": "Számla sztornózása",
       "description": "A(z) {{invoiceNumber}} számlához sztornószámla készül a Számlázz.hu rendszerében. Mindkét bizonylat megmarad. Az igazolt sztornó után a munka és az időszak ismét számlázható, új ellenőrzést követően. Az ügyfél automatikus számlázása szünetelni fog. Nem kérünk ügyfélnek küldött e-mailt.",
-      "originalNumber": "Írja be az eredeti számla számát",
+      "originalNumber": "Eredeti számla száma",
       "reason": "A sztornózás indoka",
       "confirmation": "Megerősítem, hogy ezt a számlát sztornózni kell. Az igazolt sztornó nem vonható vissza.",
       "submit": "Sztornószámla kiállítása",
