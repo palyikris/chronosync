@@ -80,7 +80,7 @@ try {
     });
     await open.click();
     const dialog = page.getByRole('dialog');
-    await expect(dialog.getByText(text.uploadTitle, { exact: true })).toBeVisible();
+    await expect(dialog.getByText(text.chooseFile, { exact: true })).toBeVisible();
     await page.screenshot({ path: `${output}/${language}-${width}-upload.png`, fullPage: true });
     // A blank official template is rejected and the user can choose another file.
     await dialog.locator('input[type=file]').setInputFiles({ name: 'blank.xls', mimeType: 'application/vnd.ms-excel', buffer: workbook('biff8', []) });
