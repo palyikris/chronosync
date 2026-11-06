@@ -327,7 +327,7 @@ export const ProjectManagementCard: React.FC<ProjectManagementCardProps> = ({
           <div
             inert={isProjectFiltersCollapsed}
             className={cn(
-              "grid flex-1 gap-3 overflow-hidden transition-all duration-300 ease-out lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)] lg:items-end",
+              "-my-2 grid flex-1 gap-3 overflow-hidden py-2 transition-all duration-300 ease-out lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)] lg:items-end",
               isProjectFiltersCollapsed
                 ? "pointer-events-none max-w-0 translate-x-[-10px] opacity-0"
                 : "max-w-[1400px] translate-x-0 opacity-100",

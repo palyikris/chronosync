@@ -427,7 +427,7 @@ export const ClientManagementCard: React.FC<Props> = ({
           <div
             inert={isClientFiltersCollapsed}
             className={cn(
-              "grid flex-1 gap-3 overflow-hidden transition-all duration-300 ease-out md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] md:items-end",
+              "-my-2 grid flex-1 gap-3 overflow-hidden py-2 transition-all duration-300 ease-out md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] md:items-end",
               isClientFiltersCollapsed
                 ? "pointer-events-none max-w-0 translate-x-[-10px] opacity-0"
                 : "max-w-[1000px] translate-x-0 opacity-100",
