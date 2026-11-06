@@ -12,13 +12,14 @@ interface Props {
   endDate: string;
   generating: boolean;
   results: InvoiceBatchResult[] | null;
+  timesheetExportMissing?: boolean;
   error: string | null;
   onConfirm: () => void;
   onClose: () => void;
 }
 
 export function InvoiceAttachmentInvoiceReview({
-  items, clientNames, startDate, endDate, generating, results, error, onConfirm, onClose,
+  items, clientNames, startDate, endDate, generating, results, timesheetExportMissing = false, error, onConfirm, onClose,
 }: Props) {
   const { t, i18n } = useTranslation();
   const [confirmed, setConfirmed] = useState(false);
@@ -76,6 +77,8 @@ export function InvoiceAttachmentInvoiceReview({
           </>
         ) : (
           <section aria-live="polite" className="space-y-3">
+            <p className="text-sm text-muted">{t(timesheetExportMissing
+              ? "dashboard.invoiceBatchNoTimesheetExport" : "dashboard.invoiceBatchAttachmentsDownloaded")}</p>
             <p className="text-sm text-text">{t(generating ? "dashboard.invoiceBatchProgress" : "dashboard.invoiceBatchFinished", { count: results.length, total: eligible.length })}</p>
             {results.map((result) => (
               <div key={result.clientId} className={`rounded-2xl border p-4 text-sm ${result.error ? "border-red-200 bg-red-50 text-red-800" : "border-border-strong bg-surface text-text"}`}>

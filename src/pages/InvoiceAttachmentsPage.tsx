@@ -16,6 +16,7 @@ import type { InvoiceBatchResult, InvoiceBatchReviewItem } from "../types/client
 import { fetchActiveClients } from "../services/clientProjectService";
 import type { Client } from "../types/client-project";
 import { downloadSzamlamellekletReport } from "../utils/downloadExcelReport";
+import { NoReportableTimeEntriesError } from "../utils/invoiceAttachmentDownloadHelpers";
 import {
   getCurrentMonthDateRange,
   isValidDashboardDateRange,
@@ -69,6 +70,7 @@ export const InvoiceAttachmentsPage: React.FC = () => {
     params: Parameters<typeof downloadSzamlamellekletReport>[0];
   } | null>(null);
   const [batchResults, setBatchResults] = useState<InvoiceBatchResult[] | null>(null);
+  const [batchTimesheetExportMissing, setBatchTimesheetExportMissing] = useState(false);
   const [isRemainingHoursInfoOpen, setIsRemainingHoursInfoOpen] = useState(false);
   const remainingHoursInfoId = useId();
   const remainingHoursInfoRoot = useRef<HTMLDivElement>(null);
@@ -248,8 +250,19 @@ export const InvoiceAttachmentsPage: React.FC = () => {
     setIsGenerating(true);
     setSubmitError(null);
     try {
-      // Generate the attachment before starting any irreversible invoice operation.
-      await downloadSzamlamellekletReport(batchReview.params);
+      // An empty timesheet export is valid for recurring fees. Other report
+      // failures must still stop the batch before any invoice is issued.
+      let timesheetExportMissing = false;
+      try {
+        await downloadSzamlamellekletReport(batchReview.params);
+      } catch (error) {
+        const reviewedInvoices = batchReview.items.flatMap((item) => item.review ? [item.review] : []);
+        if (!(error instanceof NoReportableTimeEntriesError)
+          || reviewedInvoices.length === 0
+          || reviewedInvoices.some((review) => review.approved_entries.length > 0)) throw error;
+        timesheetExportMissing = true;
+      }
+      setBatchTimesheetExportMissing(timesheetExportMissing);
       const results: InvoiceBatchResult[] = [];
       setBatchResults([]);
       for (const item of batchReview.items) {
@@ -697,11 +710,13 @@ export const InvoiceAttachmentsPage: React.FC = () => {
           clientNames={Object.fromEntries(clients.map((client) => [client.id, client.name]))}
           startDate={batchReview.params.startDate} endDate={batchReview.params.endDate}
           generating={isGenerating} results={batchResults} error={submitError}
+          timesheetExportMissing={batchTimesheetExportMissing}
           onConfirm={handleConfirmBatch} onClose={() => {
             if (busy.current) return;
             setBatchReview(null);
             if (batchResults !== null) setCreateRealInvoices(false);
             setBatchResults(null);
+            setBatchTimesheetExportMissing(false);
             setSubmitError(null);
           }} />
       ) : null}

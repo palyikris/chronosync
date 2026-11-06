@@ -33,7 +33,8 @@ const review = (client) => ({
   approved_entries: [], project_quantities: {}, review_fingerprint: "a".repeat(64),
 });
 const errors = [];
-async function open({ allSkipped = false, allEligible = false, invoicingEnabled = true, failedDownload = false, failedInvoice = false, language = "en", mobile = false } = {}) {
+async function open({ allSkipped = false, allEligible = false, invoicingEnabled = true, failedDownload = false,
+  emptyReport = false, reportFailureStatus = null, reviewHasTime = false, failedInvoice = false, language = "en", mobile = false } = {}) {
   const context = await browser.newContext({ viewport: mobile ? { width: 390, height: 844 } : { width: 1366, height: 1000 }, acceptDownloads: true });
   const user = { id: company, email: "synthetic@example.invalid", role: "authenticated", aud: "authenticated", app_metadata: {}, user_metadata: {} };
   const expires = 2082758400;
@@ -55,12 +56,19 @@ async function open({ allSkipped = false, allEligible = false, invoicingEnabled 
     if (url.pathname.endsWith("/batch-review")) {
       calls.push({operation: "review", body});
       return json(clients.map((client, index) => ({client_id: client.id,
-        review: allSkipped || (!allEligible && index === 1) ? null : review(client),
+        review: allSkipped || (!allEligible && index === 1) ? null : {
+          ...review(client),
+          items: emptyReport ? [{...review(client).items[0], quantity: "1", unit: "month", net_unit_price: "100"}] : review(client).items,
+          approved_entries: reviewHasTime ? [{id: company, project_id: company, project_name: "Services",
+            work_date: "2026-10-01", hours_logged: 2, billing_multiplier: 1, description: "Approved work"}] : [],
+        },
         reason: allSkipped || (!allEligible && index === 1) ? "Complete the client's billing profile before invoicing. Missing: billing_address." : null })));
     }
     if (url.pathname.endsWith("/generate-szamlamelleklet")) {
       calls.push({operation: "attachment", body});
       if (failedDownload) return json({detail: "Report conflict"}, 409);
+      if (reportFailureStatus !== null) return json({detail: "Report unavailable"}, reportFailureStatus);
+      if (emptyReport) return json({detail: "No approved or previously invoiced time entries were found for the selected clients and date range."}, 404);
       return route.fulfill({ status: 200, contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers: {"content-disposition": "attachment; filename=attachments.xlsx", "access-control-expose-headers": "Content-Disposition"}, body: "synthetic-workbook" });
     }
@@ -136,6 +144,53 @@ try {
     assert.deepEqual(calls.map((call) => call.operation), ["review", "attachment"]);
     await context.close();
   }
+  // Recurring-only batches proceed without a timesheet export, in both UI languages.
+  for (const language of ["en", "hu"]) {
+    const {context, page, calls} = await open({allEligible: true, emptyReport: true, language, mobile: language === "hu"});
+    const downloads = [];
+    page.on("download", (download) => downloads.push(download));
+    await preflight(page);
+    assert.deepEqual(calls.map((call) => call.operation), ["review"]);
+    const confirm = page.getByRole("button", {name: /Generate attachments and issue invoices|Mellékletek készítése és számlák kiállítása/});
+    await expect(confirm).toBeDisabled();
+    await page.getByRole("checkbox", {name: /I have read|Elolvastam/}).check();
+    await confirm.evaluate((button) => { button.click(); button.click(); });
+    await expect(page.getByText(/Invoices processed: 3 \/ 3|Feldolgozott számlák: 3 \/ 3/)).toBeVisible();
+    await expect(page.getByText(/No time entries were available|Nem volt exportálható időbejegyzés/)).toBeVisible();
+    await expect(page.getByText(/Timesheet export downloaded|Az időbejegyzések exportja letöltve/)).toHaveCount(0);
+    assert.deepEqual(calls.map((call) => call.operation), ["review", "attachment", "issue", "issue", "issue"]);
+    assert.equal(downloads.length, 0);
+    assert.ok(calls.filter((call) => call.operation === "issue").every((call) => call.body.confirm && call.body.review_fingerprint === "a".repeat(64)));
+    await page.screenshot({path: `${output}/recurring-only-${language}.png`, fullPage: true, animations: "disabled"});
+    await context.close();
+  }
+  // Other 404s, permission errors and outages still stop before issuance.
+  for (const reportFailureStatus of [401, 403, 404, 500]) {
+    const {context, page, calls} = await open({allEligible: true, reportFailureStatus});
+    await preflight(page);
+    await page.getByRole("checkbox", {name: /I have read/}).check();
+    await page.getByRole("button", {name: "Generate attachments and issue invoices"}).click();
+    await expect(page.getByRole("alert")).toBeVisible();
+    assert.deepEqual(calls.map((call) => call.operation), ["review", "attachment"]);
+    await context.close();
+  }
+  // An empty report cannot bypass an inconsistent review or an attachment-only run.
+  for (const options of [{allEligible: true, reviewHasTime: true}, {allSkipped: true}]) {
+    const {context, page, calls} = await open({...options, emptyReport: true});
+    await preflight(page);
+    await page.getByRole("checkbox", {name: /I have read/}).check();
+    await page.getByRole("dialog").getByRole("button", {name: /Generate attachments and issue invoices|Generate Invoice Attachments/}).click();
+    await expect(page.getByRole("alert")).toBeVisible();
+    assert.deepEqual(calls.map((call) => call.operation), ["review", "attachment"]);
+    await context.close();
+  }
+  {
+    const {context, page, calls} = await open({emptyReport: true});
+    await page.getByRole("button", {name: "Generate Invoice Attachments", exact: true}).click();
+    await expect(page.getByText("No approved or previously invoiced time entries were found for the selected clients and date range.", {exact: true})).toBeVisible();
+    assert.deepEqual(calls.map((call) => call.operation), ["attachment"]);
+    await context.close();
+  }
   // An uncertain result is never retried; other eligible clients still complete.
   {
     const {context, page, calls} = await open({failedInvoice: true});
@@ -188,7 +243,7 @@ try {
     await context.close();
   }
   assert.deepEqual(errors, []);
-  console.log("PASS: attachment-only/download, preflight/cancel, mixed/all eligibility, report failure, partial invoice failure, Hungarian/mobile, all skipped, repeated clicks and Escape");
+  console.log("PASS: attachment-only/download, recurring-only batches (EN/HU), preflight/cancel, mixed/all eligibility, report/permission/outage failures, partial invoice failure, Hungarian/mobile, all skipped, repeated clicks and Escape");
 } finally {
   await browser.close();
 }

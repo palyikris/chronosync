@@ -500,8 +500,10 @@
     "invoiceBatchConfirmAttachmentsOnly": "Elolvastam a fenti indokokat, és tudomásul veszem, hogy csak számlamellékletek készülnek; valódi számlák nem kerülnek kiállításra.",
     "invoiceBatchGenerate": "Mellékletek készítése és számlák kiállítása",
     "invoiceBatchResultsTitle": "A számlakészítés eredménye",
-    "invoiceBatchProgress": "A mellékletek letöltve. Feldolgozott számlák: {{count}} / {{total}}. Kérjük, tartsa nyitva ezt az ablakot.",
-    "invoiceBatchFinished": "A mellékletek letöltve. Feldolgozott számlák: {{count}} / {{total}}.",
+    "invoiceBatchAttachmentsDownloaded": "Az időbejegyzések exportja letöltve.",
+    "invoiceBatchNoTimesheetExport": "Nem volt exportálható időbejegyzés. A számlák feldolgozása az áttekintett tételekkel folytatódott.",
+    "invoiceBatchProgress": "Feldolgozott számlák: {{count}} / {{total}}. Kérjük, tartsa nyitva ezt az ablakot.",
+    "invoiceBatchFinished": "Feldolgozott számlák: {{count}} / {{total}}.",
     "invoiceBatchFailed": "Figyelmet igényel",
     "invoiceBatchCheckHistory": "Újabb próbálkozás előtt ellenőrizze a számlatörténetet. Egy megszakadt vagy bizonytalan kérés már létrehozhatott számlát. A sikeres számlák fent láthatók."
   },

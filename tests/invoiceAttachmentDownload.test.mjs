@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   getReportErrorMessage,
   getReportFilename,
+  isNoReportableTimeEntriesResponse,
 } from "../src/utils/invoiceAttachmentDownloadHelpers.ts";
 
 test("download filenames prefer RFC 5987 names and remove unsafe path characters", () => {
@@ -42,4 +43,15 @@ test("backend error details handle strings and validation arrays", () => {
     "Invalid date Required",
   );
   assert.equal(getReportErrorMessage({ detail: [] }), null);
+});
+
+test("only the report endpoint's explicit empty-data response permits a recurring-only batch", () => {
+  const empty = { detail: "No approved or previously invoiced time entries were found for the selected clients and date range." };
+  assert.equal(isNoReportableTimeEntriesResponse(404, empty), true);
+  for (const status of [200, 401, 403, 409, 413, 422, 500, 503]) {
+    assert.equal(isNoReportableTimeEntriesResponse(status, empty), false);
+  }
+  for (const payload of [null, {}, "Not found", { detail: "Not Found" }, { detail: "Client not found" }, { detail: [empty.detail] }]) {
+    assert.equal(isNoReportableTimeEntriesResponse(404, payload), false);
+  }
 });

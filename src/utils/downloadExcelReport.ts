@@ -3,6 +3,8 @@ import i18n from "../lib/i18n";
 import {
   getReportErrorMessage,
   getReportFilename,
+  isNoReportableTimeEntriesResponse,
+  NoReportableTimeEntriesError,
 } from "./invoiceAttachmentDownloadHelpers";
 
 interface DownloadReportParams {
@@ -54,6 +56,9 @@ const fetchReportBlob = async (
 
   if (!response.ok) {
     const errorData: unknown = await response.json().catch(() => null);
+    if (isNoReportableTimeEntriesResponse(response.status, errorData)) {
+      throw new NoReportableTimeEntriesError(i18n.t("dashboard.invoiceAttachmentNoBillableEntries"));
+    }
     if (response.status === 404) {
       throw new Error(i18n.t("dashboard.invoiceAttachmentNoBillableEntries"));
     }

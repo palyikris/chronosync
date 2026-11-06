@@ -1,6 +1,24 @@
 const WINDOWS_RESERVED_FILENAME = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i;
 const UNSAFE_FILENAME_CHARACTERS = /[\u202a-\u202e\u2066-\u2069\\/:*?"<>|]/g;
 
+export class NoReportableTimeEntriesError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "NoReportableTimeEntriesError";
+  }
+}
+
+export const isNoReportableTimeEntriesResponse = (
+  status: number,
+  payload: unknown,
+): boolean =>
+  status === 404 &&
+  payload !== null &&
+  typeof payload === "object" &&
+  "detail" in payload &&
+  payload.detail ===
+    "No approved or previously invoiced time entries were found for the selected clients and date range.";
+
 export const getReportErrorMessage = (payload: unknown): string | null => {
   if (!payload || typeof payload !== "object") return null;
   const detail = "detail" in payload ? payload.detail : null;
