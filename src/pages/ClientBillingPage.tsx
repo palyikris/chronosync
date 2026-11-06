@@ -619,6 +619,18 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
     saveMutation.mutate(draft);
   };
 
+  const cancelChanges = () => {
+    if (!selectedClient || saveMutation.isPending) return;
+    setDraft(createProfileDraft(selectedClient, selectedStoredProfile));
+    setIsDirty(false);
+    setResult(null);
+    setPreviewResult(null);
+    setInvoiceReview(null);
+    setReviewOpen(false);
+    setIssueError(null);
+    setAttachmentDownloadError(null);
+  };
+
   const integrationConfigured =
     preview ||
     (invoiceSettingsQuery.data?.invoice_provider === "szamlazz_hu" &&
@@ -1425,16 +1437,27 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
                     <span className="text-muted">{t("clientBilling.allChangesSaved")}</span>
                   )}
                 </div>
-                <Button
-                  type="submit"
-                  size="lg"
-                  disabled={!isDirty || saveMutation.isPending}
-                  icon={<Check />}
-                >
-                  {saveMutation.isPending
-                    ? t("common.saving")
-                    : t("clientBilling.saveProfile")}
-                </Button>
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="lg"
+                    disabled={!isDirty || saveMutation.isPending}
+                    onClick={cancelChanges}
+                  >
+                    {t("common.cancel")}
+                  </Button>
+                  <Button
+                    type="submit"
+                    size="lg"
+                    disabled={!isDirty || saveMutation.isPending}
+                    icon={<Check />}
+                  >
+                    {saveMutation.isPending
+                      ? t("common.saving")
+                      : t("clientBilling.saveProfile")}
+                  </Button>
+                </div>
               </div>
             </form>
           ) : null}
