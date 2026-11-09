@@ -174,7 +174,7 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
                     <option value="" disabled>{t(favoriteProjects.length ? "timesheet.useFavoriteProject" : "timesheet.noFavoriteProjectsShort")}</option>
                     {favoriteProjects.map((project, index) => (
                       <option key={project.id ?? index} value={index}>
-                        {projectName(project.project_id)} · {clientName(project.client_id)}
+                        {clientName(project.client_id)} · {projectName(project.project_id)}
                       </option>
                     ))}
                   </Select>
@@ -271,7 +271,7 @@ export const TimesheetEntryModal: React.FC<TimesheetEntryModalProps> = ({
               onChange={event => onChange(current => ({ ...current, description: event.target.value }))}
               placeholder={t("timesheet.taskDescriptionPlaceholder")} />
             {showEnglishDescriptionHint ? (
-              <p id="timesheet-description-requirement" role="status" className="text-[11px] leading-5 text-muted">
+              <p id="timesheet-description-requirement" role="status" className="rounded-lg bg-danger-bg px-3 py-2 text-[11px] font-bold leading-5 text-danger">
                 {t("timesheet.englishDescriptionWarning")}
               </p>
             ) : null}

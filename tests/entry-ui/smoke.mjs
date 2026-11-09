@@ -190,7 +190,7 @@ try {
   await select(fresh.page, again, labels.client, 'Hungarian client');
   await select(fresh.page, again, labels.project, 'Support');
   const dateBefore = await again.locator('#timesheet-entry-date').textContent();
-  await select(fresh.page, again, labels.favoriteProjects, /^Website/);
+  await select(fresh.page, again, labels.favoriteProjects, 'English client · Website');
   await expect(again.getByRole('button', { name: labels.client, exact: true })).toContainText('English client'); checks++;
   await expect(again.getByRole('button', { name: labels.project, exact: true })).toContainText('Website'); checks++;
   await expect(againDescription).toHaveValue('Different work today'); checks++;
@@ -234,14 +234,14 @@ try {
   const synced = await open(device.page);
   const deviceHours = synced.getByRole('spinbutton', { name: labels.totalHours });
   const deviceDescription = synced.getByRole('textbox', { name: labels.taskDescription });
-  await select(device.page, synced, labels.favoriteProjects, /^Support/);
+  await select(device.page, synced, labels.favoriteProjects, 'Hungarian client · Support');
   await expect(deviceHours).toHaveValue(''); checks++;
   await expect(deviceDescription).toHaveValue(''); checks++;
   await deviceHours.fill('2.5');
   await deviceDescription.fill('Fresh notes on another browser');
   await select(device.page, synced, labels.client, 'English client');
   await select(device.page, synced, labels.project, 'Website');
-  await select(device.page, synced, labels.favoriteProjects, /^Support/);
+  await select(device.page, synced, labels.favoriteProjects, 'Hungarian client · Support');
   await expect(deviceHours).toHaveValue('2.5'); checks++;
   await expect(deviceDescription).toHaveValue('Fresh notes on another browser'); checks++;
   await expect(synced.getByRole('button', { name: labels.client, exact: true })).toContainText('Hungarian client'); checks++;
