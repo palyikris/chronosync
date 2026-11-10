@@ -1164,12 +1164,12 @@
     "hourlyHint": "The invoice quantity will be the client's approved hours for the previous calendar month.",
     "fixedHint": "The invoice quantity will be 1 and the net unit price will be used as the monthly fee.",
     "deliveryTitle": "Delivery & attachments",
-    "deliveryDescription": "Control where the completed invoice goes and whether the supporting timesheet is included.",
+    "deliveryDescription": "Choose where the completed invoice is sent. Every invoice includes its supporting attachment.",
     "billingEmail": "Billing email",
     "sendInvoiceEmail": "Email the invoice to the client",
     "sendInvoiceEmailDescription": "Számlázz.hu sends the finalized invoice to the billing email above.",
-    "attachTimesheet": "Save billing report and attach it to invoice emails",
-    "attachTimesheetDescription": "Includes the reviewed project charges and time entries. The same workbook remains available in invoice history, even when email delivery is off.",
+    "attachTimesheet": "Invoice attachment included",
+    "attachTimesheetDescription": "The certificate of completion is always saved with the invoice and included when invoice email delivery is enabled.",
     "automationTitle": "Automation controls",
     "automationDescription": "Invoices cover the previous calendar month and only use approved time entries.",
     "missingFieldsTitle": "{{count}} required fields still need attention",
@@ -1305,13 +1305,13 @@
       }
     },
     "annex": {
-      "title": "Billing report",
+      "title": "Invoice attachment",
       "emailIncluded": "Included with the invoice email.",
       "savedOnly": "Saved with the invoice. Email delivery is disabled.",
-      "downloadReview": "Review billing report",
-      "downloadSaved": "Download billing report",
-      "downloadFailed": "Could not download the billing report.",
-      "invalidFile": "The server did not return a valid billing workbook."
+      "downloadReview": "Review invoice attachment",
+      "downloadSaved": "Download invoice attachment",
+      "downloadFailed": "Could not download the invoice attachment.",
+      "invalidFile": "The server did not return a valid invoice attachment."
     }
   },
   "userSettings": {

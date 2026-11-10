@@ -71,7 +71,7 @@ const profileSchema = z
     vat_code: z.string().trim().min(1).max(16),
     automatic_invoicing_enabled: z.boolean(),
     invoice_schedule_day: z.number().int().min(1).max(28),
-    attach_timesheet_report: z.boolean(),
+    attach_timesheet_report: z.boolean().transform(() => true),
   })
   .strict()
   .superRefine((profile, context) => {
@@ -483,7 +483,7 @@ export const downloadReviewedInvoiceAttachment = async (review: ClientInvoiceRev
       date_overrides: review.date_overrides ?? {},
       project_quantities: review.project_quantities ?? {}, review_fingerprint: review.review_fingerprint }),
   });
-  await downloadPdfResponse(response, review.attachment?.filename ?? "invoice-annex.xlsx", true);
+  await downloadPdfResponse(response, review.attachment?.filename ?? "invoice-attachment.xlsx", true);
 };
 
 export const downloadStoredInvoiceAttachment = async (companyId: string, invoiceId: string) => {
@@ -491,7 +491,7 @@ export const downloadStoredInvoiceAttachment = async (companyId: string, invoice
   const response = await fetch(`${getInvoiceApiBaseUrl()}/${encodeURIComponent(invoiceId)}/attachment?${query}`, {
     headers: { Authorization: `Bearer ${await getAccessToken()}` },
   });
-  await downloadPdfResponse(response, `invoice-annex-${invoiceId}.xlsx`, true);
+  await downloadPdfResponse(response, `invoice-attachment-${invoiceId}.xlsx`, true);
 };
 
 export const downloadIssuedInvoicePdf = async (

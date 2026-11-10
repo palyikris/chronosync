@@ -30,12 +30,13 @@ const billingProfile = { client_id: client.id, company_id: company, billing_name
   payment_term_days: 8, vat_code: 'AAM', automatic_invoicing_enabled: false, invoice_schedule_day: 1,
   attach_timesheet_report: true, net_unit_price: 999999, currency: 'USD', billing_model: 'hourly',
   invoice_item_name: 'Old item', invoice_unit: 'hour', updated_at: '2026-10-01T00:00:00Z' };
-const annexMetadata = { filename: 'invoice-annex-TST-2026-10-01-2026-10-31.xlsx',
+const annexMetadata = { filename: 'invoice-attachment-TST-2026-10-01-2026-10-31.xlsx',
   media_type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   size_bytes: 7000, sha256: 'b'.repeat(64), language: 'hu' };
 const errors = [];
 async function open(language = 'en', failPrices = false, initialTime = '2026-10-28T12:00:00Z', routePath = '/admin/settings', initialHistory = []) {
   const context = await browser.newContext({ viewport: { width: 1366, height: 900 } });
+  context.setDefaultTimeout(15_000);
   const user = { id: uid, email: 'pricing-test@example.invalid', role: 'authenticated', aud: 'authenticated', app_metadata: {}, user_metadata: {} };
   const exp = 2082758400;
   const token = [{ alg: 'HS256', typ: 'JWT' }, { sub: uid, exp, role: 'authenticated' }, 'fake']
@@ -352,7 +353,8 @@ try {
   await billingPage.getByRole('button', { name: 'Fulfillment date', exact: true }).click();
   await billingPage.getByRole('option', { name: 'Payment deadline', exact: true }).click();
   await billingPage.getByRole('textbox', { name: 'Invoice numbering prefix', exact: true }).fill('E-ECS');
-  await billingPage.getByRole('checkbox', { name: /Save billing report and attach/ }).uncheck();
+  await expect(billingPage.getByRole('checkbox', { name: /billing report|Invoice attachment included/ })).toHaveCount(0);
+  await expect(billingPage.getByText('Invoice attachment included', { exact: true })).toBeVisible();
   await billingPage.getByRole('textbox', { name: 'Seller bank name', exact: true }).fill('K&H Bank');
   await billingPage.getByRole('button', { name: 'Save billing profile', exact: true }).click();
   await expect(billingPage.getByText('Enter both the seller bank name and account, or leave both blank.', { exact: true })).toBeVisible();
@@ -360,11 +362,7 @@ try {
   await billingPage.getByRole('textbox', { name: 'Seller bank account / IBAN', exact: true }).fill('HU-TEST-IBAN');
   await billingPage.getByRole('button', { name: 'Save billing profile', exact: true }).click();
   await expect.poll(() => billing.profileWrites.length).toBe(1);
-  assert.equal(billing.profileWrites[0].attach_timesheet_report, false);
-  await billingPage.getByRole('checkbox', { name: /Save billing report and attach/ }).check();
-  await billingPage.getByRole('button', { name: 'Save billing profile', exact: true }).click();
-  await expect.poll(() => billing.profileWrites.length).toBe(2);
-  assert.equal(billing.profileWrites[1].attach_timesheet_report, true);
+  assert.equal(billing.profileWrites[0].attach_timesheet_report, true);
   assert.equal(billing.profileWrites[0].invoice_electronic, true);
   assert.equal(billing.profileWrites[0].fulfillment_date_policy, 'due_date');
   assert.equal(billing.profileWrites[0].invoice_prefix, 'E-ECS');
@@ -392,12 +390,12 @@ try {
   await expect(invoiceModal.getByRole('cell', { name: 'Zero priced project', exact: true })).toBeVisible();
   await expect(invoiceModal.getByRole('button', { name: 'Issue live invoice', exact: true })).toBeDisabled();
   await expect(invoiceModal.getByText('Saved with the invoice. Email delivery is disabled.', { exact: true })).toBeVisible();
-  await invoiceModal.getByRole('button', { name: 'Review billing report', exact: true }).click();
-  await expect(invoiceModal.getByText('The server did not return a valid billing workbook.', { exact: true })).toBeVisible();
+  await invoiceModal.getByRole('button', { name: 'Review invoice attachment', exact: true }).click();
+  await expect(invoiceModal.getByText('The server did not return a valid invoice attachment.', { exact: true })).toBeVisible();
   const annexDownload = billingPage.waitForEvent('download');
-  await invoiceModal.getByRole('button', { name: 'Review billing report', exact: true }).click();
+  await invoiceModal.getByRole('button', { name: 'Review invoice attachment', exact: true }).click();
   assert.equal((await annexDownload).suggestedFilename(), annexMetadata.filename);
-  await expect(invoiceModal.getByText('The server did not return a valid billing workbook.', { exact: true })).toHaveCount(0);
+  await expect(invoiceModal.getByText('The server did not return a valid invoice attachment.', { exact: true })).toHaveCount(0);
   await invoiceModal.screenshot({ animations: 'disabled', path: `${output}/invoice-project-review.png` });
   await invoiceModal.getByRole('checkbox').check();
   await invoiceModal.getByRole('button', { name: 'Issue live invoice', exact: true }).click();
@@ -536,7 +534,7 @@ try {
     await app.context.close();
   }
   assert.deepEqual(errors, []);
-  console.log('Passed: tenant/year query, missing and absent prices, zero price, original fee, attention filter, editing and clearing prices, preserved original denomination, failed save recovery, English/Hungarian labels, load failure, desktop/mobile layout, price-only writes, editable index settings without repricing, Budapest New Year label rollover, read-only invoice rates, explicit quantities, review lines, changed-price rejection, refusal of legacy-rate reviews, storno confirmation, timeout recovery, reference-mismatch rejection, retained original/storno PDF downloads, mobile Hungarian storno, saved annex preferences, reviewed workbook validation/download recovery and archived annex downloads, saved invoice notes/month-end settings, manual date overrides before/during review, fresh confirmation, reviewed preview fingerprints, reset-to-rules, and consistent override payloads.');
+  console.log('Passed: tenant/year query, missing and absent prices, zero price, original fee, attention filter, editing and clearing prices, preserved original denomination, failed save recovery, English/Hungarian labels, load failure, desktop/mobile layout, price-only writes, editable index settings without repricing, Budapest New Year label rollover, read-only invoice rates, explicit quantities, review lines, changed-price rejection, refusal of legacy-rate reviews, storno confirmation, timeout recovery, reference-mismatch rejection, retained original/storno PDF downloads, mobile Hungarian storno, mandatory invoice attachments, reviewed workbook validation/download recovery and archived annex downloads, saved invoice notes/month-end settings, manual date overrides before/during review, fresh confirmation, reviewed preview fingerprints, reset-to-rules, and consistent override payloads.');
 } finally {
   await browser.close();
 }

@@ -186,7 +186,7 @@ const createProfileDraft = (
         automatic_invoicing_enabled:
           profile.automatic_invoicing_enabled,
         invoice_schedule_day: profile.invoice_schedule_day,
-        attach_timesheet_report: profile.attach_timesheet_report,
+        attach_timesheet_report: true,
       }
     : {
         client_id: client.id,
@@ -1205,13 +1205,10 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
                         }))
                       }
                     />
-                    <SwitchRow
-                      id="attach-timesheet-report"
-                      title={t("clientBilling.attachTimesheet")}
-                      description={t("clientBilling.attachTimesheetDescription")}
-                      checked={draft.attach_timesheet_report}
-                      onChange={(checked) => updateDraft((current) => ({ ...current, attach_timesheet_report: checked }))}
-                    />
+                    <div className="rounded-xl border border-border bg-bg-accent/35 p-3 text-sm">
+                      <p className="font-medium text-text">{t("clientBilling.attachTimesheet")}</p>
+                      <p className="mt-1 text-muted">{t("clientBilling.attachTimesheetDescription")}</p>
+                    </div>
                   </section>
                 </div>
               </Card>
