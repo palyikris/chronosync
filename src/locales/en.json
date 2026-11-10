@@ -943,6 +943,33 @@
     "invitationSent": "Invitation sent to {{email}}. The member appears after accepting it."
   },
   "clientBilling": {
+    "terms": {
+      "customDatesTitle": "Custom dates for this invoice",
+      "optionalDatesHelp": "Leave blank to use the client rules. You can also adjust the dates during review.",
+      "invalidNote": "The invoice note contains unsupported characters.",
+      "deadlineRule": "Payment deadline",
+      "daysAfterIssue": "Days after issue",
+      "monthEnd": "Last day of month",
+      "monthOffset": "Due month",
+      "offset0": "Same month",
+      "offset1": "Following month",
+      "offset2": "Two months later",
+      "referenceDate": "Count months from",
+      "issueDate": "Invoice issue date",
+      "periodEnd": "Service-period end",
+      "monthEndHelp": "The deadline is the last calendar day of the selected month.",
+      "invoiceNote": "Invoice note (optional)",
+      "noteHelp": "Added below the service period on every invoice for this client. Project line notes stay separate.",
+      "adjustDates": "Adjust invoice dates",
+      "overrideHelp": "Changes apply to this invoice only. Refresh the review before confirming issuance.",
+      "fulfillmentDate": "Fulfillment date",
+      "dueDate": "Payment due date",
+      "customDates": "This invoice uses custom dates.",
+      "reviewRequired": "Refresh the review to use these dates.",
+      "applyDates": "Refresh review",
+      "discardDates": "Discard edits",
+      "resetDates": "Use client rules"
+    },
     "partnerImport": {
       "title": "Import billing details",
       "openButton": "Import from Számlázz.hu",

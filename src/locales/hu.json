@@ -942,6 +942,33 @@
     "invitationSent": "Meghívó elküldve: {{email}}. A csapattag az elfogadás után jelenik meg."
   },
   "clientBilling": {
+    "terms": {
+      "customDatesTitle": "Egyedi dátumok ehhez a számlához",
+      "optionalDatesHelp": "Az ügyfélszabályok használatához hagyd üresen. A dátumok az ellenőrzés során is módosíthatók.",
+      "invalidNote": "A számlamegjegyzés nem támogatott karaktert tartalmaz.",
+      "deadlineRule": "Fizetési határidő szabálya",
+      "daysAfterIssue": "Napok a kiállítástól",
+      "monthEnd": "A hónap utolsó napja",
+      "monthOffset": "Esedékesség hónapja",
+      "offset0": "Ugyanaz a hónap",
+      "offset1": "Következő hónap",
+      "offset2": "Két hónappal később",
+      "referenceDate": "Hónapok számítása ettől",
+      "issueDate": "Számla kelte",
+      "periodEnd": "Elszámolási időszak vége",
+      "monthEndHelp": "A fizetési határidő a kiválasztott hónap utolsó naptári napja.",
+      "invoiceNote": "Számlamegjegyzés (nem kötelező)",
+      "noteHelp": "Az ügyfél minden számláján az elszámolási időszak alatt jelenik meg. A projekt tételmegjegyzése külön marad.",
+      "adjustDates": "Számladátumok módosítása",
+      "overrideHelp": "A módosítás csak erre a számlára érvényes. Kiállítás előtt frissítsd az ellenőrzést.",
+      "fulfillmentDate": "Teljesítés dátuma",
+      "dueDate": "Fizetési határidő",
+      "customDates": "Ez a számla egyedi dátumokat használ.",
+      "reviewRequired": "A dátumok alkalmazásához frissítsd az ellenőrzést.",
+      "applyDates": "Ellenőrzés frissítése",
+      "discardDates": "Módosítások elvetése",
+      "resetDates": "Ügyfélszabályok használata"
+    },
     "partnerImport": {
       "title": "Számlázási adatok importálása",
       "openButton": "Importálás a Számlázz.hu-ból",

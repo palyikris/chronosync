@@ -38,6 +38,10 @@ export interface ClientBillingProfile {
   invoice_language: InvoiceLanguage;
   payment_method: string;
   payment_term_days: number;
+  payment_due_policy?: "days_after_issue" | "month_end";
+  payment_due_reference?: "issue_date" | "period_end";
+  payment_due_month_offset?: number;
+  invoice_note?: string | null;
   invoice_electronic?: boolean;
   fulfillment_date_policy?: "period_end" | "due_date" | "issue_date";
   invoice_prefix?: string | null;
@@ -102,6 +106,7 @@ export interface InvoiceReviewEntry {
 }
 
 export interface ClientInvoiceReview {
+  date_overrides?: InvoiceDateOverrides;
   company_id: string;
   client_id: string;
   client_code: string;
@@ -137,6 +142,11 @@ export interface ClientInvoiceReview {
   project_quantities: Record<string, number>;
   items: InvoiceReviewProjectLine[];
   review_fingerprint: string;
+}
+
+export interface InvoiceDateOverrides {
+  due_date?: string | null;
+  fulfillment_date?: string | null;
 }
 
 export interface InvoiceBatchReviewItem {

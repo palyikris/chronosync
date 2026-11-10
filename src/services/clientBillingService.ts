@@ -11,6 +11,7 @@ import {
   type InvoiceHistoryItem,
   type InvoiceBatchReviewItem,
   type InvoiceStornoParams,
+  type InvoiceDateOverrides,
 } from "../types/client-billing";
 import { getBillingProfileReadiness } from "../utils/clientBillingReadiness";
 import { fetchAllRows } from "../utils/fetchAllRows";
@@ -54,6 +55,14 @@ const profileSchema = z
     invoice_language: z.enum(INVOICE_LANGUAGES),
     payment_method: z.string().trim().min(1).max(64),
     payment_term_days: z.number().int().min(0).max(365),
+    payment_due_policy: z.enum(["days_after_issue", "month_end"]).default("days_after_issue"),
+    payment_due_reference: z.enum(["issue_date", "period_end"]).default("issue_date"),
+    payment_due_month_offset: z.number().int().min(0).max(2).default(1),
+    invoice_note: nullableText(450).default(null).refine(value => value === null || [...value].every(char => {
+      const code = char.codePointAt(0)!;
+      return code === 9 || code === 10 || code === 13 || code >= 32 && code <= 0xd7ff ||
+        code >= 0xe000 && code <= 0xfffd || code >= 0x10000 && code <= 0x10ffff;
+    }), { message: i18n.t("clientBilling.terms.invalidNote") }),
     invoice_electronic: z.boolean().default(false),
     fulfillment_date_policy: z.enum(["period_end", "due_date", "issue_date"]).default("period_end"),
     invoice_prefix: nullableText(32).default(null),
@@ -107,6 +116,10 @@ const PROFILE_COLUMNS = [
   "invoice_language",
   "payment_method",
   "payment_term_days",
+  "payment_due_policy",
+  "payment_due_reference",
+  "payment_due_month_offset",
+  "invoice_note",
   "invoice_electronic",
   "fulfillment_date_policy",
   "invoice_prefix",
@@ -164,6 +177,8 @@ interface DownloadClientInvoicePreviewParams {
   periodStart: string;
   periodEnd: string;
   projectQuantities?: Record<string, number>;
+  dateOverrides?: InvoiceDateOverrides;
+  reviewFingerprint?: string;
 }
 
 const getInvoicePreviewApiUrl = () => {
@@ -246,6 +261,8 @@ export const downloadClientInvoicePreview = async ({
   periodStart,
   periodEnd,
   projectQuantities = {},
+  dateOverrides = {},
+  reviewFingerprint,
 }: DownloadClientInvoicePreviewParams): Promise<void> => {
   const {
     data: { session },
@@ -266,6 +283,8 @@ export const downloadClientInvoicePreview = async ({
       period_start: periodStart,
       period_end: periodEnd,
       project_quantities: projectQuantities,
+      date_overrides: dateOverrides,
+      ...(reviewFingerprint ? { review_fingerprint: reviewFingerprint } : {}),
     }),
   });
 
@@ -302,6 +321,7 @@ interface ClientInvoicePeriodParams {
   periodStart: string;
   periodEnd: string;
   projectQuantities?: Record<string, number>;
+  dateOverrides?: InvoiceDateOverrides;
 }
 
 const normalizeInvoiceReview = (value: ClientInvoiceReview): ClientInvoiceReview => {
@@ -374,6 +394,7 @@ export const reviewClientInvoice = async ({
   periodStart,
   periodEnd,
   projectQuantities = {},
+  dateOverrides = {},
 }: ClientInvoicePeriodParams): Promise<ClientInvoiceReview> => {
   const response = await fetch(`${getInvoiceApiBaseUrl()}/client-review`, {
     method: "POST",
@@ -387,6 +408,7 @@ export const reviewClientInvoice = async ({
       period_start: periodStart,
       period_end: periodEnd,
       project_quantities: projectQuantities,
+      date_overrides: dateOverrides,
     }),
   });
   if (!response.ok) throw new Error(await getInvoiceApiError(response));
@@ -409,6 +431,7 @@ export const issueClientInvoice = async (
       period_end: review.period_end,
       review_fingerprint: review.review_fingerprint,
       project_quantities: review.project_quantities,
+      date_overrides: review.date_overrides ?? {},
       confirm: true,
     }),
   });
@@ -457,6 +480,7 @@ export const downloadReviewedInvoiceAttachment = async (review: ClientInvoiceRev
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${await getAccessToken()}` },
     body: JSON.stringify({ company_id: review.company_id, client_id: review.client_id,
       period_start: review.period_start, period_end: review.period_end,
+      date_overrides: review.date_overrides ?? {},
       project_quantities: review.project_quantities ?? {}, review_fingerprint: review.review_fingerprint }),
   });
   await downloadPdfResponse(response, review.attachment?.filename ?? "invoice-annex.xlsx", true);

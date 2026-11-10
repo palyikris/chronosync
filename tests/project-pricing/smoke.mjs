@@ -60,6 +60,7 @@ async function open(language = 'en', failPrices = false, initialTime = '2026-10-
   let selectedYear = 2026;
   const indexRates = ['ksh','eu'].map(index_code => ({ company_id: company, index_code, effective_year: 2026, rate: index_code === 'ksh' ? .044 : .024 }));
   let failSave = false;
+  let failPreview = false;
   await context.route('**/*', async route => {
     const req = route.request(), url = new URL(req.url());
     if (url.origin === base) return route.continue();
@@ -70,13 +71,13 @@ async function open(language = 'en', failPrices = false, initialTime = '2026-10-
       assert.equal(req.postDataJSON().p_company_id, company); return json(0);
     }
     if (url.pathname.includes('/auth/')) return json(user);
-    if (url.hostname === 'price-api.invalid') {
+    if (['price-api.invalid', 'invoice-terms-api.invalid'].includes(url.hostname)) {
       if (url.pathname.endsWith('/history')) return json(invoiceHistory);
       if (url.pathname.endsWith('/client-attachment') || url.pathname.endsWith('/attachment')) {
         const isPreview = url.pathname.endsWith('/client-attachment');
         if (isPreview) {
           const payload = req.postDataJSON();
-          assert.equal(payload.review_fingerprint, 'a'.repeat(64));
+          assert.equal(payload.review_fingerprint, (payload.date_overrides?.due_date === '2026-11-30' ? 'b' : Object.values(payload.date_overrides ?? {}).some(Boolean) ? 'c' : 'a').repeat(64));
           assert.deepEqual(payload.project_quantities, { [projects[2].id]: 1 });
           apiCalls.push({ endpoint: 'annex-preview', payload });
           if (apiCalls.filter(c => c.endpoint === 'annex-preview').length === 1) {
@@ -113,6 +114,7 @@ async function open(language = 'en', failPrices = false, initialTime = '2026-10-
       }
       if (url.pathname.endsWith('/client-preview')) {
         apiCalls.push({ endpoint: 'preview', payload: req.postDataJSON() });
+        if (failPreview) { failPreview = false; return json({ detail: 'Invoice changed after review. Refresh before previewing.' }, 409); }
         return route.fulfill({ contentType: 'application/pdf', body: '%PDF-1.4\nmock preview' });
       }
       if (url.pathname.endsWith('/client-issue')) {
@@ -126,12 +128,12 @@ async function open(language = 'en', failPrices = false, initialTime = '2026-10-
           unit: i === 0 ? 'óra' : 'hó', net_unit_price: i === 0 ? '156.6' : '0', currency: 'EUR',
           vat_code: 'AAM', net_total: i === 0 ? '313.2' : '0', vat_total: '0', gross_total: i === 0 ? '313.2' : '0' }));
         return json({ ...payload, client_code: client.client_code, client_name: client.name,
-          issue_date: '2026-10-28', fulfillment_date: contextBillingProfile.fulfillment_date_policy === 'due_date' ? '2026-11-05' : payload.period_end, due_date: '2026-11-05',
+          issue_date: '2026-10-28', fulfillment_date: payload.date_overrides?.fulfillment_date ?? (contextBillingProfile.fulfillment_date_policy === 'due_date' ? (payload.date_overrides?.due_date ?? '2026-11-05') : payload.period_end), due_date: payload.date_overrides?.due_date ?? '2026-11-05',
           e_invoice: contextBillingProfile.invoice_electronic ?? false,
           invoice_prefix: contextBillingProfile.invoice_prefix,
           seller_bank_name: contextBillingProfile.seller_bank_name,
           seller_bank_account: contextBillingProfile.seller_bank_account,
-          invoice_comment: `Service period: ${payload.period_start} - ${payload.period_end}`,
+          invoice_comment: `Service period: ${payload.period_start} - ${payload.period_end}${contextBillingProfile.invoice_note ? `\n${contextBillingProfile.invoice_note}` : ""}`,
           attach_timesheet_report: contextBillingProfile.attach_timesheet_report,
           attachment: contextBillingProfile.attach_timesheet_report ? annexMetadata : null,
           payment_method: 'Átutalás', language: 'hu', billing_model: legacyReview ? 'hourly' : 'project',
@@ -139,15 +141,15 @@ async function open(language = 'en', failPrices = false, initialTime = '2026-10-
           vat_code: 'AAM', net_total: '313.2', vat_total: '0', gross_total: '313.2',
           recipient: { name: 'Pricing buyer', postal_code: '1111', city: 'Budapest', address: 'Test street',
             country: 'HU', email: null, send_email: false, tax_subject: 1, tax_number: '12345678-2-41' },
-          approved_entries: [{ id: '00000000-0000-4000-8000-000000000090', project_id: projects[0].id, project_name: projects[0].name, work_date: payload.period_start, hours_logged: '2', description: 'Approved work' }], items, review_fingerprint: 'a'.repeat(64) });
+          approved_entries: [{ id: '00000000-0000-4000-8000-000000000090', project_id: projects[0].id, project_name: projects[0].name, work_date: payload.period_start, hours_logged: '2', description: 'Approved work' }], items, review_fingerprint: (payload.date_overrides?.due_date === '2026-11-30' ? 'b' : Object.values(payload.date_overrides ?? {}).some(Boolean) ? 'c' : 'a').repeat(64) });
       }
       return json({ invoice_provider: 'szamlazz_hu', api_key_configured: routePath === '/admin/billing' });
     }
     const table = url.pathname.split('/').at(-1);
     if (table === 'profiles') return json(profile);
     if (table === 'companies') return json({ id: company, name: 'Pricing Test Company', enabled_modules: ['leave_attachments', 'invoicing'], is_active: true, is_deleted: false, szamlazz_test_mode: routePath !== '/admin/billing', leave_client_id: null, leave_project_id: null });
-    if (table === 'clients') return json([client]);
-    if (table === 'projects') return json(projects);
+    if (table === 'clients') return json(Number(url.searchParams.get('offset') ?? 0) ? [] : [client]);
+    if (table === 'projects') return json(Number(url.searchParams.get('offset') ?? 0) ? [] : projects);
     if (table === 'client_billing_profiles') {
       if (req.method() === 'POST') {
         const value = req.postDataJSON(); profileWrites.push(value);
@@ -155,7 +157,7 @@ async function open(language = 'en', failPrices = false, initialTime = '2026-10-
         Object.assign(contextBillingProfile, value);
         return json(contextBillingProfile);
       }
-      return json([contextBillingProfile]);
+      return json(Number(url.searchParams.get("offset") ?? 0) ? [] : [contextBillingProfile]);
     }
     if (table === 'company_price_indexes') {
       if (req.method() === 'POST') { indexWrites.push(req.postDataJSON()); return json(null); }
@@ -207,7 +209,7 @@ async function open(language = 'en', failPrices = false, initialTime = '2026-10-
     console.log({ language, initialTime, url: page.url(), text: (await page.locator('body').innerText()).slice(0, 1600), errors });
     throw error;
   }
-  return { context, page, writes, priceWrites, indexWrites, apiCalls, profileWrites, legacyReview: value => { legacyReview = value; }, getPrices: () => contextPrices, failSave: value => { failSave = value; } };
+  return { context, page, writes, priceWrites, indexWrites, apiCalls, profileWrites, legacyReview: value => { legacyReview = value; }, getPrices: () => contextPrices, failPreview: () => { failPreview = true; }, failSave: value => { failSave = value; } };
 }
 try {
   const app = await open();
@@ -460,8 +462,81 @@ try {
     await stornoPage.screenshot({ path: `${output}/storno-history-${language}.png`, animations: 'disabled' });
     await stornoApp.context.close();
   }
+  for (const language of ['en', 'hu']) {
+    const { clientBilling: labels, common } = JSON.parse(await readFile(new URL(`../../src/locales/${language}.json`, import.meta.url), 'utf8'));
+    const app = await open(language, false, '2026-10-28T12:00:00Z', '/admin/billing');
+    const page = app.page;
+    const select = async (label, option) => {
+      await page.getByRole('button', { name: label, exact: true }).click();
+      await page.getByRole('option', { name: option, exact: true }).click();
+    };
+    await select(labels.terms.deadlineRule, labels.terms.monthEnd);
+    await select(labels.terms.monthOffset, labels.terms.offset2);
+    await select(labels.terms.referenceDate, labels.terms.periodEnd);
+    await expect(page.getByRole('spinbutton', { name: labels.paymentTermDays, exact: true })).toHaveCount(0);
+    const note = 'Approved service & agreement <reference>\nAccording to the annex';
+    await page.getByLabel(labels.terms.invoiceNote, { exact: true }).fill(note);
+    await expect(page.getByText(`${note.length}/450`, { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: labels.saveProfile, exact: true }).click();
+    await expect.poll(() => app.profileWrites.length).toBe(1);
+    assert.equal(app.profileWrites[0].payment_due_policy, 'month_end');
+    assert.equal(app.profileWrites[0].payment_due_reference, 'period_end');
+    assert.equal(app.profileWrites[0].payment_due_month_offset, 2);
+    assert.equal(app.profileWrites[0].payment_term_days, 8);
+    assert.equal(app.profileWrites[0].invoice_note, note);
+    await page.getByLabel(labels.terms.invoiceNote, { exact: true }).scrollIntoViewIfNeeded();
+    await page.screenshot({ path: `${output}/invoice-terms-${language}-desktop.png`, animations: 'disabled' });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.getByLabel(labels.terms.invoiceNote, { exact: true }).locator('..').locator('..')
+      .screenshot({ path: `${output}/invoice-terms-${language}-mobile.png`, animations: 'disabled' });
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+    await page.getByRole('region', { name: labels.projectPricingTitle }).getByRole('spinbutton').fill('1');
+    await page.locator('summary').filter({ hasText: labels.terms.customDatesTitle }).click();
+    await page.getByLabel(labels.terms.dueDate, { exact: true }).fill('2026-11-30');
+    await page.getByRole('button', { name: labels.reviewAndIssue, exact: true }).click();
+    assert.deepEqual(app.apiCalls.at(-1).payload.date_overrides, { due_date: '2026-11-30' });
+    let modal = page.getByRole('dialog');
+    await expect(modal.getByText(/Approved service & agreement <reference>/)).toBeVisible();
+    await modal.getByRole('checkbox').check();
+    await modal.locator('summary').filter({ hasText: labels.terms.adjustDates }).click();
+    await modal.getByLabel(labels.terms.dueDate, { exact: true }).fill('2026-12-31');
+    await modal.getByLabel(labels.terms.fulfillmentDate, { exact: true }).fill('2026-10-29');
+    await expect(modal.getByRole('checkbox')).not.toBeChecked();
+    await expect(modal.getByRole('checkbox')).toBeDisabled();
+    await expect(modal.getByRole('button', { name: labels.issueInvoice, exact: true })).toBeDisabled();
+    await expect(modal.getByRole('button', { name: labels.generatePreview, exact: true })).toBeDisabled();
+    await modal.getByRole('button', { name: labels.terms.applyDates, exact: true }).click();
+    await expect.poll(() => app.apiCalls.filter(call => call.endpoint === 'review').length).toBe(2);
+    assert.deepEqual(app.apiCalls.at(-1).payload.date_overrides, { due_date: '2026-12-31', fulfillment_date: '2026-10-29' });
+    modal = page.getByRole('dialog');
+    await expect(modal.getByRole('checkbox')).toBeEnabled();
+    await expect(modal.getByRole('checkbox')).not.toBeChecked();
+    app.failPreview();
+    await modal.getByRole('button', { name: labels.generatePreview, exact: true }).click();
+    await expect(modal.getByText('Invoice changed after review. Refresh before previewing.', { exact: true })).toBeVisible();
+    const download = page.waitForEvent('download');
+    await modal.getByRole('button', { name: labels.generatePreview, exact: true }).click();
+    await download;
+    assert.deepEqual(app.apiCalls.at(-1).payload.date_overrides, { due_date: '2026-12-31', fulfillment_date: '2026-10-29' });
+    assert.equal(app.apiCalls.at(-1).payload.review_fingerprint, 'c'.repeat(64));
+    await modal.locator('summary').filter({ hasText: labels.terms.adjustDates }).click();
+    await modal.screenshot({ path: `${output}/invoice-dates-${language}-mobile.png`, animations: 'disabled' });
+    await page.setViewportSize({ width: 1366, height: 900 });
+    await modal.screenshot({ path: `${output}/invoice-dates-${language}-desktop.png`, animations: 'disabled' });
+    await modal.getByRole('checkbox').check();
+    await modal.getByRole('button', { name: labels.issueInvoice, exact: true }).click();
+    await expect(modal.getByText('Project prices changed; review again')).toBeVisible();
+    assert.deepEqual(app.apiCalls.at(-1).payload.date_overrides, { due_date: '2026-12-31', fulfillment_date: '2026-10-29' });
+    assert.equal(app.apiCalls.at(-1).payload.review_fingerprint, 'c'.repeat(64));
+    await modal.getByRole('button', { name: labels.terms.resetDates, exact: true }).click();
+    await expect.poll(() => app.apiCalls.filter(call => call.endpoint === 'review').length).toBe(3);
+    assert.deepEqual(app.apiCalls.at(-1).payload.date_overrides, {});
+    await expect(page.getByRole('dialog').getByRole('checkbox')).not.toBeChecked();
+    await page.getByRole('dialog').getByRole('button', { name: common.cancel, exact: true }).click();
+    await app.context.close();
+  }
   assert.deepEqual(errors, []);
-  console.log('Passed: tenant/year query, missing and absent prices, zero price, original fee, attention filter, editing and clearing prices, preserved original denomination, failed save recovery, English/Hungarian labels, load failure, desktop/mobile layout, price-only writes, editable index settings without repricing, Budapest New Year label rollover, read-only invoice rates, explicit quantities, review lines, changed-price rejection, refusal of legacy-rate reviews, storno confirmation, timeout recovery, reference-mismatch rejection, retained original/storno PDF downloads, mobile Hungarian storno, saved annex preferences, reviewed workbook validation/download recovery and archived annex downloads.');
+  console.log('Passed: tenant/year query, missing and absent prices, zero price, original fee, attention filter, editing and clearing prices, preserved original denomination, failed save recovery, English/Hungarian labels, load failure, desktop/mobile layout, price-only writes, editable index settings without repricing, Budapest New Year label rollover, read-only invoice rates, explicit quantities, review lines, changed-price rejection, refusal of legacy-rate reviews, storno confirmation, timeout recovery, reference-mismatch rejection, retained original/storno PDF downloads, mobile Hungarian storno, saved annex preferences, reviewed workbook validation/download recovery and archived annex downloads, saved invoice notes/month-end settings, manual date overrides before/during review, fresh confirmation, reviewed preview fingerprints, reset-to-rules, and consistent override payloads.');
 } finally {
   await browser.close();
 }

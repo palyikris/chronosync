@@ -20,6 +20,8 @@ import { Card } from "../components/shared/Card";
 import { Checkbox } from "../components/shared/Checkbox";
 import { InvoiceHistoryCard } from "../components/client-billing/InvoiceHistoryCard";
 import { ProjectInvoicePricing } from "../components/client-billing/ProjectInvoicePricing";
+import { InvoiceDateFields } from "../components/client-billing/InvoiceDateFields";
+import { InvoiceTermsFields } from "../components/client-billing/InvoiceTermsFields";
 import { InvoiceReviewModal } from "../components/client-billing/InvoiceReviewModal";
 import { PartnerBillingImportModal } from "../components/client-billing/PartnerBillingImportModal";
 import { Input } from "../components/shared/Input";
@@ -50,6 +52,7 @@ import type {
   InvoiceHistoryItem,
   InvoiceHistoryScope,
   TaxSubject,
+  InvoiceDateOverrides,
 } from "../types/client-billing";
 import type { Client } from "../types/client-project";
 import { getBillingProfileReadiness } from "../utils/clientBillingReadiness";
@@ -170,6 +173,10 @@ const createProfileDraft = (
         invoice_language: profile.invoice_language,
         payment_method: profile.payment_method,
         payment_term_days: profile.payment_term_days,
+        payment_due_policy: profile.payment_due_policy ?? "days_after_issue",
+        payment_due_reference: profile.payment_due_reference ?? "issue_date",
+        payment_due_month_offset: profile.payment_due_month_offset ?? 1,
+        invoice_note: profile.invoice_note ?? null,
         invoice_electronic: profile.invoice_electronic ?? false,
         fulfillment_date_policy: profile.fulfillment_date_policy ?? "period_end",
         invoice_prefix: profile.invoice_prefix ?? null,
@@ -198,6 +205,10 @@ const createProfileDraft = (
         invoice_language: client.invoice_attachment_language ?? "hu",
         payment_method: "Átutalás",
         payment_term_days: 8,
+        payment_due_policy: "days_after_issue",
+        payment_due_reference: "issue_date",
+        payment_due_month_offset: 1,
+        invoice_note: null,
         invoice_electronic: false,
         fulfillment_date_policy: "period_end",
         invoice_prefix: null,
@@ -310,6 +321,7 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
   } | null>(null);
   const [invoiceReview, setInvoiceReview] = useState<ClientInvoiceReview | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [manualDates, setManualDates] = useState<InvoiceDateOverrides>({});
   const [partnerImportOpen, setPartnerImportOpen] = useState(false);
   const [issueError, setIssueError] = useState<string | null>(null);
   const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<string | null>(null);
@@ -394,6 +406,7 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
     }
 
     setDraft(createProfileDraft(selectedClient, selectedStoredProfile));
+    setManualDates({});
     setIsDirty(false);
     setResult(null);
     setPreviewResult(null);
@@ -489,6 +502,7 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
     mutationFn: reviewClientInvoice,
     onSuccess: (review) => {
       setInvoiceReview(review);
+      setManualDates(review.date_overrides ?? {});
       setAttachmentDownloadError(null);
       setIssueError(null);
       setReviewOpen(true);
@@ -517,6 +531,7 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
         }),
       });
       void queryClient.invalidateQueries({ queryKey: ["invoice-history", companyId] });
+      setManualDates({});
       void queryClient.invalidateQueries({ queryKey: ["timesheets"] });
     },
     onError: (error) => {
@@ -651,6 +666,7 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
       periodStart: invoicePeriod.start,
       periodEnd: invoicePeriod.end,
       projectQuantities,
+      dateOverrides: manualDates,
     });
   };
 
@@ -664,6 +680,7 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
       periodStart: invoicePeriod.start,
       periodEnd: invoicePeriod.end,
       projectQuantities,
+      dateOverrides: manualDates,
     });
   };
 
@@ -1115,21 +1132,8 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
                         <option value="Bankkártya">{t("clientBilling.paymentCard")}</option>
                         <option value="PayPal">PayPal</option>
                       </Select>
-                      <Input
-                        id="payment-term-days"
-                        type="number"
-                        min="0"
-                        max="365"
-                        step="1"
-                        label={t("clientBilling.paymentTermDays")}
-                        value={draft.payment_term_days}
-                        onChange={(event) =>
-                          updateDraft((current) => ({
-                            ...current,
-                            payment_term_days: Number(event.target.value),
-                          }))
-                        }
-                      />
+                      <InvoiceTermsFields profile={draft} onChange={changes =>
+                        updateDraft(current => ({ ...current, ...changes }))} />
                       <Select
                         id="invoice-language"
                         label={t("clientBilling.invoiceLanguage")}
@@ -1228,6 +1232,8 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
                       label={t("clientBilling.periodStart")}
                       value={invoicePeriod.start}
                       onChange={(event) => {
+                        setManualDates({});
+                        setInvoiceReview(null);
                         setInvoicePeriod((current) => ({
                           ...current,
                           start: event.target.value,
@@ -1241,6 +1247,8 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
                       label={t("clientBilling.periodEnd")}
                       value={invoicePeriod.end}
                       onChange={(event) => {
+                        setManualDates({});
+                        setInvoiceReview(null);
                         setInvoicePeriod((current) => ({
                           ...current,
                           end: event.target.value,
@@ -1249,6 +1257,16 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
                       }}
                     />
                   </div>
+                  {!preview ? <details className="rounded-xl border border-border bg-bg-accent/25 p-3.5">
+                    <summary className="cursor-pointer text-xs font-semibold text-text">{t("clientBilling.terms.customDatesTitle")}</summary>
+                    <p className="mt-2 text-xs leading-5 text-muted">{t("clientBilling.terms.optionalDatesHelp")}</p>
+                    <div className="mt-3">
+                      <InvoiceDateFields dueDate={manualDates.due_date ?? ""} fulfillmentDate={manualDates.fulfillment_date ?? ""}
+                        disabled={reviewMutation.isPending || previewMutation.isPending}
+                        onDueChange={value => { setManualDates(current => ({ ...current, due_date: value || null })); setInvoiceReview(null); setPreviewResult(null); }}
+                        onFulfillmentChange={value => { setManualDates(current => ({ ...current, fulfillment_date: value || null })); setInvoiceReview(null); setPreviewResult(null); }} />
+                    </div>
+                  </details> : null}
                   {!preview ? (
                     <ProjectInvoicePricing key={quantityScope} companyId={companyId}
                       clientId={effectiveSelectedClientId} year={Number(invoicePeriod.start.slice(0, 4))}
@@ -1386,6 +1404,29 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
         open={reviewOpen}
         review={invoiceReview}
         issuing={issueMutation.isPending}
+        reviewing={reviewMutation.isPending}
+        previewDownloading={previewMutation.isPending}
+        onDownloadPreview={() => {
+          if (!invoiceReview || !selectedClient) return;
+          setIssueError(null);
+          previewMutation.mutate({ companyId: invoiceReview.company_id, clientId: invoiceReview.client_id,
+            clientCode: selectedClient.client_code, periodStart: invoiceReview.period_start,
+            periodEnd: invoiceReview.period_end, projectQuantities: invoiceReview.project_quantities,
+            dateOverrides: invoiceReview.date_overrides ?? {}, reviewFingerprint: invoiceReview.review_fingerprint }, {
+            onError: error => setIssueError(error instanceof Error ? error.message : t("clientBilling.previewFailed")),
+          });
+        }}
+        onReviewDates={async (dateOverrides: InvoiceDateOverrides) => {
+          if (!invoiceReview) return;
+          setIssueError(null);
+          try {
+            await reviewMutation.mutateAsync({ companyId: invoiceReview.company_id, clientId: invoiceReview.client_id,
+              periodStart: invoiceReview.period_start, periodEnd: invoiceReview.period_end,
+              projectQuantities: invoiceReview.project_quantities, dateOverrides });
+          } catch (error) {
+            setIssueError(error instanceof Error ? error.message : t("clientBilling.reviewFailed"));
+          }
+        }}
         canIssue={!isCompanyPreviewMode}
         error={issueError}
         attachmentDownloading={downloadingAttachmentId === "review"}

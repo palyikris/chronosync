@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { AlertTriangle, CheckCircle2, ReceiptText, ShieldCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import type { ClientInvoiceReview } from "../../types/client-billing";
+import type { ClientInvoiceReview, InvoiceDateOverrides } from "../../types/client-billing";
 import { Button } from "../shared/Button";
 import { Checkbox } from "../shared/Checkbox";
 import { Modal } from "../shared/Modal";
+import { InvoiceDateFields } from "./InvoiceDateFields";
 
 interface InvoiceReviewModalProps {
   open: boolean;
@@ -17,6 +18,10 @@ interface InvoiceReviewModalProps {
   attachmentDownloading?: boolean;
   attachmentError?: string | null;
   onDownloadAttachment?: () => void;
+  reviewing?: boolean;
+  onReviewDates?: (overrides: InvoiceDateOverrides) => Promise<void>;
+  onDownloadPreview?: () => void;
+  previewDownloading?: boolean;
 }
 
 const formatMoney = (value: number, currency: string) =>
@@ -37,12 +42,26 @@ export const InvoiceReviewModal: React.FC<InvoiceReviewModalProps> = ({
   attachmentDownloading = false,
   attachmentError = null,
   onDownloadAttachment,
+  reviewing = false,
+  onReviewDates,
+  onDownloadPreview,
+  previewDownloading = false,
 }) => {
   const { t } = useTranslation();
   const [confirmed, setConfirmed] = useState(false);
+  const [dueDate, setDueDate] = useState(review?.due_date ?? "");
+  const [fulfillmentDate, setFulfillmentDate] = useState(review?.fulfillment_date ?? "");
 
   if (!review) return null;
   const items = review.items ?? [];
+  const dateDirty = dueDate !== review.due_date || fulfillmentDate !== review.fulfillment_date;
+  const busy = issuing || reviewing;
+  const hasOverrides = Boolean(review.date_overrides?.due_date || review.date_overrides?.fulfillment_date);
+  const datesValid = Boolean(dueDate && fulfillmentDate && dueDate >= review.issue_date);
+  const refreshDates = (overrides: InvoiceDateOverrides) => {
+    setConfirmed(false);
+    void onReviewDates?.(overrides);
+  };
 
   const handleClose = () => {
     setConfirmed(false);
@@ -53,7 +72,8 @@ export const InvoiceReviewModal: React.FC<InvoiceReviewModalProps> = ({
     <Modal
       open={open}
       title={t("clientBilling.reviewModalTitle")}
-      onClose={issuing ? () => undefined : handleClose}
+      onClose={busy ? () => undefined : handleClose}
+      closeDisabled={busy}
       className="sm:max-w-3xl"
     >
       <div className="overflow-y-auto p-5">
@@ -105,7 +125,7 @@ export const InvoiceReviewModal: React.FC<InvoiceReviewModalProps> = ({
             <p className="mt-1 break-all">{review.attachment.filename} · {Math.ceil(review.attachment.size_bytes / 1024)} KB</p>
             <p className="mt-1">{t(review.recipient.send_email ? "clientBilling.annex.emailIncluded" : "clientBilling.annex.savedOnly")}</p>
             {onDownloadAttachment ? (
-              <Button className="mt-2" size="sm" variant="outline" disabled={issuing || attachmentDownloading}
+              <Button className="mt-2" size="sm" variant="outline" disabled={busy || dateDirty || attachmentDownloading}
                 onClick={onDownloadAttachment}>
                 {t(attachmentDownloading ? "common.loading" : "clientBilling.annex.downloadReview")}
               </Button>
@@ -128,9 +148,33 @@ export const InvoiceReviewModal: React.FC<InvoiceReviewModalProps> = ({
           {review.invoice_prefix && ` · ${review.invoice_prefix}`}
         </div>
         {(review.invoice_comment || review.seller_bank_account) && <div className="mt-3 text-xs leading-5 text-muted">
-          {review.invoice_comment && <p>{review.invoice_comment}</p>}
+          {review.invoice_comment && <p className="whitespace-pre-wrap break-words">{review.invoice_comment}</p>}
           {review.seller_bank_account && <p>{review.seller_bank_name} · {review.seller_bank_account}</p>}
         </div>}
+
+        {onReviewDates && <details className="mt-3 rounded-xl border border-border bg-bg-accent/25 p-3.5">
+          <summary className="cursor-pointer text-xs font-semibold text-text">{t("clientBilling.terms.adjustDates")}</summary>
+          <p className="mt-2 text-xs leading-5 text-muted">{t("clientBilling.terms.overrideHelp")}</p>
+          <div className="mt-3">
+            <InvoiceDateFields fulfillmentDate={fulfillmentDate} dueDate={dueDate} issueDate={review.issue_date}
+              disabled={busy} required onDueChange={value => { setDueDate(value); setConfirmed(false); }}
+              onFulfillmentChange={value => { setFulfillmentDate(value); setConfirmed(false); }} />
+          </div>
+          {hasOverrides && <p className="mt-2 text-xs text-muted-strong">{t("clientBilling.terms.customDates")}</p>}
+          {dateDirty && <p role="status" className="mt-2 text-xs text-muted-strong">{t("clientBilling.terms.reviewRequired")}</p>}
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" disabled={!dateDirty || !datesValid || busy}
+              onClick={() => refreshDates({
+                due_date: dueDate !== review.due_date ? dueDate : review.date_overrides?.due_date,
+                fulfillment_date: fulfillmentDate !== review.fulfillment_date ? fulfillmentDate : review.date_overrides?.fulfillment_date,
+              })}>{t(reviewing ? "common.loading" : "clientBilling.terms.applyDates")}</Button>
+            {dateDirty && <Button size="sm" variant="ghost" disabled={busy} onClick={() => {
+              setDueDate(review.due_date); setFulfillmentDate(review.fulfillment_date); setConfirmed(false);
+            }}>{t("clientBilling.terms.discardDates")}</Button>}
+            {hasOverrides && <Button size="sm" variant="ghost" disabled={busy}
+              onClick={() => refreshDates({})}>{t("clientBilling.terms.resetDates")}</Button>}
+          </div>
+        </details>}
 
         {review.exchange_rate_bank ? (
           <p className="mt-3 text-xs text-muted">
@@ -255,7 +299,7 @@ export const InvoiceReviewModal: React.FC<InvoiceReviewModalProps> = ({
         <label className="mt-4 flex cursor-pointer items-start gap-2.5 rounded-xl border border-border p-3.5">
           <Checkbox
             checked={confirmed}
-            disabled={!canIssue || issuing}
+            disabled={!canIssue || busy || dateDirty}
             onChange={(event) => setConfirmed(event.target.checked)}
             className="mt-0.5"
           />
@@ -270,14 +314,16 @@ export const InvoiceReviewModal: React.FC<InvoiceReviewModalProps> = ({
         </label>
       </div>
 
-      <div className="flex items-center justify-end gap-2 border-t border-border bg-bg-accent/35 px-5 py-3.5">
-        <Button variant="outline" onClick={handleClose} disabled={issuing}>
+      <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border bg-bg-accent/35 px-5 py-3.5">
+        {onDownloadPreview && <Button variant="outline" disabled={busy || dateDirty || previewDownloading}
+          onClick={onDownloadPreview}>{t(previewDownloading ? "common.loading" : "clientBilling.generatePreview")}</Button>}
+        <Button variant="outline" onClick={handleClose} disabled={busy}>
           {t("common.cancel")}
         </Button>
         <Button
           variant="primary"
           icon={issuing ? undefined : <CheckCircle2 />}
-          disabled={!canIssue || !confirmed || issuing}
+          disabled={!canIssue || !confirmed || busy || dateDirty}
           onClick={() => {
             setConfirmed(false);
             onIssue();
