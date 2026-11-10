@@ -65,7 +65,7 @@ export const EntryRow: React.FC<EntryRowProps> = React.memo(
         </td>
 
         <td className="p-3.5 font-medium text-slate-900 w-[200px]">
-          <Tooltip content={userDisplay}>
+          <Tooltip content={userDisplay} className="min-w-0 max-w-full">
             <span className="truncate block max-w-[190px]">{userDisplay}</span>
           </Tooltip>
         </td>
@@ -75,7 +75,7 @@ export const EntryRow: React.FC<EntryRowProps> = React.memo(
         </td>
 
         <td className="p-3.5 text-slate-600">
-          <Tooltip content={entry.description || "—"}>
+          <Tooltip content={entry.description || "—"} className="min-w-0 max-w-full">
             <span className="block truncate">
               {entry.description || "—"}
             </span>
