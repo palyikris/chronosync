@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { requestPasswordReset, signInUser } from "../services/authService";
 import { useAuth } from "../context/useAuth";
 import { getHomeRouteForRole } from "../utils/navigation";
+import { safeAuthContinuation } from "../utils/authActions";
 import { ArrowRight, Clock3, Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
 
 export const LoginPage: React.FC = () => {
@@ -18,6 +19,8 @@ export const LoginPage: React.FC = () => {
 
   const { user, profile, authError, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = safeAuthContinuation(searchParams.get("returnTo") ?? searchParams.get("redirect_to"));
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -41,9 +44,9 @@ export const LoginPage: React.FC = () => {
 
   useEffect(() => {
     if (!authLoading && user && profile) {
-      navigate(getHomeRouteForRole(profile.role), { replace: true });
+      navigate(returnTo === "/" ? getHomeRouteForRole(profile.role) : returnTo, { replace: true });
     }
-  }, [authLoading, navigate, profile, user]);
+  }, [authLoading, navigate, profile, returnTo, user]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

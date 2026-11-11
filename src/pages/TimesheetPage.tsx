@@ -63,6 +63,9 @@ const MOBILE_TIMESHEET_QUERY = "(max-width: 639px)";
 
 const getViewPreference = (): TimesheetViewMode => {
   if (typeof window === "undefined") return "calendar";
+  if (new URLSearchParams(window.location.search).get("view") === "attention") {
+    return "attention";
+  }
   if (window.matchMedia(MOBILE_TIMESHEET_QUERY).matches) return "list";
 
   const stored = window.localStorage.getItem(TIMESHEET_VIEW_STORAGE_KEY);
