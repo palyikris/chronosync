@@ -41,6 +41,7 @@ export function PartnerBillingImportModal({ companyId, onClose, onComplete }: Pr
   const [profiles, setProfiles] = useState<ClientBillingProfile[]>([]);
   const [mapping, setMapping] = useState<PartnerColumnMapping>({});
   const [choices, setChoices] = useState<Record<number, string | null>>({});
+  const [emailChoices, setEmailChoices] = useState<Record<number, string | null>>({});
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const [search, setSearch] = useState("");
@@ -61,8 +62,8 @@ export function PartnerBillingImportModal({ companyId, onClose, onComplete }: Pr
     return () => window.removeEventListener("beforeunload", preventUnload);
   }, [step]);
 
-  const rows = useMemo(() => file ? buildPartnerReview(file, mapping, clients, profiles, companyId, choices) : [],
-    [file, mapping, clients, profiles, companyId, choices]);
+  const rows = useMemo(() => file ? buildPartnerReview(file, mapping, clients, profiles, companyId, choices, emailChoices) : [],
+    [file, mapping, clients, profiles, companyId, choices, emailChoices]);
   const clientById = useMemo(() => new Map(clients.map(client => [client.id, client])), [clients]);
   const profileById = useMemo(() => new Map(profiles.map(profile => [profile.client_id, profile])), [profiles]);
   const ready = rows.filter(row => row.status === "ready");
@@ -99,7 +100,7 @@ export function PartnerBillingImportModal({ companyId, onClose, onComplete }: Pr
       ]);
       if (abort.signal.aborted) return;
       setFile(parsed); setMapping(suggestPartnerColumns(parsed.headers));
-      setClients(freshClients); setProfiles(freshProfiles); setChoices({});
+      setClients(freshClients); setProfiles(freshProfiles); setChoices({}); setEmailChoices({});
       setStep("columns");
     } catch (err) {
       if (abort.signal.aborted) return;
@@ -137,6 +138,7 @@ export function PartnerBillingImportModal({ companyId, onClose, onComplete }: Pr
       return next;
     });
     setChoices({});
+    setEmailChoices({});
   };
 
   const stepIndex = step === "upload" ? 0 : step === "columns" ? 1 : 2;
@@ -266,6 +268,25 @@ export function PartnerBillingImportModal({ companyId, onClose, onComplete }: Pr
                 </div>
                 {row.issues.map((issue, index) => <p key={`${issue}-${index}`} className="rounded-lg bg-warning-bg p-2.5 text-[11px] leading-relaxed text-warning">
                   {tr(`issues.${issue}`)}{issue === "invalid" ? ` ${row.invalidFields.map(field => tr(`fields.${field}`)).join(", ")}` : ""}</p>)}
+                {row.emailOptions.length > 1 || row.invalidFields.includes("billing_email") || Object.hasOwn(emailChoices, row.rowNumber) ?
+                  <div className="space-y-1.5">
+                    <label htmlFor={`partner-email-${row.rowNumber}`} className="block text-xs font-medium text-text">{tr("emailChoice")}</label>
+                    <select id={`partner-email-${row.rowNumber}`} className={selectClass}
+                      value={emailChoices[row.rowNumber] === null ? "skip" : emailChoices[row.rowNumber] ?? ""}
+                      onChange={event => setEmailChoices(current => {
+                        const next = { ...current };
+                        if (!event.target.value) delete next[row.rowNumber];
+                        else next[row.rowNumber] = event.target.value === "skip" ? null : event.target.value;
+                        return next;
+                      })}>
+                      <option value="">{tr("chooseEmail")}</option>
+                      <option value="skip">{tr("skipEmail")}</option>
+                      {row.emailOptions.map(email => <option key={email} value={email}>{email}</option>)}
+                    </select>
+                    <p className="text-[11px] leading-relaxed text-muted">{tr("emailChoiceHint")}</p>
+                    {profile?.billing_email && !Object.hasOwn(row.data, "billing_email") ?
+                      <p className="break-words text-[11px] text-muted"><span>{tr("kept")}: </span><span>{profile.billing_email}</span></p> : null}
+                  </div> : null}
                 <div className="divide-y divide-border rounded-lg border border-border bg-surface-strong">
                   {Object.entries(row.data).map(([field, value]) => <div key={field} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-2 p-2.5 text-[11px]">
                     <span className="text-muted">{tr(`fields.${field}`)}</span><div className="min-w-0 break-words text-text">

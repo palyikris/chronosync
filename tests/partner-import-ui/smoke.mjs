@@ -22,8 +22,8 @@ const seedProfile = { client_id: first, company_id: company, billing_name: 'Save
   created_at: '2026-11-06T00:00:00Z', updated_at: '2026-11-06T00:00:00Z' };
 const headers = ['partner neve', 'partner azonosító', 'ország', 'irányítószám', 'település', 'utca és házszám', 'adószám', 'email cím', 'adóalany', 'fizetési határidő (nap)'];
 const partnerRows = [
-  ['Árvíz & Társai Kft.', 'ARV', 'Magyarország', '1051', 'Budapest', 'Fő utca 1.', '12345678-2-41', 'incoming@example.invalid', '1', '30'],
-  ['Unknown partner', 'MAS', 'HU', '6720', 'Szeged', 'Tisza utca 2.', '87654321-2-06', 'second@example.invalid', '1', '15'],
+  ['Árvíz & Társai Kft.', 'ARV', 'Magyarország', '1051', 'Budapest', 'Fő utca 1.', '12345678-2-41', 'incoming@example.invalid, other@example.invalid', 'van magyar adószáma', '30'],
+  ['Unknown partner', 'MAS', 'HU', '6720', 'Szeged', 'Tisza utca 2.', '87654321-2-06', 'contact@example.invalid; second@example.invalid', 'van magyar adószáma', '15'],
 ];
 function workbook(type, rows = partnerRows) {
   const book = XLSX.utils.book_new();
@@ -51,6 +51,9 @@ try {
         assert.equal(payload.p_rows[0].client_id, first);
         assert.equal(payload.p_rows[1].client_id, second);
         assert.ok(payload.p_rows.every(row => !Object.hasOwn(row.data, 'client_code') && !Object.hasOwn(row.data, 'send_invoice_email')));
+        assert.ok(payload.p_rows.every(row => row.data.tax_subject === 1));
+        assert.equal(payload.p_rows[0].data.billing_email, undefined);
+        assert.equal(payload.p_rows[1].data.billing_email, 'second@example.invalid');
         requests.push(payload);
         pending = async (fail = false) => {
           if (fail) return route.fulfill({ status: 503, contentType: 'application/json', body: '{"message":"Unavailable"}' });
@@ -74,7 +77,7 @@ try {
     page.on('pageerror', error => errors.push(error.message));
     await page.goto(`${base}/tests/partner-import-ui/?lang=${language}`);
     const open = page.getByRole('button', { name: text.openButton, exact: true });
-    await expect(open).toBeEnabled().catch(async error => {
+    await expect(open).toBeEnabled({ timeout: 15000 }).catch(async error => {
       console.log({ errors, body: (await page.locator('body').innerText()).slice(0, 2000) });
       throw error;
     });
@@ -98,10 +101,14 @@ try {
     await dialog.locator('article').first().getByRole('button', { expanded: false }).click();
     await expect(dialog.getByText('Saved billing name', { exact: true })).toBeVisible();
     await expect(dialog.getByText('saved@example.invalid', { exact: true })).toBeVisible();
+    await expect(dialog.getByText(text.issues.invalid, { exact: false })).toHaveCount(1);
+    await dialog.getByLabel(text.emailChoice, { exact: true }).selectOption('skip');
+    await expect(dialog.getByText(text.issues.invalid, { exact: false })).toHaveCount(0);
     await page.screenshot({ path: `${output}/${language}-${width}-review.png`, fullPage: true });
     await dialog.locator('article').nth(1).getByRole('button', { expanded: false }).click();
     await dialog.getByRole('button', { name: text.matchClient, exact: true }).click();
     await page.getByRole('option', { name: 'Második Zrt. · MAS', exact: true }).click();
+    await dialog.locator('article').nth(1).getByLabel(text.emailChoice, { exact: true }).selectOption('second@example.invalid');
     const importButton = dialog.getByRole('button', { name: text.importButton_other.replace('{{count}}', '2'), exact: true });
     await expect(importButton).toBeEnabled();
     await importButton.click();
@@ -133,8 +140,12 @@ try {
     // Re-import is a no-op; no second RPC is offered for fully populated fields.
     await open.click();
     await page.getByRole('dialog').locator('input[type=file]').setInputFiles({ name: 'partners.csv', mimeType: 'text/csv',
-      buffer: Buffer.from('\ufeff' + [headers, ...partnerRows].map(row => row.map(value => `"${String(value).replaceAll('"','""')}"`).join(';')).join('\r\n')) });
+      buffer: Buffer.from('\ufeff' + [headers, ...partnerRows].map(row => row.map(value => `"${String(value).replaceAll('"','""')}"`).join(',')).join('\r\n')) });
     await page.getByRole('button', { name: text.reviewMatches, exact: true }).click();
+    for (const article of await page.getByRole('dialog').locator('article').all()) {
+      await article.getByRole('button', { expanded: false }).click();
+      await article.getByLabel(text.emailChoice, { exact: true }).selectOption('skip');
+    }
     await expect(page.getByRole('dialog').getByRole('button', { name: text.importButton_other.replace('{{count}}', '0'), exact: true })).toBeDisabled();
     if (language === 'en' && width === 1280) {
       await page.getByRole('dialog').getByRole('button', { name: common.closeDialog, exact: true }).click();

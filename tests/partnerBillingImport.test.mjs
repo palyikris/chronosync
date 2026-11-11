@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildPartnerReview, suggestPartnerColumns, normalizePartnerCountry, readPartnerRow } from '../src/utils/partnerBillingImport.ts';
+import { buildPartnerReview, suggestPartnerColumns, normalizePartnerCountry, normalizePartnerTaxSubject, readPartnerRow } from '../src/utils/partnerBillingImport.ts';
 
 const COMPANY = 'company';
 const clients = [
@@ -75,4 +75,77 @@ test('client-code matching requires an explicit matching column, not the provide
   assert.equal(buildPartnerReview(input, mapping, clients, [profile], COMPANY)[0].match, 'code');
   input.rows[0].values[4] = 'T-W-O';
   assert.equal(buildPartnerReview(input, mapping, clients, [profile], COMPANY)[0].clientId, null);
+});
+
+test('recognizes all exported tax-subject labels and preserves numeric codes', () => {
+  const labels = [
+    ['van magyar adószáma', 1], ['EU-s vállalkozás', 6], ['EU-n kívüli vállalkozás', 7],
+    ['nem tudjuk hogy a vásárló adóalany-e', 0], ['nincs adószáma', -1],
+    ['nincs adószáma (azaz nincs magyar adószáma)', -1],
+  ];
+  for (const [label, subject] of labels) {
+    for (const value of [label, ` ${label.toUpperCase()} `, label.normalize('NFKD').replace(/\p{M}/gu, ''), String(subject)]) {
+      const parsed = readPartnerRow({ rowNumber: 2, values: [value] }, { tax_subject: 0 });
+      assert.equal(parsed.data.tax_subject, subject, value);
+      assert.deepEqual(parsed.invalidFields, []);
+    }
+  }
+  assert.equal(normalizePartnerTaxSubject('EU–s  vállalkozás'), 6);
+  for (const value of ['', 'unknown', 'adóalany', 'nem EU-s vállalkozás', '2', 'true', '0x1', '1e0', '1.0']) {
+    assert.equal(normalizePartnerTaxSubject(value), null, value);
+  }
+  assert.deepEqual(readPartnerRow({ rowNumber: 2, values: [''] }, { tax_subject: 0 }).data, {});
+  assert.deepEqual(readPartnerRow({ rowNumber: 2, values: ['unknown'] }, { tax_subject: 0 }).invalidFields, ['tax_subject']);
+});
+
+test('text tax subjects fill missing status, preserve zero and block conflicting identities', () => {
+  const input = { headers: ['partner neve', 'adóalany', 'utca és házszám'],
+    rows: [{ rowNumber: 2, values: ['Árvíz & Társai Kft.', 'van magyar adószáma', 'Street'] }] };
+  const row = review(input, [{ ...profile, tax_subject: null }])[0];
+  assert.equal(row.status, 'ready');
+  assert.equal(row.data.tax_subject, 1);
+  assert.ok(row.changes.includes('tax_subject'));
+  assert.equal(review(input, [{ ...profile, tax_subject: 0 }])[0].status, 'blocked');
+  input.rows[0].values[1] = 'nincs adószáma';
+  assert.ok(review(input)[0].issues.includes('identityConflict'));
+  assert.equal(review(input, [{ ...profile, tax_subject: null, tax_number: null }])[0].status, 'ready');
+});
+
+test('multiple billing emails need an explicit choice or omission for that row', () => {
+  const source = { rowNumber: 2, values: [' first@example.invalid, second@example.invalid;first@example.invalid\nthird@example.invalid '] };
+  const mapping = { billing_email: 0 };
+  const parsed = readPartnerRow(source, mapping);
+  assert.deepEqual(parsed.emailOptions, ['first@example.invalid', 'second@example.invalid', 'third@example.invalid']);
+  assert.deepEqual(parsed.invalidFields, ['billing_email']);
+  assert.equal(parsed.data.billing_email, undefined);
+  assert.equal(readPartnerRow(source, mapping, 'second@example.invalid').data.billing_email, 'second@example.invalid');
+  assert.deepEqual(readPartnerRow(source, mapping, null).invalidFields, []);
+  assert.deepEqual(readPartnerRow(source, mapping, null).data, {});
+  assert.deepEqual(readPartnerRow(source, mapping, 'not-in-file@example.invalid').invalidFields, ['billing_email']);
+  assert.equal(readPartnerRow({ ...source, values: ['same@example.invalid; same@example.invalid'] }, mapping).data.billing_email, 'same@example.invalid');
+  // A malformed address cannot silently become a different valid recipient.
+  const malformed = { ...source, values: ['valid@example.invalid, broken email'] };
+  assert.deepEqual(readPartnerRow(malformed, mapping).invalidFields, ['billing_email']);
+  assert.equal(readPartnerRow(malformed, mapping, 'valid@example.invalid').data.billing_email, 'valid@example.invalid');
+  assert.deepEqual(readPartnerRow({ ...source, values: ['broken email'] }, mapping, null).invalidFields, []);
+  const longList = Array.from({ length: 20 }, (_, index) => `person-${index}@example.invalid`).join(', ');
+  assert.ok(longList.length > 255);
+  assert.equal(readPartnerRow({ ...source, values: [longList] }, mapping, 'person-19@example.invalid').data.billing_email,
+    'person-19@example.invalid');
+});
+
+test('email choices unblock only their own row and preserve the saved email', () => {
+  const input = file(['Árvíz & Társai Kft.', '', 'Budapest', 'first@example.invalid, second@example.invalid'],
+    ['Second Zrt.', '', 'Szeged', 'third@example.invalid; fourth@example.invalid']);
+  const mapping = suggestPartnerColumns(input.headers);
+  const profiles = [{ ...profile, billing_city: null }];
+  const unresolved = buildPartnerReview(input, mapping, clients, profiles, COMPANY);
+  assert.ok(unresolved.every(row => row.status === 'blocked'));
+  const selected = buildPartnerReview(input, mapping, clients, profiles, COMPANY, {}, { 2: 'second@example.invalid' });
+  assert.equal(selected[0].status, 'ready');
+  assert.ok(selected[0].preserved.includes('billing_email'));
+  assert.equal(selected[1].status, 'blocked');
+  const skipped = buildPartnerReview(input, mapping, clients, profiles, COMPANY, {}, { 2: null, 3: null });
+  assert.ok(skipped.every(row => row.status === 'ready' && !Object.hasOwn(row.data, 'billing_email')));
+  assert.equal(profile.billing_email, 'saved@example.invalid');
 });

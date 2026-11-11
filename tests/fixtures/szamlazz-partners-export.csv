@@ -1,0 +1,8 @@
+"partner neve","partner azonosító","ország","irányítószám","település","utca és házszám","postázási név","postacím: ország","postacím: irányítószám","postacím: település","postacím: utca és házszám","adószám","csoportos adószám","közösségi adószám","email cím","számla típus (E/P/EP)","alapértelmezett fizetési mód","fizetési határidő (nap)","főkönyvi szám","partner főkönyvi azonosító","kapcsolattartó neve","kapcsolattartó telefon","kapcsolattartó fax","devizanem","adóalany","partner megjegyzés","alapértelmezett számla megjegyzés","bankszámlaszám"
+"Minta, Csoporttag Kft.","PROVIDER-1","Magyarország","0123","Budapest","Minta utca 1. ""A"" épület","","","","","","99887766-4-41","88776655-5-41","","contact@example.invalid, accounts@example.invalid","E","átutalás","0","","","","","","HUF","van magyar adószáma","","",""
+"EU Beispiel GmbH","PROVIDER-2","Germany","01234","Berlin","Beispielstraße 2","","","","","","","","DE123456789","eu@example.invalid","","","15","","","","","","EUR","EU-s vállalkozás","","",""
+"Minta Magánszemély","","Hungary","1051","Budapest","Minta utca 3.","","","","","","","","","","","","8","","","","","","","nincs adószáma","","",""
+"Example UK Ltd.","","United Kingdom","SW1A 1AA","London","Example Street 4","","","","","","GB123456789","","","","","","30","","","","","","","EU-n kívüli vállalkozás","","",""
+"Ismeretlen partner","","HU","","","","","","","","","","","","","","","10","","","","","","","nem tudjuk hogy a vásárló adóalany-e","","",""
+"Hiányos partner","","","","","","","","","","","","","","","","","14","","","","","","","","","",""
+"Ellenőrizendő partner","","","","","","","","","","","","","","","","","","","","","","","","unsupported status","","",""

@@ -4,6 +4,10 @@ Company billing admins can open **Client invoicing → Import from Számlázz.hu
 
 The wizard reads CSV, XLS and XLSX files in a browser worker, recognizes the official Hungarian partner-template headings, and lets the user adjust column mappings before reviewing matches. It accepts up to 10 MB / 5,000 rows, supports UTF-8, Windows-1250 and ISO-8859-2 CSV text, and paginates the review. The original file is not uploaded.
 
+The adóalany column accepts both numeric codes and Számlázz.hu's exported Hungarian labels: `van magyar adószáma` → 1, `EU-s vállalkozás` → 6, `EU-n kívüli vállalkozás` → 7, `nem tudjuk hogy a vásárló adóalany-e` → 0, and `nincs adószáma` → -1. Case, accents, punctuation and whitespace are normalized for labels. Blank cells leave the status missing; unrecognized values require review. These mappings follow the [official recipient tax-status documentation](https://tudastar.szamlazz.hu/gyik/vevo-adoszama-szamlan).
+
+When an email cell has several addresses separated by commas, semicolons or line breaks, expand the partner in the review and choose one billing email, or choose **Leave email out** to import the other details. Invalid email cells can also be left out for that partner. The importer never selects an address from a list without an explicit choice. Existing saved billing emails are still preserved. Email choices reset when another file is loaded or column mappings change.
+
 ## Matching and preservation
 
 Matching is limited to the current company's existing clients:
@@ -40,4 +44,4 @@ After saving, the import reloads profiles and invalidates the billing page's que
 
 The public Számlázz.hu partner template was inspected to verify header recognition. An authenticated import was also completed through the local frontend against the existing **Test Inc** mock company, using `tests/fixtures/szamlazz-partners-mock.csv` and the hosted database. Two existing mock clients gained missing details; stored values, all client records and pricing were preserved. The unmatched partner created no client, repeat import offered zero changes, and the billing page refreshed and retained the values after reload. See the [manual test report](partner-billing-import-live-2026-11-06.md).
 
-A real customer's export and the deployed frontend have not been exercised. No production customer records, provider accounts, invoice issuance or email delivery were changed.
+The parser and review were also checked locally against the customer's 72-row CSV export on 2026-11-10. Regression fixtures use fictional partners with the export's complete 28-column layout; customer data is not committed. The deployed frontend has not been exercised for this update. No production customer records, provider accounts, invoice issuance or email delivery were changed.

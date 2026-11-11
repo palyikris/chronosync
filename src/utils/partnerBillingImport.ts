@@ -24,6 +24,7 @@ export interface PartnerReviewRow {
   preserved: PartnerBillingField[];
   issues: PartnerImportIssue[];
   invalidFields: PartnerImportField[];
+  emailOptions: string[];
   status: "ready" | "unmatched" | "unchanged" | "blocked" | "skipped";
 }
 
@@ -34,6 +35,24 @@ export const normalizePartnerTax = (value: unknown): string => String(value ?? "
   .toUpperCase().replace(/[^A-Z0-9]/g, "");
 const normalizePartnerCode = (value: unknown): string => String(value ?? "").trim().toLocaleLowerCase("hu");
 const hasValue = (value: unknown) => value !== null && value !== undefined && String(value).trim() !== "";
+
+// Labels used by Számlázz.hu's partner export, with the documented Agent codes.
+const taxSubjectLabels = new Map<string, TaxSubject>([
+  ["van magyar adószáma", 1],
+  ["EU-s vállalkozás", 6],
+  ["EU-n kívüli vállalkozás", 7],
+  ["nem tudjuk hogy a vásárló adóalany-e", 0],
+  ["nincs adószáma", -1],
+  ["nincs adószáma (azaz nincs magyar adószáma)", -1],
+].map(([label, subject]) => [normalizePartnerName(label), subject as TaxSubject]));
+
+export function normalizePartnerTaxSubject(value: string): TaxSubject | null {
+  const text = value.trim();
+  if (/^(?:-1|0|1|6|7)$/.test(text)) return Number(text) as TaxSubject;
+  return taxSubjectLabels.get(normalizePartnerName(text)) ?? null;
+}
+
+const validEmail = (value: string) => value.length <= 255 && /^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(value);
 
 const aliases: Record<PartnerImportField, string[]> = {
   billing_name: ["partner neve", "partner név", "név", "cégnév", "vevő neve", "partner name", "customer name", "billing name", "client name"],
@@ -85,9 +104,10 @@ const limits: Partial<Record<PartnerImportField, number>> = {
   tax_number: 32, eu_vat_number: 32, group_tax_number: 32, billing_email: 255, payment_method: 64,
 };
 
-export function readPartnerRow(row: PartnerFileRow, mapping: PartnerColumnMapping) {
+export function readPartnerRow(row: PartnerFileRow, mapping: PartnerColumnMapping, emailChoice?: string | null) {
   const data: PartnerBillingData = {};
   const invalidFields: PartnerImportField[] = [];
+  let emailOptions: string[] = [];
   let code = "";
   for (const field of PARTNER_IMPORT_FIELDS) {
     const index = mapping[field];
@@ -99,18 +119,24 @@ export function readPartnerRow(row: PartnerFileRow, mapping: PartnerColumnMappin
       if (country) data[field] = country;
       else invalidFields.push(field);
     } else if (field === "tax_subject") {
-      const subject = Number(text);
-      if (([-1, 0, 1, 6, 7] as number[]).includes(subject)) data[field] = subject as TaxSubject;
+      const subject = normalizePartnerTaxSubject(text);
+      if (subject !== null) data[field] = subject;
+      else invalidFields.push(field);
+    } else if (field === "billing_email") {
+      const emails = [...new Set(text.split(/[,;\r\n]/).map(value => value.trim()).filter(Boolean))];
+      emailOptions = emails.filter(validEmail);
+      if (emailChoice === null) continue;
+      if (emailChoice !== undefined && emailOptions.includes(emailChoice)) data[field] = emailChoice;
+      else if (emailChoice === undefined && emails.length === 1 && emailOptions.length === 1) data[field] = emailOptions[0];
       else invalidFields.push(field);
     } else if (field === "payment_term_days") {
       if (/^\d+$/.test(text) && Number(text) <= 365) data[field] = Number(text);
       else invalidFields.push(field);
-    } else if (text.length > (limits[field] ?? 255) ||
-      (field === "billing_email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text))) {
+    } else if (text.length > (limits[field] ?? 255)) {
       invalidFields.push(field);
     } else data[field] = text;
   }
-  return { data, code, invalidFields };
+  return { data, code, invalidFields, emailOptions };
 }
 
 export function partnerIdentityConflicts(data: PartnerBillingData, profile?: ClientBillingProfile): boolean {
@@ -134,6 +160,7 @@ export function buildPartnerReview(
   file: PartnerFile, mapping: PartnerColumnMapping, clients: Client[],
   profiles: ClientBillingProfile[], companyId: string,
   choices: Record<number, string | null> = {},
+  emailChoices: Record<number, string | null> = {},
 ): PartnerReviewRow[] {
   const scopedClients = clients.filter(client => client.company_id === companyId);
   const scopedProfiles = profiles.filter(profile => profile.company_id === companyId);
@@ -155,7 +182,7 @@ export function buildPartnerReview(
     ...scopedProfiles.map(profile => [normalizePartnerName(profile.billing_name), profile.client_id] as [string, string]),
   ]);
   const rows = file.rows.map((row): PartnerReviewRow => {
-    const { data, code, invalidFields } = readPartnerRow(row, mapping);
+    const { data, code, invalidFields, emailOptions } = readPartnerRow(row, mapping, emailChoices[row.rowNumber]);
     const taxMatches = new Set([data.tax_number, data.eu_vat_number].flatMap(value =>
       [...(taxIndex.get(normalizePartnerTax(value)) ?? [])]));
     const codeMatches = codeIndex.get(normalizePartnerCode(code)) ?? new Set<string>();
@@ -189,7 +216,7 @@ export function buildPartnerReview(
       issues.push("identityConflict");
     }
     return {
-      rowNumber: row.rowNumber, name: String(data.billing_name ?? code ?? ""), data, clientId, match, changes, preserved, issues, invalidFields,
+      rowNumber: row.rowNumber, name: String(data.billing_name ?? code), data, clientId, match, changes, preserved, issues, invalidFields, emailOptions,
       status: Object.hasOwn(choices, row.rowNumber) && choices[row.rowNumber] === null ? "skipped" :
         !clientId ? "unmatched" : issues.length ? "blocked" : changes.length ? "ready" : "unchanged",
     };
