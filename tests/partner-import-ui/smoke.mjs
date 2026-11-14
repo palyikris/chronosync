@@ -23,7 +23,7 @@ const seedProfile = { client_id: first, company_id: company, billing_name: 'Save
 const headers = ['partner neve', 'partner azonosító', 'ország', 'irányítószám', 'település', 'utca és házszám', 'adószám', 'email cím', 'adóalany', 'fizetési határidő (nap)'];
 const partnerRows = [
   ['Árvíz & Társai Kft.', 'ARV', 'Magyarország', '1051', 'Budapest', 'Fő utca 1.', '12345678-2-41', 'incoming@example.invalid, other@example.invalid', 'van magyar adószáma', '30'],
-  ['Unknown partner', 'MAS', 'HU', '6720', 'Szeged', 'Tisza utca 2.', '87654321-2-06', 'contact@example.invalid; second@example.invalid', 'van magyar adószáma', '15'],
+  ['Unknown partner', 'MAS', 'HU', '6720', 'Szeged', 'Tisza utca 2.', '87654321-2-06', 'contact@example.invalid; second@example.invalid; omitted@example.invalid', 'van magyar adószáma', '15'],
 ];
 function workbook(type, rows = partnerRows) {
   const book = XLSX.utils.book_new();
@@ -52,21 +52,29 @@ try {
         assert.equal(payload.p_rows[1].client_id, second);
         assert.ok(payload.p_rows.every(row => !Object.hasOwn(row.data, 'client_code') && !Object.hasOwn(row.data, 'send_invoice_email')));
         assert.ok(payload.p_rows.every(row => row.data.tax_subject === 1));
-        assert.equal(payload.p_rows[0].data.billing_email, undefined);
-        assert.equal(payload.p_rows[1].data.billing_email, 'second@example.invalid');
+        assert.equal(payload.p_rows[0].data.billing_email, 'incoming@example.invalid,other@example.invalid');
+        assert.equal(payload.p_rows[1].data.billing_email, 'contact@example.invalid,second@example.invalid');
         requests.push(payload);
         pending = async (fail = false) => {
           if (fail) return route.fulfill({ status: 503, contentType: 'application/json', body: '{"message":"Unavailable"}' });
-          profiles = [{ ...seedProfile, billing_postal_code: '1051', billing_city: 'Budapest', billing_address: 'Fő utca 1.' },
+          profiles = [{ ...seedProfile, billing_postal_code: '1051', billing_city: 'Budapest', billing_address: 'Fő utca 1.',
+            billing_email: `${seedProfile.billing_email},${payload.p_rows[0].data.billing_email}` },
             { ...seedProfile, client_id: second, billing_name: 'Unknown partner', tax_number: '87654321-2-06',
-              billing_postal_code: '6720', billing_city: 'Szeged', billing_address: 'Tisza utca 2.', billing_email: 'second@example.invalid', payment_term_days: 15 }];
-          return json([{ client_id: first, status: 'updated', fields: ['billing_postal_code','billing_city','billing_address'] },
+              billing_postal_code: '6720', billing_city: 'Szeged', billing_address: 'Tisza utca 2.', billing_email: payload.p_rows[1].data.billing_email, payment_term_days: 15 }];
+          return json([{ client_id: first, status: 'updated', fields: ['billing_postal_code','billing_city','billing_address','billing_email'] },
             { client_id: second, status: 'updated', fields: ['billing_name','billing_postal_code','billing_city','billing_address','tax_number','billing_email'] }]);
         };
         return;
       }
       if (url.pathname.endsWith('/clients')) return json(url.searchParams.get('offset') === '0' || !url.searchParams.has('offset') ? clients : []);
-      if (url.pathname.endsWith('/client_billing_profiles')) return json(url.searchParams.get('offset') === '0' || !url.searchParams.has('offset') ? profiles : []);
+      if (url.pathname.endsWith('/client_billing_profiles')) {
+        if (request.method() === 'POST') {
+          const profile = request.postDataJSON();
+          profiles = profiles.map(saved => saved.client_id === profile.client_id ? { ...saved, ...profile } : saved);
+          return json(profiles.find(saved => saved.client_id === profile.client_id));
+        }
+        return json(url.searchParams.get('offset') === '0' || !url.searchParams.has('offset') ? profiles : []);
+      }
       if (url.pathname.endsWith('/companies')) return json({ id: company, name: 'Test company', szamlazz_test_mode: true });
       if (url.pathname.endsWith('/invoice-settings')) return json({ invoice_provider: 'szamlazz_hu', api_key_configured: false });
       if (url.pathname.endsWith('/rpc/get_company_invoice_credentials')) return json({ invoice_provider: 'szamlazz_hu', api_key_configured: false });
@@ -102,13 +110,15 @@ try {
     await expect(dialog.getByText('Saved billing name', { exact: true })).toBeVisible();
     await expect(dialog.getByText('saved@example.invalid', { exact: true })).toBeVisible();
     await expect(dialog.getByText(text.issues.invalid, { exact: false })).toHaveCount(1);
-    await dialog.getByLabel(text.emailChoice, { exact: true }).selectOption('skip');
+    await dialog.getByRole('button', { name: text.selectAllEmails, exact: true }).click();
+    await expect(dialog.getByLabel(text.emailChoice, { exact: true })).toHaveValues(['incoming@example.invalid', 'other@example.invalid']);
     await expect(dialog.getByText(text.issues.invalid, { exact: false })).toHaveCount(0);
     await page.screenshot({ path: `${output}/${language}-${width}-review.png`, fullPage: true });
     await dialog.locator('article').nth(1).getByRole('button', { expanded: false }).click();
     await dialog.getByRole('button', { name: text.matchClient, exact: true }).click();
     await page.getByRole('option', { name: 'Második Zrt. · MAS', exact: true }).click();
-    await dialog.locator('article').nth(1).getByLabel(text.emailChoice, { exact: true }).selectOption('second@example.invalid');
+    await dialog.locator('article').nth(1).getByLabel(text.emailChoice, { exact: true })
+      .selectOption(['contact@example.invalid', 'second@example.invalid']);
     const importButton = dialog.getByRole('button', { name: text.importButton_other.replace('{{count}}', '2'), exact: true });
     await expect(importButton).toBeEnabled();
     await importButton.click();
@@ -136,15 +146,32 @@ try {
     // The parent page refreshes its query cache and editable snapshot automatically.
     await expect(page.locator('#billing-city')).toHaveValue('Budapest');
     await expect(page.locator('#billing-name')).toHaveValue('Saved billing name');
+    const emailInput = page.getByLabel(billing.billingEmail, { exact: true });
+    const removeEmail = email => page.getByRole('button', { name: billing.removeBillingEmail.replace('{{email}}', email), exact: true });
+    for (const address of ['saved@example.invalid', 'incoming@example.invalid', 'other@example.invalid']) {
+      await expect(removeEmail(address)).toBeVisible();
+    }
+    await emailInput.fill('wrong-address');
+    await page.getByRole('button', { name: billing.addBillingEmail, exact: true }).click();
+    await expect(page.getByText(billing.invalidBillingEmail, { exact: true })).toBeVisible();
+    await emailInput.fill('manual@example.invalid');
+    await emailInput.press('Enter');
+    await expect(removeEmail('manual@example.invalid')).toBeVisible();
+    await removeEmail('other@example.invalid').click();
+    await page.getByRole('button', { name: billing.saveProfile, exact: true }).click();
+    await expect.poll(() => profiles[0].billing_email).toBe('saved@example.invalid,incoming@example.invalid,manual@example.invalid');
+    await page.reload();
+    await expect(removeEmail('manual@example.invalid')).toBeVisible();
+    await expect(removeEmail('other@example.invalid')).toHaveCount(0);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
-    // Re-import is a no-op; no second RPC is offered for fully populated fields.
+    // Skipping email lets the repeat import finish with no new fields to fill.
     await open.click();
     await page.getByRole('dialog').locator('input[type=file]').setInputFiles({ name: 'partners.csv', mimeType: 'text/csv',
       buffer: Buffer.from('\ufeff' + [headers, ...partnerRows].map(row => row.map(value => `"${String(value).replaceAll('"','""')}"`).join(',')).join('\r\n')) });
     await page.getByRole('button', { name: text.reviewMatches, exact: true }).click();
     for (const article of await page.getByRole('dialog').locator('article').all()) {
       await article.getByRole('button', { expanded: false }).click();
-      await article.getByLabel(text.emailChoice, { exact: true }).selectOption('skip');
+      await article.getByRole('button', { name: text.skipEmail, exact: true }).click();
     }
     await expect(page.getByRole('dialog').getByRole('button', { name: text.importButton_other.replace('{{count}}', '0'), exact: true })).toBeDisabled();
     if (language === 'en' && width === 1280) {

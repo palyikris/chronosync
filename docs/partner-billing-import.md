@@ -6,7 +6,7 @@ The wizard reads CSV, XLS and XLSX files in a browser worker, recognizes the off
 
 The adóalany column accepts both numeric codes and Számlázz.hu's exported Hungarian labels: `van magyar adószáma` → 1, `EU-s vállalkozás` → 6, `EU-n kívüli vállalkozás` → 7, `nem tudjuk hogy a vásárló adóalany-e` → 0, and `nincs adószáma` → -1. Case, accents, punctuation and whitespace are normalized for labels. Blank cells leave the status missing; unrecognized values require review. These mappings follow the [official recipient tax-status documentation](https://tudastar.szamlazz.hu/gyik/vevo-adoszama-szamlan).
 
-When an email cell has several addresses separated by commas, semicolons or line breaks, expand the partner in the review and choose one billing email, or choose **Leave email out** to import the other details. Invalid email cells can also be left out for that partner. The importer never selects an address from a list without an explicit choice. Existing saved billing emails are still preserved. Email choices reset when another file is loaded or column mappings change.
+When an email cell has several addresses separated by commas, semicolons or line breaks, expand the partner in the review and select the addresses to add. Use **Import all emails** to select every valid address in the cell, or **Leave email out** to import the other details. Email choices reset when another file is loaded or column mappings change.
 
 ## Matching and preservation
 
@@ -18,13 +18,13 @@ Matching is limited to the current company's existing clients:
 
 Contradictory signals or multiple candidates require an explicit client selection. Számlázz.hu's partner identifier is never automatically treated as a ChronoSync code. Multiple source rows assigned to one client are blocked until the user skips or reassigns the duplicates. Unmatched rows are skipped; the import never creates clients.
 
-Only empty billing fields can be filled. Existing billing names, addresses, emails, payment terms (including zero), country and tax values are preserved. Identity conflicts block the whole row, so a conflicting country's address cannot be mixed into a saved profile. The review distinguishes incoming fills from saved values that will be kept. Invalid source fields can be excluded through column mapping.
+The import fills empty billing fields and appends new email addresses to the saved list, ignoring case when checking for duplicates. Identity conflicts block the whole row, so a conflicting country's address cannot be mixed into a saved profile. The review distinguishes incoming additions from saved values. Invalid source fields can be excluded through column mapping.
 
 Client names/codes, projects, prices, operational settings, invoice language, email delivery, automatic invoicing, document format and schedule are not changed. A missing billing profile can be created for an existing client, with email delivery and automation disabled by default. A country or tax conflict must be resolved in the billing editor or source data before importing that row.
 
 ## Database integration
 
-Apply `supabase/migrations/20261106223909_import_client_billing_details.sql` **before deploying the frontend**. Existing migrations from both repositories, including the module-aware billing-admin helper, must already be present. No backend application deployment or new environment variable is needed.
+Apply `supabase/migrations/20261113151355_import_multiple_billing_emails.sql` and the backend migration `20261113151433_enqueue_multiple_invoice_recipients.sql` before deploying the frontend. Deploy the updated invoice backend before enabling the frontend feature so invoice reviews and delivery can use the full recipient list.
 
 Applied to the connected shared Supabase project on 2026-11-06 with migration version `20261106223909`. Verified function presence, `SECURITY INVOKER`, authenticated execution, and denied anonymous execution through both database privileges and the hosted REST endpoint (HTTP 401 / SQLSTATE 42501). Client and billing-profile counts remained 101 and 100. The local migration filename matches hosted migration history. No import was run against customer records.
 

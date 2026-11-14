@@ -7,11 +7,13 @@ import {
   CheckCircle2,
   Download,
   Eye,
+  Plus,
   ReceiptText,
   Search,
   Settings2,
   ShieldCheck,
   Upload,
+  X,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -56,6 +58,7 @@ import type {
 } from "../types/client-billing";
 import type { Client } from "../types/client-project";
 import { getBillingProfileReadiness } from "../utils/clientBillingReadiness";
+import { BILLING_EMAIL_MAX_LENGTH, isBillingEmail, splitBillingEmails, uniqueBillingEmails } from "../utils/billingEmails";
 import { cn } from "../utils/cn";
 import { isDemoDocument } from "../lib/serviceEnvironment";
 
@@ -309,7 +312,10 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
   const [historyScope, setHistoryScope] = useState<InvoiceHistoryScope>("client");
   const [searchTerm, setSearchTerm] = useState("");
   const [draft, setDraft] = useState<ClientBillingProfileUpsert | null>(null);
-  const [isDirty, setIsDirty] = useState(false);
+  const [profileEdited, setProfileEdited] = useState(false);
+  const [billingEmailInput, setBillingEmailInput] = useState("");
+  const [billingEmailError, setBillingEmailError] = useState(false);
+  const isDirty = profileEdited || Boolean(billingEmailInput.trim());
   const [invoicePeriod, setInvoicePeriod] = useState(initialPeriod ?? getPreviousCalendarMonth);
   const [result, setResult] = useState<{
     kind: "success" | "error";
@@ -406,8 +412,10 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
     }
 
     setDraft(createProfileDraft(selectedClient, selectedStoredProfile));
+    setBillingEmailInput("");
+    setBillingEmailError(false);
     setManualDates({});
-    setIsDirty(false);
+    setProfileEdited(false);
     setResult(null);
     setPreviewResult(null);
     setInvoiceReview(null);
@@ -440,7 +448,7 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
       }
       return next;
     });
-    setIsDirty(true);
+    setProfileEdited(true);
     setResult(null);
     setPreviewResult(null);
     setInvoiceReview(null);
@@ -462,7 +470,7 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
         },
       );
       setDraft(createProfileDraft(selectedClient!, savedProfile));
-      setIsDirty(false);
+      setProfileEdited(false);
       setResult({
         kind: "success",
         message: t("clientBilling.saved"),
@@ -600,6 +608,7 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
   );
 
   const draftReadiness = draft ? getBillingProfileReadiness(draft) : null;
+  const billingEmails = uniqueBillingEmails(splitBillingEmails(draft?.billing_email));
   const savedProfileReadiness = selectedStoredProfile
     ? getBillingProfileReadiness(selectedStoredProfile)
     : null;
@@ -613,16 +622,38 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
     setSelectedClientId(clientId);
   };
 
+  const getBillingEmailsWithInput = () => {
+    const email = billingEmailInput.trim();
+    if (email && !isBillingEmail(email)) {
+      setBillingEmailError(true);
+      return null;
+    }
+    return email ? uniqueBillingEmails([...billingEmails, email]) : billingEmails;
+  };
+
+  const addBillingEmail = () => {
+    const emails = getBillingEmailsWithInput();
+    if (!emails) return;
+    if (emails.length !== billingEmails.length) {
+      updateDraft(current => ({ ...current, billing_email: emails.join(",") }));
+    }
+    setBillingEmailInput("");
+    setBillingEmailError(false);
+  };
+
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     if (!draft || saveMutation.isPending) return;
-    saveMutation.mutate(draft);
+    const emails = getBillingEmailsWithInput();
+    if (emails) saveMutation.mutate({ ...draft, billing_email: emails.join(",") || null });
   };
 
   const cancelChanges = () => {
     if (!selectedClient || saveMutation.isPending) return;
     setDraft(createProfileDraft(selectedClient, selectedStoredProfile));
-    setIsDirty(false);
+    setBillingEmailInput("");
+    setBillingEmailError(false);
+    setProfileEdited(false);
     setResult(null);
     setPreviewResult(null);
     setInvoiceReview(null);
@@ -1181,18 +1212,53 @@ export const ClientBillingPage: React.FC<{ preview?: boolean; initialPeriod?: { 
                     <SectionHeading title={t("clientBilling.deliveryTitle")}>
                       <p>{t("clientBilling.deliveryDescription")}</p>
                     </SectionHeading>
-                    <Input
-                      id="billing-email"
-                      type="email"
-                      label={t("clientBilling.billingEmail")}
-                      value={draft.billing_email ?? ""}
-                      onChange={(event) =>
-                        updateDraft((current) => ({
-                          ...current,
-                          billing_email: event.target.value,
-                        }))
-                      }
-                    />
+                    <div className="space-y-2">
+                      <div className="flex items-stretch gap-2">
+                        <Input
+                          id="billing-email"
+                          type="email"
+                          label={t("clientBilling.billingEmail")}
+                          className="min-w-0 flex-1"
+                          value={billingEmailInput}
+                          maxLength={BILLING_EMAIL_MAX_LENGTH}
+                          disabled={saveMutation.isPending}
+                          aria-invalid={billingEmailError}
+                          aria-describedby={billingEmailError ? "billing-email-error" : undefined}
+                          onChange={event => {
+                            setBillingEmailInput(event.target.value);
+                            setBillingEmailError(false);
+                            setResult(null);
+                          }}
+                          onKeyDown={event => {
+                            if (event.key === "Enter") {
+                              event.preventDefault();
+                              if (billingEmailInput.trim()) addBillingEmail();
+                            }
+                          }}
+                        />
+                        <Button variant="secondary" icon={<Plus />} disabled={!billingEmailInput.trim() || saveMutation.isPending}
+                          onClick={addBillingEmail}>{t("clientBilling.addBillingEmail")}</Button>
+                      </div>
+                      {billingEmailError ? <p id="billing-email-error" role="alert" className="text-xs text-danger">
+                        {t("clientBilling.invalidBillingEmail")}
+                      </p> : null}
+                      {billingEmails.length ? <ul className="flex flex-wrap gap-1.5">
+                        {billingEmails.map(email => <li key={email}
+                          className="inline-flex max-w-full items-center gap-1 rounded-full bg-bg-accent py-0.5 pr-2.5 pl-0.5 text-xs text-text">
+                          <button type="button" disabled={saveMutation.isPending}
+                            aria-label={t("clientBilling.removeBillingEmail", { email })}
+                            className="grid size-6 shrink-0 cursor-pointer place-items-center rounded-full text-muted-strong hover:bg-danger/10 hover:text-danger focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-45"
+                            onClick={() => updateDraft(current => ({
+                              ...current,
+                              billing_email: splitBillingEmails(current.billing_email)
+                                .filter(saved => saved.toLowerCase() !== email.toLowerCase()).join(",") || null,
+                            }))}>
+                            <X className="size-3.5" aria-hidden="true" />
+                          </button>
+                          <span className="min-w-0 [overflow-wrap:anywhere]">{email}</span>
+                        </li>)}
+                      </ul> : null}
+                    </div>
                     <SwitchRow
                       id="send-invoice-email"
                       title={t("clientBilling.sendInvoiceEmail")}

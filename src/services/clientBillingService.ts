@@ -14,6 +14,7 @@ import {
   type InvoiceDateOverrides,
 } from "../types/client-billing";
 import { getBillingProfileReadiness } from "../utils/clientBillingReadiness";
+import { isBillingEmail, splitBillingEmails, uniqueBillingEmails } from "../utils/billingEmails";
 import { fetchAllRows } from "../utils/fetchAllRows";
 
 const nullableText = (maxLength: number) =>
@@ -49,8 +50,9 @@ const profileSchema = z
     eu_vat_number: nullableText(32),
     group_tax_number: nullableText(32),
     billing_email: z
-      .union([z.string().trim().email().max(255), z.literal(""), z.null()])
-      .transform((value) => value || null),
+      .string().nullable().transform(splitBillingEmails)
+      .refine(emails => emails.every(isBillingEmail), { message: i18n.t("clientBilling.invalidBillingEmail") })
+      .transform(emails => uniqueBillingEmails(emails).join(",") || null),
     send_invoice_email: z.boolean(),
     invoice_language: z.enum(INVOICE_LANGUAGES),
     payment_method: z.string().trim().min(1).max(64),
@@ -83,7 +85,7 @@ const profileSchema = z
       context.addIssue({
         code: "custom",
         path: ["billing_email"],
-        message: "Billing email is required when email delivery is enabled.",
+        message: i18n.t("clientBilling.billingEmailRequired"),
       });
     }
 

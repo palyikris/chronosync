@@ -1,5 +1,6 @@
 import type { Client } from "../types/client-project";
 import type { ClientBillingProfile, TaxSubject } from "../types/client-billing";
+import { isBillingEmail, splitBillingEmails, uniqueBillingEmails } from "./billingEmails.ts";
 
 export const PARTNER_IMPORT_LIMIT = 5000;
 export const PARTNER_IMPORT_FIELDS = [
@@ -9,7 +10,9 @@ export const PARTNER_IMPORT_FIELDS = [
 ] as const;
 export type PartnerImportField = typeof PARTNER_IMPORT_FIELDS[number];
 export type PartnerBillingField = Exclude<PartnerImportField, "client_code">;
-export type PartnerBillingData = Partial<Record<PartnerBillingField, string | number>>;
+export type PartnerBillingData = Partial<Record<Exclude<PartnerBillingField, "billing_email">, string | number>> & {
+  billing_email?: string;
+};
 export type PartnerColumnMapping = Partial<Record<PartnerImportField, number>>;
 export interface PartnerFileRow { rowNumber: number; values: string[] }
 export interface PartnerFile { headers: string[]; rows: PartnerFileRow[]; sheetName: string }
@@ -52,7 +55,6 @@ export function normalizePartnerTaxSubject(value: string): TaxSubject | null {
   return taxSubjectLabels.get(normalizePartnerName(text)) ?? null;
 }
 
-const validEmail = (value: string) => value.length <= 255 && /^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(value);
 
 const aliases: Record<PartnerImportField, string[]> = {
   billing_name: ["partner neve", "partner név", "név", "cégnév", "vevő neve", "partner name", "customer name", "billing name", "client name"],
@@ -101,10 +103,10 @@ export function normalizePartnerCountry(value: string): string | null {
 
 const limits: Partial<Record<PartnerImportField, number>> = {
   billing_name: 255, billing_postal_code: 32, billing_city: 120, billing_address: 255,
-  tax_number: 32, eu_vat_number: 32, group_tax_number: 32, billing_email: 255, payment_method: 64,
+  tax_number: 32, eu_vat_number: 32, group_tax_number: 32, payment_method: 64,
 };
 
-export function readPartnerRow(row: PartnerFileRow, mapping: PartnerColumnMapping, emailChoice?: string | null) {
+export function readPartnerRow(row: PartnerFileRow, mapping: PartnerColumnMapping, emailChoice?: string[]) {
   const data: PartnerBillingData = {};
   const invalidFields: PartnerImportField[] = [];
   let emailOptions: string[] = [];
@@ -123,12 +125,12 @@ export function readPartnerRow(row: PartnerFileRow, mapping: PartnerColumnMappin
       if (subject !== null) data[field] = subject;
       else invalidFields.push(field);
     } else if (field === "billing_email") {
-      const emails = [...new Set(text.split(/[,;\r\n]/).map(value => value.trim()).filter(Boolean))];
-      emailOptions = emails.filter(validEmail);
-      if (emailChoice === null) continue;
-      if (emailChoice !== undefined && emailOptions.includes(emailChoice)) data[field] = emailChoice;
-      else if (emailChoice === undefined && emails.length === 1 && emailOptions.length === 1) data[field] = emailOptions[0];
-      else invalidFields.push(field);
+      const emails = uniqueBillingEmails(splitBillingEmails(text));
+      emailOptions = emails.filter(isBillingEmail);
+      const selected = emailChoice ?? (emails.length === 1 && emailOptions.length === 1 ? emailOptions : undefined);
+      const available = new Set(emailOptions);
+      if (!selected || selected.some(email => !available.has(email))) invalidFields.push(field);
+      else if (selected.length) data[field] = uniqueBillingEmails(selected).join(",");
     } else if (field === "payment_term_days") {
       if (/^\d+$/.test(text) && Number(text) <= 365) data[field] = Number(text);
       else invalidFields.push(field);
@@ -160,7 +162,7 @@ export function buildPartnerReview(
   file: PartnerFile, mapping: PartnerColumnMapping, clients: Client[],
   profiles: ClientBillingProfile[], companyId: string,
   choices: Record<number, string | null> = {},
-  emailChoices: Record<number, string | null> = {},
+  emailChoices: Record<number, string[]> = {},
 ): PartnerReviewRow[] {
   const scopedClients = clients.filter(client => client.company_id === companyId);
   const scopedProfiles = profiles.filter(profile => profile.company_id === companyId);
@@ -205,8 +207,13 @@ export function buildPartnerReview(
       }
     }
     const profile = clientId ? profileById.get(clientId) : undefined;
-    const changes = (Object.keys(data) as PartnerBillingField[]).filter(field => !profile || !hasValue(profile[field]));
-    const preserved = (Object.keys(data) as PartnerBillingField[]).filter(field => profile && hasValue(profile[field]));
+    const savedEmails = new Set(splitBillingEmails(profile?.billing_email).map(email => email.toLowerCase()));
+    const addedEmails = splitBillingEmails(data.billing_email)
+      .filter(email => !savedEmails.has(email.toLowerCase()));
+    if (addedEmails.length) data.billing_email = addedEmails.join(",");
+    const fields = Object.keys(data) as PartnerBillingField[];
+    const changes = fields.filter(field => field === "billing_email" ? addedEmails.length > 0 : !hasValue(profile?.[field]));
+    const preserved = fields.filter(field => !changes.includes(field));
     const issues: PartnerImportIssue[] = invalidFields.length ? ["invalid"] : [];
     if (partnerIdentityConflicts(data, profile)) issues.push("identityConflict");
     // Validate incoming identity even for a client without a saved profile.

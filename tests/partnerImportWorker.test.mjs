@@ -19,7 +19,7 @@ test('reads the full quoted Számlázz.hu export layout, leading zeroes, labels 
   assert.equal(mapping.tax_subject, 24);
   assert.equal(mapping.billing_email, 14);
   const clients = result.rows.map((row, index) => ({ id: `client-${index}`, company_id: 'company', name: row.values[0] }));
-  const rows = buildPartnerReview(result, mapping, clients, [], 'company', {}, { 2: 'accounts@example.invalid' });
+  const rows = buildPartnerReview(result, mapping, clients, [], 'company', {}, { 2: ['accounts@example.invalid'] });
   assert.deepEqual(rows.map(row => row.data.tax_subject), [1, 6, -1, 7, 0, undefined, undefined]);
   assert.deepEqual(rows.map(row => row.status), ['ready', 'ready', 'ready', 'ready', 'ready', 'ready', 'blocked']);
   assert.equal(rows[0].data.billing_postal_code, '0123');

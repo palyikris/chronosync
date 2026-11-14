@@ -2,6 +2,7 @@ import { useId } from "react";
 import { ChevronDown, FileSpreadsheet, Info, Mail, MailMinus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { ClientInvoiceReview, InvoiceReviewProjectLine } from "../../types/client-billing";
+import { splitBillingEmails } from "../../utils/billingEmails";
 
 function LineDescription({ line }: { line: InvoiceReviewProjectLine }) {
   return (
@@ -69,7 +70,7 @@ export function InvoiceBatchReviewCard({ review }: { review: ClientInvoiceReview
             {t(review.recipient.send_email ? "dashboard.invoiceBatchEmailOn" : "dashboard.invoiceBatchEmailOff")}
           </span>
           {review.recipient.send_email ? (
-            <span className="min-w-0 text-muted [overflow-wrap:anywhere]">{review.recipient.email ?? t("clientBilling.noBillingEmail")}</span>
+            <span className="min-w-0 text-muted [overflow-wrap:anywhere]">{splitBillingEmails(review.recipient.email).join(", ") || t("clientBilling.noBillingEmail")}</span>
           ) : null}
           <span className="text-muted">{t("clientBilling.projectLineCount", { count: review.items.length })}</span>
         </div>

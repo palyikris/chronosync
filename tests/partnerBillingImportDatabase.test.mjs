@@ -50,6 +50,7 @@ describe('partner import database protections', { skip: !dsn }, () => {
       create policy client_company_read on public.clients for select to authenticated
       using (company_id=(select private.current_billing_admin_company_id()));`);
     sql(readFileSync(new URL('../supabase/migrations/20261106223909_import_client_billing_details.sql', import.meta.url), 'utf8'));
+    sql(readFileSync(new URL('../supabase/migrations/20261113151355_import_multiple_billing_emails.sql', import.meta.url), 'utf8'));
   });
   beforeEach(() => {
     sql(`truncate client_billing_profiles,clients,profiles,companies cascade;
@@ -60,17 +61,18 @@ describe('partner import database protections', { skip: !dsn }, () => {
       insert into client_billing_profiles(client_id,company_id,billing_name,billing_email,payment_term_days)
         values ('${client}','${company}','Saved name','saved@example.invalid',0);`);
   });
-  test('fills empty fields, preserves names, email, zero-day terms and every unrelated setting', () => {
+  test('fills empty fields and appends unique emails while preserving existing settings', () => {
     const before = snapshot();
-    const result = run([row({ billing_name: 'Incoming name', billing_city: 'Budapest', billing_email: 'new@example.invalid', payment_term_days: 30 })]);
-    assert.deepEqual(result[0].fields, ['billing_city']);
+    const billing_email = 'SAVED@example.invalid, new@example.invalid, NEW@example.invalid, team@example.invalid';
+    const result = run([row({ billing_name: 'Incoming name', billing_city: 'Budapest', billing_email, payment_term_days: 30 })]);
+    assert.deepEqual(result[0].fields, ['billing_email', 'billing_city']);
     const after = snapshot();
     delete before.updated_at; delete after.updated_at;
-    assert.deepEqual(after, { ...before, billing_city: 'Budapest' });
+    assert.deepEqual(after, { ...before, billing_city: 'Budapest', billing_email: 'saved@example.invalid,new@example.invalid,team@example.invalid' });
     assert.equal(sql(`select name||':'||client_code from clients where id='${client}'`).stdout.trim(), 'Original client:ORIGINAL');
   });
   test('replay is idempotent and does not touch updated_at', () => {
-    const input = [row({ billing_address: 'Street 1' })];
+    const input = [row({ billing_address: 'Street 1', billing_email: 'new@example.invalid,team@example.invalid' })];
     assert.equal(run(input)[0].status, 'updated');
     const first = snapshot();
     assert.equal(run(input)[0].status, 'unchanged');
@@ -109,7 +111,8 @@ describe('partner import database protections', { skip: !dsn }, () => {
   });
   test('inconsistent VAT groups and malformed data roll back even newly created profiles', () => {
     for (const data of [{ tax_subject: 1, tax_number: '12345678-2-41', group_tax_number: '87654321-5-41' },
-      { billing_email: 'bad email' }, { billing_country_code: 'Hungary' }, { payment_term_days: 1.5 }, { billing_city: ['bad'] }]) {
+      { billing_email: 'valid@example.invalid,bad email' }, { billing_email: ['valid@example.invalid'] },
+      { billing_country_code: 'Hungary' }, { payment_term_days: 1.5 }, { billing_city: ['bad'] }]) {
       assert.equal(run([{ client_id: second, data }])[0].status, 'failed');
       assert.equal(sql(`select count(*) from client_billing_profiles where client_id='${second}'`).stdout.trim(), '0');
     }
@@ -120,12 +123,14 @@ describe('partner import database protections', { skip: !dsn }, () => {
     process.stderr.on('data', data => { stderr += data; });
     const done = new Promise((resolve, reject) => process.on('exit', code => code === 0 ? resolve() : reject(new Error(stderr))));
     const locked = new Promise(resolve => process.stdout.on('data', data => { if (String(data).includes('locked')) resolve(); }));
-    process.stdin.end(`begin; update client_billing_profiles set billing_city='Concurrent value' where client_id='${client}'; select 'locked'; select pg_sleep(0.4); commit;`);
+    process.stdin.end(`begin; update client_billing_profiles set billing_city='Concurrent value',
+      billing_email='saved@example.invalid,concurrent@example.invalid' where client_id='${client}'; select 'locked'; select pg_sleep(0.4); commit;`);
     await locked;
-    assert.equal(run([row({ billing_city: 'Stale file value', billing_address: 'Fill street' })])[0].status, 'updated');
+    assert.equal(run([row({ billing_city: 'Stale file value', billing_address: 'Fill street', billing_email: 'file@example.invalid' })])[0].status, 'updated');
     await done;
     assert.equal(snapshot().billing_city, 'Concurrent value');
     assert.equal(snapshot().billing_address, 'Fill street');
+    assert.equal(snapshot().billing_email, 'saved@example.invalid,concurrent@example.invalid,file@example.invalid');
   });
   test('function retains RLS and only authenticated callers have execute permission', () => {
     assert.equal(sql(`select prosecdef from pg_proc where oid='public.import_client_billing_details(uuid,jsonb)'::regprocedure`).stdout.trim(), 'f');

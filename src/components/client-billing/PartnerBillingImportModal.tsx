@@ -12,6 +12,7 @@ import type { PartnerColumnMapping, PartnerFile, PartnerImportField, PartnerRevi
 import type { Client } from "../../types/client-project";
 import type { ClientBillingProfile } from "../../types/client-billing";
 import { cn } from "../../utils/cn";
+import { splitBillingEmails } from "../../utils/billingEmails";
 
 interface Props { companyId: string; onClose: () => void; onComplete: () => Promise<void> }
 type Step = "upload" | "columns" | "review" | "saving" | "done";
@@ -41,7 +42,7 @@ export function PartnerBillingImportModal({ companyId, onClose, onComplete }: Pr
   const [profiles, setProfiles] = useState<ClientBillingProfile[]>([]);
   const [mapping, setMapping] = useState<PartnerColumnMapping>({});
   const [choices, setChoices] = useState<Record<number, string | null>>({});
-  const [emailChoices, setEmailChoices] = useState<Record<number, string | null>>({});
+  const [emailChoices, setEmailChoices] = useState<Record<number, string[]>>({});
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const [search, setSearch] = useState("");
@@ -79,8 +80,12 @@ export function PartnerBillingImportModal({ companyId, onClose, onComplete }: Pr
   const failed = outcomes.filter(outcome => outcome.status === "failed");
   const progress = importTotal ? Math.round(outcomes.length / importTotal * 100) : 0;
   const formatValue = (field: string, value: unknown) => {
+    if (field === "billing_email") return splitBillingEmails(String(value ?? "")).join(", ");
     const labels: Record<string, string> = { "1": "Domestic", "6": "Eu", "7": "NonEu", "0": "Unknown", "-1": "NoNumber" };
     return field === "tax_subject" ? t(`clientBilling.taxSubject${labels[String(value)]}`) : String(value ?? "");
+  };
+  const chooseEmails = (rowNumber: number, emails: string[]) => {
+    setEmailChoices(current => ({ ...current, [rowNumber]: emails }));
   };
   const close = () => {
     if (busy.current) return;
@@ -270,24 +275,31 @@ export function PartnerBillingImportModal({ companyId, onClose, onComplete }: Pr
                   {tr(`issues.${issue}`)}{issue === "invalid" ? ` ${row.invalidFields.map(field => tr(`fields.${field}`)).join(", ")}` : ""}</p>)}
                 {row.emailOptions.length > 1 || row.invalidFields.includes("billing_email") || Object.hasOwn(emailChoices, row.rowNumber) ?
                   <div className="space-y-1.5">
-                    <label htmlFor={`partner-email-${row.rowNumber}`} className="block text-xs font-medium text-text">{tr("emailChoice")}</label>
-                    <select id={`partner-email-${row.rowNumber}`} className={selectClass}
-                      value={emailChoices[row.rowNumber] === null ? "skip" : emailChoices[row.rowNumber] ?? ""}
-                      onChange={event => setEmailChoices(current => {
-                        const next = { ...current };
-                        if (!event.target.value) delete next[row.rowNumber];
-                        else next[row.rowNumber] = event.target.value === "skip" ? null : event.target.value;
-                        return next;
-                      })}>
-                      <option value="">{tr("chooseEmail")}</option>
-                      <option value="skip">{tr("skipEmail")}</option>
-                      {row.emailOptions.map(email => <option key={email} value={email}>{email}</option>)}
-                    </select>
-                    <p className="text-[11px] leading-relaxed text-muted">{tr("emailChoiceHint")}</p>
-                    {profile?.billing_email && !Object.hasOwn(row.data, "billing_email") ?
-                      <p className="break-words text-[11px] text-muted"><span>{tr("kept")}: </span><span>{profile.billing_email}</span></p> : null}
+                    {row.emailOptions.length ? <>
+                      <label htmlFor={`partner-email-${row.rowNumber}`} className="block text-xs font-medium text-text">{tr("emailChoice")}</label>
+                      <select multiple id={`partner-email-${row.rowNumber}`} className={`${selectClass} py-1.5`}
+                        size={Math.min(Math.max(row.emailOptions.length, 2), 6)}
+                        value={emailChoices[row.rowNumber] ?? []}
+                        onChange={event => chooseEmails(row.rowNumber, Array.from(event.target.selectedOptions, option => option.value))}>
+                        {row.emailOptions.map(email => <option key={email} value={email}>{email}</option>)}
+                      </select>
+                    </> : null}
+                    <div className="flex flex-wrap gap-2">
+                      {row.emailOptions.length ? <Button size="sm" variant="secondary"
+                        disabled={emailChoices[row.rowNumber]?.length === row.emailOptions.length}
+                        onClick={() => chooseEmails(row.rowNumber, row.emailOptions)}>{tr("selectAllEmails")}</Button> : null}
+                      <Button size="sm" variant="ghost" disabled={emailChoices[row.rowNumber]?.length === 0}
+                        onClick={() => chooseEmails(row.rowNumber, [])}>{tr("skipEmail")}</Button>
+                    </div>
+                    {row.emailOptions.length ? <p className="text-[11px] leading-relaxed text-muted">{tr("emailChoiceHint")}</p> : null}
                   </div> : null}
                 <div className="divide-y divide-border rounded-lg border border-border bg-surface-strong">
+                  {profile?.billing_email && !row.preserved.includes("billing_email") &&
+                    (row.emailOptions.length > 0 || row.invalidFields.includes("billing_email") || Object.hasOwn(emailChoices, row.rowNumber)) ?
+                    <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-2 p-2.5 text-[11px]">
+                      <span className="text-muted">{tr("savedEmails")}</span>
+                      <span className="min-w-0 break-words text-text">{formatValue("billing_email", profile.billing_email)}</span>
+                    </div> : null}
                   {Object.entries(row.data).map(([field, value]) => <div key={field} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-2 p-2.5 text-[11px]">
                     <span className="text-muted">{tr(`fields.${field}`)}</span><div className="min-w-0 break-words text-text">
                       {row.preserved.includes(field as typeof row.preserved[number]) ? <><span className="font-medium">{formatValue(field, profile?.[field as keyof ClientBillingProfile])}</span>

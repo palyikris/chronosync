@@ -6,6 +6,7 @@ import { Button } from "../shared/Button";
 import { Checkbox } from "../shared/Checkbox";
 import { Modal } from "../shared/Modal";
 import { InvoiceDateFields } from "./InvoiceDateFields";
+import { splitBillingEmails } from "../../utils/billingEmails";
 
 interface InvoiceReviewModalProps {
   open: boolean;
@@ -90,8 +91,8 @@ export const InvoiceReviewModal: React.FC<InvoiceReviewModalProps> = ({
               {review.recipient.address}
               {review.recipient.country ? ` · ${review.recipient.country}` : ""}
             </p>
-            <p className="text-xs text-muted">
-              {review.recipient.email ?? t("clientBilling.noBillingEmail")}
+            <p className="text-xs text-muted [overflow-wrap:anywhere]">
+              {splitBillingEmails(review.recipient.email).join(", ") || t("clientBilling.noBillingEmail")}
             </p>
             <p className="mt-1 text-[10.5px] text-muted">
               {t("clientBilling.reviewTaxSubject", {
