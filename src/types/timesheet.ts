@@ -65,6 +65,11 @@ export type TimesheetEntryStatus =
   | "approved"
   | "rejected"
   | "invoiced";
+
+export const COMPANY_CALENDAR_STATUSES = [
+  "submitted", "approved", "rejected", "invoiced",
+] as const satisfies readonly TimesheetEntryStatus[];
+
 export interface TimesheetEntry {
   id: string;
   user_id: string;
@@ -83,6 +88,11 @@ export interface TimesheetEntry {
   approved_at?: string;
   submitted_at?: string;
 }
+
+export type CompanyCalendarEntry = Pick<
+  TimesheetEntry,
+  "id" | "user_id" | "client_id" | "project_id" | "work_date" | "hours_logged" | "status" | "description"
+>;
 
 export interface ActiveTimerState {
   started_at: string;
@@ -126,8 +136,10 @@ export type TimesheetFormData = Omit<
 export interface TimesheetCalendarProps {
   currentDate: Date;
   selectedDate: string;
-  timesheets: TimesheetEntry[];
+  timesheets: Pick<TimesheetEntry, "work_date" | "hours_logged" | "status">[];
   totalMonthlyHours: number;
+  showStatusBreakdown?: boolean;
+  loading?: boolean;
   lockedDates?: string[];
   copyModeActive?: boolean;
   onSelectDate: (date: string) => void;
@@ -199,7 +211,7 @@ export interface TimesheetSummaryProps {
   totalMonthlyHours: number;
 }
 
-export type TimesheetViewMode = "grid" | "calendar" | "list" | "attention";
+export type TimesheetViewMode = "grid" | "calendar" | "list" | "attention" | "behind-the-scenes";
 
 export interface TimesheetGridRow {
   id: string;

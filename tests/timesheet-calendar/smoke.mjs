@@ -67,7 +67,7 @@ async function run(language) {
     if (url.pathname.endsWith("/auth/v1/token")) return json(session);
     const table = url.pathname.split("/").at(-1);
     if (table === "profiles") return json(request.headers().accept?.includes("object") ? profile : [profile]);
-    if (table === "clients") return json(clients);
+    if (table === "clients") return json(clients.slice(Number(url.searchParams.get("offset") ?? 0)));
     if (table === "projects") return json(projects);
     if (table !== "timesheets") return json([]);
     if (request.method() === "POST") {

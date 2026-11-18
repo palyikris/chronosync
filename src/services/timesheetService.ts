@@ -3,11 +3,13 @@ import i18n from "../lib/i18n";
 import { fetchAllRows } from "../utils/fetchAllRows";
 import { assertTimesheetDateIsUnlocked } from "./leaveService";
 import {
+  COMPANY_CALENDAR_STATUSES,
   newTimesheetPayloadSchema,
   timesheetEntryUpdatePayloadSchema,
 } from "../types/timesheet";
 import type {
   ActiveTimerState,
+  CompanyCalendarEntry,
   NewTimesheetPayload,
   SelectableTimesheetUser,
   TimesheetEntry,
@@ -132,6 +134,25 @@ export async function fetchUserTimesheets(
   return data as TimesheetEntry[];
 }
 
+export async function fetchCompanyCalendarTimesheets(
+  companyId: string,
+  dateYearMonth: string,
+): Promise<CompanyCalendarEntry[]> {
+  const { monthStart, nextMonthStart } = getMonthBounds(dateYearMonth);
+
+  return fetchAllRows<CompanyCalendarEntry>((from, to) =>
+    supabase
+      .from("timesheets")
+      .select("id, user_id, client_id, project_id, work_date, hours_logged, status, description")
+      .eq("company_id", companyId)
+      .gte("work_date", monthStart)
+      .lt("work_date", nextMonthStart)
+      .in("status", COMPANY_CALENDAR_STATUSES)
+      .order("id", { ascending: true })
+      .range(from, to),
+  );
+}
+
 /** Fetch unresolved entries across every date, with rejections first. */
 export async function fetchUserAttentionTimesheets(
   targetUserId?: string,
@@ -155,23 +176,17 @@ export async function fetchSelectableCompanyUsers(
   companyId?: string,
   includeAllCompanies = false,
 ): Promise<SelectableTimesheetUser[]> {
-  let query = supabase
-    .from("profiles")
-    .select("id, company_id, full_name, role")
-    .order("full_name", { ascending: true });
-
-  if (!includeAllCompanies) {
-    if (!companyId) {
-      throw new Error(i18n.t("errors.companyIdRequired"));
-    }
-
-    query = query.eq("company_id", companyId).neq("role", "super_admin");
+  if (!includeAllCompanies && !companyId) {
+    throw new Error(i18n.t("errors.companyIdRequired"));
   }
 
-  const { data, error } = await query;
-
-  if (error) throw error;
-  return data as SelectableTimesheetUser[];
+  return fetchAllRows<SelectableTimesheetUser>((from, to) => {
+    let query = supabase.from("profiles").select("id, company_id, full_name, role");
+    if (!includeAllCompanies && companyId) {
+      query = query.eq("company_id", companyId).neq("role", "super_admin");
+    }
+    return query.order("full_name").order("id").range(from, to);
+  });
 }
 
 /**

@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import ts from "typescript";
 import { createClient } from "@supabase/supabase-js";
 import { fetchAllRows } from "../src/utils/fetchAllRows.ts";
+import { COMPANY_CALENDAR_STATUSES } from "../src/types/timesheet.ts";
 
 // Execute the real service against local API/storage fakes; no hosted writes.
 function serviceFixture(t, options = {}) {
@@ -74,6 +75,7 @@ function serviceFixture(t, options = {}) {
       if (options.lockedDate === date) throw new Error("Date locked");
     } },
     "../types/timesheet": {
+      COMPANY_CALENDAR_STATUSES,
       newTimesheetPayloadSchema: { parse: value => value },
       timesheetEntryUpdatePayloadSchema: { parse: value => value },
     },
@@ -186,6 +188,24 @@ test("attention defaults to the authenticated user and rejects incomplete or una
   const { service: loggedOut, reads } = serviceFixture(t, { loggedOut: true });
   await assert.rejects(loggedOut.fetchUserAttentionTimesheets(), /notAuthenticated/);
   assert.equal(reads.length, 0);
+});
+
+test("the company calendar reads every page of the company's finalized or reviewable entries for the requested month", async t => {
+  const entry = { company_id: "company-1", user_id: "user-1", work_date: "2025-12-31", hours_logged: 2, status: "submitted" };
+  const rows = [
+    { ...entry, id: "1", work_date: "2025-12-01" },
+    { ...entry, id: "2", user_id: "user-2", status: "approved" },
+    { ...entry, id: "3", user_id: "user-2", status: "rejected" },
+    { ...entry, id: "4", user_id: "user-3", status: "invoiced" },
+    { ...entry, id: "5", status: "draft" },
+    { ...entry, id: "6", company_id: "other-company" },
+    { ...entry, id: "7", work_date: "2025-11-30" },
+    { ...entry, id: "8", work_date: "2026-01-01" },
+  ];
+  const { service, reads } = serviceFixture(t, { rows, pageSize: 2 });
+  const entries = await service.fetchCompanyCalendarTimesheets("company-1", "2025-12");
+  assert.deepEqual(entries.map(row => row.id), ["1", "2", "3", "4"]);
+  assert.deepEqual(reads.map(read => read.from), [0, 2, 4]);
 });
 
 test("resubmission saves corrections and submits in one write, clearing old review metadata", async t => {

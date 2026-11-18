@@ -1,4 +1,4 @@
-import { Calendar, CircleAlert, List } from "lucide-react";
+import { Calendar, CalendarDays, CircleAlert, List } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { SegmentedControl } from "../shared/SegmentedControl";
 import type { TimesheetViewMode } from "../../types/timesheet";
@@ -7,14 +7,16 @@ interface TimesheetViewSwitcherProps {
   value: TimesheetViewMode;
   attentionCount?: number;
   attentionLoading?: boolean;
+  showCompanyCalendar?: boolean;
   onChange: (view: TimesheetViewMode) => void;
 }
 
-export function TimesheetViewSwitcher({ value, attentionCount, attentionLoading = false, onChange }: TimesheetViewSwitcherProps) {
+export function TimesheetViewSwitcher({ value, attentionCount, attentionLoading = false, showCompanyCalendar = false, onChange }: TimesheetViewSwitcherProps) {
   const { t } = useTranslation();
   const views = [
     { value: "calendar", label: "timesheet.calendarView", icon: Calendar },
     { value: "list", label: "timesheet.listView", icon: List },
+    { value: "behind-the-scenes", label: "timesheet.behindTheScenes", icon: CalendarDays },
     { value: "attention", label: "timesheet.needsAttention", icon: CircleAlert },
   ] as const;
   const showAttention = attentionCount === undefined
@@ -25,7 +27,9 @@ export function TimesheetViewSwitcher({ value, attentionCount, attentionLoading 
       value={value}
       onChange={onChange}
       ariaLabel={t("timesheet.viewOptions")}
-      options={views.filter(({ value: view }) => view !== "attention" || showAttention).map(({ value: view, label, icon: Icon }) => ({
+      options={views.filter(({ value: view }) => (
+        (view !== "attention" || showAttention) && (view !== "behind-the-scenes" || showCompanyCalendar)
+      )).map(({ value: view, label, icon: Icon }) => ({
         value: view,
         label: (
           <span className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap">

@@ -7,6 +7,7 @@ import { useFavoriteProjects } from "../hooks/useFavoriteProjects";
 import {
   TIMESHEET_REFRESH_EVENT,
   cloneEntry,
+  fetchCompanyCalendarTimesheets,
   fetchUserTimesheets,
   fetchUserAttentionTimesheets,
   fetchSelectableCompanyUsers,
@@ -20,6 +21,7 @@ import {
   fetchProjects,
 } from "../services/clientProjectService";
 import { TimesheetCalendar } from "../components/timesheet/TimesheetCalendar";
+import { CompanyTimesheetDayPanel } from "../components/timesheet/CompanyTimesheetDayPanel";
 import { TimesheetEntryFilter } from "../components/timesheet/TimesheetEntryFilter";
 import { TimesheetViewSwitcher } from "../components/timesheet/TimesheetViewSwitcher";
 import { TimesheetEntryList } from "../components/timesheet/TimesheetEntryList";
@@ -69,7 +71,7 @@ const getViewPreference = (): TimesheetViewMode => {
   if (window.matchMedia(MOBILE_TIMESHEET_QUERY).matches) return "list";
 
   const stored = window.localStorage.getItem(TIMESHEET_VIEW_STORAGE_KEY);
-  if (stored === "calendar" || stored === "list" || stored === "attention") {
+  if (stored === "calendar" || stored === "list" || stored === "attention" || stored === "behind-the-scenes") {
     return stored;
   }
 
@@ -77,7 +79,7 @@ const getViewPreference = (): TimesheetViewMode => {
 };
 
 export const TimesheetPage: React.FC<{ initialDate?: string }> = ({ initialDate }) => {
-  const { profile, user } = useAuth();
+  const { profile, user, isCompanyAdmin } = useAuth();
   const { hasModule } = useCompanyModules();
   const favorites = useFavoriteProjects();
   const queryClient = useQueryClient();
@@ -98,8 +100,11 @@ export const TimesheetPage: React.FC<{ initialDate?: string }> = ({ initialDate 
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [selectedClientId, setSelectedClientId] = useState<string>("");
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
   const [preferredViewMode, setViewMode] =
     useState<TimesheetViewMode>(getViewPreference);
+  const calendarColumnRef = React.useRef<HTMLDivElement>(null);
+  const [companyCalendarHeight, setCompanyCalendarHeight] = useState<number>();
   const [feedback, setFeedback] = useState<{
     type: "error" | "success";
     message: string;
@@ -129,12 +134,32 @@ export const TimesheetPage: React.FC<{ initialDate?: string }> = ({ initialDate 
     new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1),
   );
   const isSuperAdmin = profile?.role === "super_admin";
+  const companyId = profile?.company_id ?? "";
+  const canViewCompanyCalendar = isCompanyAdmin && Boolean(user && companyId);
+  const isCompanyCalendar = canViewCompanyCalendar && preferredViewMode === "behind-the-scenes";
+
+  React.useLayoutEffect(() => {
+    const calendarColumn = calendarColumnRef.current;
+    if (!isCompanyCalendar || !calendarColumn) return;
+
+    const observer = new ResizeObserver(() => {
+      setCompanyCalendarHeight(calendarColumn.getBoundingClientRect().height);
+    });
+    observer.observe(calendarColumn);
+    return () => observer.disconnect();
+  }, [isCompanyCalendar]);
 
   const { data: selectableUsers = [] } = useQuery<SelectableTimesheetUser[]>({
     queryKey: ["timesheet-users", profile?.company_id, profile?.role],
     queryFn: () =>
       fetchSelectableCompanyUsers(profile?.company_id, Boolean(isSuperAdmin)),
     enabled: Boolean(profile && isSuperAdmin),
+  });
+
+  const companyEmployeesQuery = useQuery({
+    queryKey: ["review-employees", companyId],
+    queryFn: () => fetchSelectableCompanyUsers(companyId),
+    enabled: isCompanyCalendar,
   });
 
   const currentUserOption: SelectableTimesheetUser | null = profile
@@ -206,25 +231,39 @@ export const TimesheetPage: React.FC<{ initialDate?: string }> = ({ initialDate 
   // --------------------------------------------------------------------------
   // TanStack Query: Fetch Logs
   // --------------------------------------------------------------------------
+  const companyCalendarQuery = useQuery({
+    queryKey: ["timesheets", "company-calendar", companyId, user?.id, yearMonth],
+    queryFn: () => fetchCompanyCalendarTimesheets(companyId, yearMonth),
+    enabled: isCompanyCalendar,
+  });
+
+  const companyCalendarEntries = React.useMemo(() => (
+    companyCalendarQuery.data?.filter((entry) =>
+      (!selectedEmployeeId || entry.user_id === selectedEmployeeId) &&
+      (!selectedClientId || entry.client_id === selectedClientId) &&
+      (!selectedProjectId || entry.project_id === selectedProjectId),
+    ) ?? []
+  ), [companyCalendarQuery.data, selectedEmployeeId, selectedClientId, selectedProjectId]);
+
   const {
     data: currentMonthTimesheets = [],
     isLoading: isLoadingCurrentMonth,
     isError: timesheetsError,
   } = useQuery({
     queryKey: ["timesheets", targetUserId, yearMonth],
-    enabled: Boolean(targetUserId),
+    enabled: Boolean(targetUserId) && !isCompanyCalendar,
     queryFn: () => fetchUserTimesheets(yearMonth, targetUserId),
   });
 
   const { data: previousMonthTimesheets = [], isError: previousMonthError } = useQuery({
     queryKey: ["timesheets", targetUserId, previousMonthKey],
-    enabled: Boolean(targetUserId),
+    enabled: Boolean(targetUserId) && !isCompanyCalendar,
     queryFn: () => fetchUserTimesheets(previousMonthKey, targetUserId),
   });
 
   const { data: nextMonthTimesheets = [], isError: nextMonthError } = useQuery({
     queryKey: ["timesheets", targetUserId, nextMonthKey],
-    enabled: Boolean(targetUserId),
+    enabled: Boolean(targetUserId) && !isCompanyCalendar,
     queryFn: () => fetchUserTimesheets(nextMonthKey, targetUserId),
   });
 
@@ -239,28 +278,33 @@ export const TimesheetPage: React.FC<{ initialDate?: string }> = ({ initialDate 
     queryFn: () => fetchUserAttentionTimesheets(targetUserId),
   });
 
-  const attentionIsEmpty = attentionLoaded && attentionTimesheets.length === 0;
-  const viewMode = preferredViewMode === "attention" && attentionIsEmpty
+  const shouldClearAttention = preferredViewMode === "attention" && attentionLoaded && attentionTimesheets.length === 0;
+  const viewMode = shouldClearAttention || (preferredViewMode === "behind-the-scenes" && !canViewCompanyCalendar)
     ? "calendar" : preferredViewMode;
   // Clear an obsolete selection so new drafts do not reopen this view later.
-  if (viewMode !== preferredViewMode) setViewMode(viewMode);
+  if (shouldClearAttention) setViewMode("calendar");
 
   const { data: approvedLeaveDates = [], isError: leaveError } = useQuery({
     queryKey: ["approved-leave-dates", targetUserId],
-    enabled: Boolean(targetUserId),
+    enabled: Boolean(targetUserId) && !isCompanyCalendar,
     queryFn: () => fetchApprovedLeaveDatesForUser(targetUserId!),
   });
 
   const isLoading = viewMode === "attention" ? isLoadingAttention : isLoadingCurrentMonth;
-  const hasLoadError = clientsError || projectsError || leaveError || (
-    viewMode === "attention"
+  const hasLoadError = clientsError || projectsError || (isCompanyCalendar
+    ? companyCalendarQuery.isError || companyEmployeesQuery.isError
+    : leaveError || (viewMode === "attention"
       ? attentionError
       : timesheetsError || previousMonthError || nextMonthError
+    )
   );
-  const canEditEntries = canManageTarget && !hasLoadError && !isLoading;
+  const canEditEntries = !isCompanyCalendar && canManageTarget && !hasLoadError && !isLoading;
   const retryLoading = () => {
     for (const key of ["all-clients", "all-projects", "timesheets", "approved-leave-dates"]) {
       void queryClient.invalidateQueries({ queryKey: [key] });
+    }
+    if (isCompanyCalendar) {
+      void queryClient.invalidateQueries({ queryKey: ["review-employees", companyId] });
     }
   };
 
@@ -462,6 +506,7 @@ export const TimesheetPage: React.FC<{ initialDate?: string }> = ({ initialDate 
   ]);
 
   useEffect(() => {
+    if (isCompanyCalendar) return;
     const handleNewEntryShortcut = (event: KeyboardEvent) => {
       if (
         event.ctrlKey &&
@@ -477,7 +522,7 @@ export const TimesheetPage: React.FC<{ initialDate?: string }> = ({ initialDate 
     return () => {
       window.removeEventListener("keydown", handleNewEntryShortcut, true);
     };
-  }, [openCreateModal]);
+  }, [isCompanyCalendar, openCreateModal]);
 
   const openEditModal = (entry: TimesheetEntry) => {
     if (!canEditEntries) return;
@@ -740,6 +785,7 @@ export const TimesheetPage: React.FC<{ initialDate?: string }> = ({ initialDate 
   const handleResetFilters = () => {
     setSelectedClientId("");
     setSelectedProjectId("");
+    if (isCompanyCalendar) setSelectedEmployeeId("");
   };
 
   const viewModeSwitcher = (
@@ -747,7 +793,12 @@ export const TimesheetPage: React.FC<{ initialDate?: string }> = ({ initialDate 
       value={viewMode}
       attentionCount={!isLoadingAttention && !attentionError ? attentionTimesheets.length : undefined}
       attentionLoading={isLoadingAttention}
+      showCompanyCalendar={canViewCompanyCalendar}
       onChange={(view) => {
+        if (view === "behind-the-scenes") {
+          if (!canViewCompanyCalendar) return;
+          closeModal();
+        }
         setPendingCopyEntry(null);
         setViewMode(view);
       }}
@@ -825,9 +876,11 @@ export const TimesheetPage: React.FC<{ initialDate?: string }> = ({ initialDate 
           <h1 className="text-[23px] font-semibold tracking-[-0.03em] text-text sm:text-[28px]">
             {t("timesheet.title")}
           </h1>
-          <p className="mt-1 text-[13px] leading-5 text-muted sm:mt-1.5 sm:text-sm">{t("timesheet.subtitle")}</p>
+          <p className="mt-1 text-[13px] leading-5 text-muted sm:mt-1.5 sm:text-sm">
+            {t(isCompanyCalendar ? "timesheet.companyCalendarSubtitle" : "timesheet.subtitle")}
+          </p>
         </div>
-        <div className="hidden shrink-0 sm:block">{addEntryButton}</div>
+        {!isCompanyCalendar ? <div className="hidden shrink-0 sm:block">{addEntryButton}</div> : null}
       </div>
 
       {isSuperAdmin ? (
@@ -870,17 +923,26 @@ export const TimesheetPage: React.FC<{ initialDate?: string }> = ({ initialDate 
         projects={allProjects}
         selectedClientId={selectedClientId}
         selectedProjectId={selectedProjectId}
+        employeeFilter={isCompanyCalendar ? {
+          options: companyEmployeesQuery.data ?? [],
+          selectedId: selectedEmployeeId,
+          loading: companyEmployeesQuery.isLoading,
+          onChange: setSelectedEmployeeId,
+        } : undefined}
         viewModeSwitcher={viewModeSwitcher}
         onClientChange={handleClientFilterChange}
         onProjectChange={handleProjectFilterChange}
         onReset={handleResetFilters}
       />
 
-      {viewMode === "calendar" ? (
+      {viewMode === "calendar" || isCompanyCalendar ? (
         <>
           <div className="grid grid-cols-1 gap-4 lg:gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.75fr)] xl:items-stretch">
-            <div className="order-2 min-w-0 space-y-3 xl:order-1">
-              {pendingCopyEntry ? (
+            <div
+              ref={isCompanyCalendar ? calendarColumnRef : undefined}
+              className={`order-2 min-w-0 space-y-3 xl:order-1${isCompanyCalendar ? " self-start" : ""}`}
+            >
+              {!isCompanyCalendar && pendingCopyEntry ? (
                 <Card className="border-dashed border-primary/40 bg-primary/5 p-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
@@ -905,38 +967,58 @@ export const TimesheetPage: React.FC<{ initialDate?: string }> = ({ initialDate 
               <TimesheetCalendar
                 currentDate={currentDate}
                 selectedDate={selectedDate}
-                timesheets={filteredCurrentMonthTimesheets}
-                totalMonthlyHours={totalCurrentMonthHours}
-                lockedDates={approvedLeaveDates}
-                copyModeActive={Boolean(pendingCopyEntry)}
-                onSelectDate={handleCalendarSelect}
+                timesheets={isCompanyCalendar ? companyCalendarEntries : filteredCurrentMonthTimesheets}
+                totalMonthlyHours={isCompanyCalendar
+                  ? companyCalendarEntries.reduce((sum, entry) => sum + Number(entry.hours_logged), 0)
+                  : totalCurrentMonthHours}
+                showStatusBreakdown={isCompanyCalendar}
+                loading={isCompanyCalendar && companyCalendarQuery.isLoading}
+                lockedDates={isCompanyCalendar ? undefined : approvedLeaveDates}
+                copyModeActive={!isCompanyCalendar && Boolean(pendingCopyEntry)}
+                onSelectDate={isCompanyCalendar ? setSelectedDate : handleCalendarSelect}
                 onPreviousMonth={handlePrevMonth}
                 onNextMonth={handleNextMonth}
               />
             </div>
 
-            <div className="order-1 flex h-full min-w-0 flex-col xl:sticky xl:top-6 xl:order-2">
+            <div
+              className="order-1 flex h-full min-w-0 flex-col xl:sticky xl:top-6 xl:order-2"
+              style={isCompanyCalendar ? { maxHeight: companyCalendarHeight } : undefined}
+            >
               <div className="flex min-h-0 flex-1 flex-col">
-                <TimesheetEntryList
-                  selectedDate={selectedDate}
-                  totalDailyHours={totalDailyHours}
-                  entries={selectedDayLogs}
-                  allEntries={timesheets}
-                  hasEntryFilter={hasEntryFilter}
-                  loading={isLoading}
-                  onEditEntry={openEditModal}
-                  onDuplicateEntry={handleStartCopy}
-                  onDeleteEntry={(entryId) => deleteMutation.mutate(entryId)}
-                  isUpdating={updateMutation.isPending}
-                  isDuplicating={duplicateMutation.isPending}
-                  isDeleting={deleteMutation.isPending}
-                  clients={allClients}
-                  projects={allProjects}
-                  canManageTarget={canEditEntries}
-                  onFeedback={setFeedback}
-                  isSelectedDateLocked={isSelectedDateLocked}
-                  viewMode={viewMode}
-                />
+                {isCompanyCalendar ? (
+                  <CompanyTimesheetDayPanel
+                    date={selectedDate}
+                    entries={companyCalendarEntries.filter(entry => entry.work_date === selectedDate)}
+                    employees={companyEmployeesQuery.data ?? []}
+                    clients={allClients}
+                    projects={allProjects}
+                    hasFilters={Boolean(selectedClientId || selectedProjectId || selectedEmployeeId)}
+                    loading={companyCalendarQuery.isLoading || companyEmployeesQuery.isLoading}
+                    loadFailed={companyCalendarQuery.isError && !companyCalendarQuery.data}
+                  />
+                ) : (
+                  <TimesheetEntryList
+                    selectedDate={selectedDate}
+                    totalDailyHours={totalDailyHours}
+                    entries={selectedDayLogs}
+                    allEntries={timesheets}
+                    hasEntryFilter={hasEntryFilter}
+                    loading={isLoading}
+                    onEditEntry={openEditModal}
+                    onDuplicateEntry={handleStartCopy}
+                    onDeleteEntry={(entryId) => deleteMutation.mutate(entryId)}
+                    isUpdating={updateMutation.isPending}
+                    isDuplicating={duplicateMutation.isPending}
+                    isDeleting={deleteMutation.isPending}
+                    clients={allClients}
+                    projects={allProjects}
+                    canManageTarget={canEditEntries}
+                    onFeedback={setFeedback}
+                    isSelectedDateLocked={isSelectedDateLocked}
+                    viewMode={viewMode}
+                  />
+                )}
               </div>
             </div>
           </div>

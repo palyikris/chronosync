@@ -6,6 +6,7 @@ import { Card } from "../shared/Card";
 import { Select } from "../shared/Select";
 import { cn } from "../../utils/cn";
 import type { Client, Project } from "../../types/client-project";
+import type { SelectableTimesheetUser } from "../../types/timesheet";
 
 const TIMESHEET_FILTERS_COLLAPSED_STORAGE_KEY =
   "chronosync:timesheet:filters-collapsed";
@@ -26,6 +27,12 @@ interface TimesheetEntryFilterProps {
   projects: Project[];
   selectedClientId: string;
   selectedProjectId: string;
+  employeeFilter?: {
+    options: SelectableTimesheetUser[];
+    selectedId: string;
+    loading: boolean;
+    onChange: (employeeId: string) => void;
+  };
   viewModeSwitcher: React.ReactNode;
   onClientChange: (clientId: string) => void;
   onProjectChange: (projectId: string) => void;
@@ -37,6 +44,7 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
   projects,
   selectedClientId,
   selectedProjectId,
+  employeeFilter,
   viewModeSwitcher,
   onClientChange,
   onProjectChange,
@@ -73,6 +81,7 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
     availableProjects.some((project) => project.id === selectedProjectId);
   const selectedClient = availableClients.find(client => client.id === selectedClientId);
   const selectedProject = availableProjects.find(project => project.id === selectedProjectId);
+  const selectedEmployee = employeeFilter?.options.find(employee => employee.id === employeeFilter.selectedId);
 
   React.useEffect(() => {
     if (!selectedClientExists) {
@@ -133,7 +142,7 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
             variant="ghost"
             size="sm"
             onClick={onReset}
-            disabled={!selectedClientId && !selectedProjectId}
+            disabled={!selectedClientId && !selectedProjectId && !employeeFilter?.selectedId}
             icon={<X className="h-4 w-4" />}
             className="min-w-0 flex-auto [&>span]:whitespace-normal [&>span]:leading-5 sm:flex-none"
           >
@@ -142,21 +151,26 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
         </div>
       </div>
 
-      {selectedClient ? (
+      {selectedClient || selectedEmployee ? (
         <div role="status" aria-atomic="true" className="mt-3 min-w-0 rounded-lg border border-primary-strong/20 bg-primary/10 px-3 py-2 text-xs text-primary-strong">
           <p className="font-semibold break-words">
-            {t("timesheet.client")}: {selectedClient.name}
-            {selectedProject ? ` · ${t("timesheet.project")}: ${selectedProject.name}` : ""}
+            {[
+              selectedClient && `${t("timesheet.client")}: ${selectedClient.name}`,
+              selectedProject && `${t("timesheet.project")}: ${selectedProject.name}`,
+              selectedEmployee && `${t("timesheet.employee")}: ${selectedEmployee.full_name}`,
+            ].filter(Boolean).join(" · ")}
           </p>
-          <p className="mt-1">
-            {t(selectedProject ? "timesheet.filterEntriesActiveWithProject" : "timesheet.filterEntriesActive")}
-          </p>
+          {selectedClient && !selectedEmployee ? (
+            <p className="mt-1">
+              {t(selectedProject ? "timesheet.filterEntriesActiveWithProject" : "timesheet.filterEntriesActive")}
+            </p>
+          ) : null}
         </div>
       ) : null}
 
       <div id={filterPanelId} hidden={isCollapsed}>
         {!isCollapsed ? (
-          <div className="mt-4 grid min-w-0 gap-3 border-t border-border pt-4 sm:grid-cols-2">
+          <div className={cn("mt-4 grid min-w-0 gap-3 border-t border-border pt-4 sm:grid-cols-2", employeeFilter && "lg:grid-cols-3")}>
             <Select
               value={selectedClientId}
               onChange={(event) => onClientChange(event.target.value)}
@@ -190,6 +204,21 @@ export const TimesheetEntryFilter: React.FC<TimesheetEntryFilterProps> = ({
                 </option>
               ))}
             </Select>
+
+            {employeeFilter ? (
+              <Select
+                value={employeeFilter.selectedId}
+                onChange={(event) => employeeFilter.onChange(event.target.value)}
+                label={t("timesheet.employee")}
+                className="w-full min-w-0 [&_.auth-input]:min-h-11 [&_.auth-input]:py-2"
+                disabled={employeeFilter.loading}
+              >
+                <option value="">{t("timesheet.allEmployees")}</option>
+                {employeeFilter.options.map((employee) => (
+                  <option key={employee.id} value={employee.id}>{employee.full_name}</option>
+                ))}
+              </Select>
+            ) : null}
           </div>
         ) : null}
       </div>

@@ -3,17 +3,23 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../shared/Button";
 import { Card, CardContent, CardHeader } from "../shared/Card";
+import { timesheetStatusColors } from "./timesheetStatusColors";
 import { formatHours } from "../../utils/formatHours";
+import { COMPANY_CALENDAR_STATUSES } from "../../types/timesheet";
 import type {
   TimesheetCalendarProps,
   TimesheetEntryStatus,
 } from "../../types/timesheet";
+
+const dailyStatusPriority = ["rejected", "invoiced", "submitted", "approved"] as const;
 
 export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
   currentDate,
   selectedDate,
   timesheets,
   totalMonthlyHours,
+  showStatusBreakdown = false,
+  loading = false,
   lockedDates = [],
   copyModeActive = false,
   onSelectDate,
@@ -50,21 +56,20 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
   const todayDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
   const lockedDateSet = new Set(lockedDates);
 
-  const getColorOfEntriesForEntries = (
-    entryStatuses: TimesheetEntryStatus[],
-  ): string => {
-    const statuses = new Set(entryStatuses);
-    if (statuses.has("rejected")) {
-      return "border border-red-300 bg-red-50 text-red-800";
-    } else if (statuses.has("invoiced")) {
-      return "border border-purple-200 bg-purple-50 text-purple-800";
-    } else if (statuses.has("submitted")) {
-      return "border border-blue-200 bg-blue-50 text-blue-800";
-    } else if (statuses.has("approved")) {
-      return "border border-green-200 bg-green-100 text-green-800";
+  const totalsByDate = React.useMemo(() => {
+    const days = new Map<string, {
+      total: number;
+      byStatus: Partial<Record<TimesheetEntryStatus, number>>;
+    }>();
+    for (const entry of timesheets) {
+      const day = days.get(entry.work_date) ?? { total: 0, byStatus: {} };
+      const hours = Number(entry.hours_logged);
+      day.total += hours;
+      day.byStatus[entry.status] = (day.byStatus[entry.status] ?? 0) + hours;
+      days.set(entry.work_date, day);
     }
-    return "border border-slate-300 bg-slate-100 text-slate-800";
-  };
+    return days;
+  }, [timesheets]);
 
   return (
     <Card className="h-full overflow-hidden">
@@ -75,10 +80,21 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
           </div>
           <div key={yearMonth} className="calendar-label flex flex-wrap items-center gap-3">
             <span className="text-[14px] font-semibold tracking-[-0.015em] text-text">{monthLabel}</span>
-            <span className="rounded-full border border-border-strong bg-white/55 px-2.5 py-1 text-xs font-semibold text-muted-strong">
-              {t("timesheet.totalLogged")}: {formatHours(totalMonthlyHours)} hrs
+            <span role={loading ? "status" : undefined} className="rounded-full border border-border-strong bg-white/55 px-2.5 py-1 text-xs font-semibold text-muted-strong">
+              {loading ? t("timesheet.loadingEntries") : (
+                <>{t("timesheet.totalLogged")}: {formatHours(totalMonthlyHours)} hrs</>
+              )}
             </span>
           </div>
+          {showStatusBreakdown ? (
+            <ul className="flex flex-wrap gap-1.5 pt-1 text-xs">
+              {COMPANY_CALENDAR_STATUSES.map((status) => (
+                <li key={status} className={`rounded-md px-2 py-0.5 ${timesheetStatusColors[status]}`}>
+                  {t(`timesheet.${status}`)}
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </div>
 
         <div className="flex items-center gap-1">
@@ -99,7 +115,7 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
         </div>
       </CardHeader>
 
-      <div key={`calendar-${yearMonth}`} className="calendar-month min-w-0">
+      <div key={`calendar-${yearMonth}`} className="calendar-month min-w-0" aria-busy={loading}>
         <div className="w-full min-w-0">
           <div className="grid grid-cols-7 border-b border-border bg-transparent py-2.5 text-center text-xs font-semibold text-muted-strong">
             {weekDays.map((day) => (
@@ -121,17 +137,22 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
                 const formattedDay =
                   dayNumber < 10 ? `0${dayNumber}` : `${dayNumber}`;
                 const dateStr = `${yearMonth}-${formattedDay}`;
-                const dayLogs = timesheets.filter(
-                  (entry) => entry.work_date === dateStr,
-                );
-                const hasLogs = dayLogs.length > 0;
+                const day = totalsByDate.get(dateStr);
                 const isSelected = selectedDate === dateStr;
                 const isToday = dateStr === todayDateStr;
                 const isLocked = lockedDateSet.has(dateStr);
                 const isCopyTargetDisabled = copyModeActive && isLocked;
 
-                const entryStatuses = dayLogs.map((entry) => entry.status);
-                const colorClass = getColorOfEntriesForEntries(entryStatuses);
+                const statusHours = showStatusBreakdown && day
+                  ? COMPANY_CALENDAR_STATUSES.flatMap((status) => {
+                      const hours = day.byStatus[status];
+                      return hours === undefined ? [] : [{ status, hours: formatHours(hours) }];
+                    })
+                  : [];
+                const totalStatus = dailyStatusPriority.find((status) => day?.byStatus[status] !== undefined) ?? "draft";
+                const hoursLabel = showStatusBreakdown
+                  ? statusHours.map(({ status, hours }) => t("timesheet.statusHours", { status: t(`timesheet.${status}`), hours })).join(", ")
+                  : day ? `${formatHours(day.total)} hours logged` : "";
 
                 return (
                   <button
@@ -139,7 +160,8 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
                     type="button"
                     disabled={isCopyTargetDisabled}
                     onClick={() => onSelectDate(dateStr)}
-                    aria-label={`${dateStr}${hasLogs ? `, ${formatHours(dayLogs.reduce((sum, entry) => sum + Number(entry.hours_logged), 0))} hours logged` : ""}${isLocked ? `, ${t("leave.lockedDay")}` : ""}`}
+                    aria-label={`${dateStr}${hoursLabel ? `, ${hoursLabel}` : ""}${isLocked ? `, ${t("leave.lockedDay")}` : ""}`}
+                    aria-pressed={showStatusBreakdown ? isSelected : undefined}
                     className={`relative flex min-h-14 min-w-0 flex-col justify-between border-b border-r border-border p-1 text-left transition-[background-color,box-shadow,opacity] duration-300 ease-[cubic-bezier(0.22,0.7,0.24,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-strong/45 focus-visible:ring-inset sm:min-h-17.5 sm:p-2 ${
                       isCopyTargetDisabled
                         ? "cursor-not-allowed bg-slate-100/80 opacity-70"
@@ -170,17 +192,21 @@ export const TimesheetCalendar: React.FC<TimesheetCalendarProps> = ({
                         {t("leave.lockedDay")}
                       </span>
                     ) : null}
-                    {hasLogs ? (
-                      <div
-                        className={`w-full truncate rounded-md px-1 py-0.5 text-center text-[11px] font-semibold ${colorClass}`}
-                      >
-                        {formatHours(
-                          dayLogs.reduce(
-                            (sum, entry) => sum + Number(entry.hours_logged),
-                            0,
-                          ),
-                        )}
-                        h
+                    {statusHours.length > 0 ? (
+                      <div className="mt-1 w-full space-y-0.5">
+                        {statusHours.map(({ status, hours }) => (
+                          <div
+                            key={status}
+                            title={t("timesheet.statusHours", { status: t(`timesheet.${status}`), hours })}
+                            className={`break-all rounded-md px-0.5 py-0.5 text-center text-[10px] font-semibold leading-tight tabular-nums sm:px-1 sm:text-[11px] ${timesheetStatusColors[status]}`}
+                          >
+                            {hours}h
+                          </div>
+                        ))}
+                      </div>
+                    ) : day && !showStatusBreakdown ? (
+                      <div className={`w-full truncate rounded-md px-1 py-0.5 text-center text-[11px] font-semibold ${timesheetStatusColors[totalStatus]}`}>
+                        {formatHours(day.total)}h
                       </div>
                     ) : null}
                   </button>
